@@ -1,0 +1,5 @@
+rootProject.name = 'sale'
+
+include('base')
+
+project(':base').projectDir = file('com.flash.base')
