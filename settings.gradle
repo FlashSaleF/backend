@@ -1,7 +1,7 @@
 rootProject.name = 'sale'
 
 include('base')
-//include('auth')
+include('auth')
 include('eureka')
 //include('gateway')
 include('user')
@@ -11,7 +11,7 @@ include('user')
 //include('flashsale')
 
 project(':base').projectDir = file('com.flash.base')
-//project(':auth').projectDir = file('com.flash.auth')
+project(':auth').projectDir = file('com.flash.auth')
 project(':eureka').projectDir = file('com.flash.eureka')
 //project(':gateway').projectDir = file('com.flash.gateway')
 project(':user').projectDir = file('com.flash.user')
