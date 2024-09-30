@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: order  # 애플리케이션 이름
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orders  # PostgreSQL DB URL
+    username: ${DB_USERNAME}  # 환경 변수로 DB 사용자 설정
+    password: ${DB_PASSWORD}  # 환경 변수로 DB 비밀번호 설정
+    driver-class-name: org.postgresql.Driver  # JDBC 드라이버 클래스 이름
+
+  jpa:
+    hibernate:
+      ddl-auto: update  # 스키마 업데이트 설정
+    show-sql: true  # SQL 쿼리 출력 여부
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect  # Hibernate PostgreSQL 방언 설정
