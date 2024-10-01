@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -42,6 +43,13 @@ public class FlashSaleService {
         flashSale.update(flashSaleRequestDto);
 
         return flashSaleMapper.convertToResponseDto(flashSale);
+    }
+
+    @Transactional
+    public List<FlashSaleResponseDto> availableList() {
+        List<FlashSale> flashSaleList = flashSaleRepository.findAllByEndDateGreaterThanEqualAndIsDeletedFalse(LocalDate.now());
+
+        return flashSaleList.stream().map(flashSaleMapper::convertToResponseDto).toList();
     }
 
     private FlashSale existFlashSale(UUID flashSaleId) {

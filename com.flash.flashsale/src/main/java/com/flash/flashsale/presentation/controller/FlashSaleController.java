@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,5 +29,11 @@ public class FlashSaleController {
         @Valid @RequestBody FlashSaleRequestDto flashSaleRequestDto
     ) {
         return ResponseEntity.ok(flashSaleService.update(flashSaleId, flashSaleRequestDto));
+    }
+
+    @GetMapping("/available")
+    public ResponseEntity<List<FlashSaleResponseDto>> availableList(
+    ) {
+        return ResponseEntity.ok(flashSaleService.availableList());
     }
 }
