@@ -24,7 +24,7 @@ public class FlashSaleProductService {
         validDuplicate(flashSaleProductRequestDto);
         validAvailableDateTime(flashSaleProductRequestDto);
 
-        FlashSale flashSale = flashSaleService.excistFlashSale(flashSaleProductRequestDto.flashSaleId());
+        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
 
         validAvailableSailTime(flashSale, flashSaleProductRequestDto);
 
