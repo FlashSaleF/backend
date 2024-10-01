@@ -1,6 +1,7 @@
 package com.flash.vendor.application.service;
 
-import com.flash.vendor.application.client.UserFeignClient;
+import com.flash.vendor.application.dto.mapper.VendorMapper;
+import com.flash.vendor.infrastructure.client.UserFeignClient;
 import com.flash.vendor.application.dto.request.VendorRequestDto;
 import com.flash.vendor.application.dto.response.UserResponseDto;
 import com.flash.vendor.application.dto.response.VendorResponseDto;
@@ -19,6 +20,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @RequiredArgsConstructor
 public class VendorService {
 
+    private final VendorMapper vendorMapper;
     private final UserFeignClient userFeignClient;
     private final VendorRepository vendorRepository;
     public VendorResponseDto createVendor(VendorRequestDto request) {
@@ -37,7 +39,7 @@ public class VendorService {
 
         Vendor savedVendor = vendorRepository.save(vendor);
 
-        return convertToResponseDto(savedVendor);
+        return vendorMapper.convertToResponseDto(savedVendor);
 
     }
 
@@ -48,16 +50,6 @@ public class VendorService {
         if (optionalVendor.isPresent()) {
             throw new ResponseStatusException(BAD_REQUEST, "이미 등록되어 있는 주소입니다.");
         }
-    }
-
-    private VendorResponseDto convertToResponseDto(Vendor vendor) {
-        return new VendorResponseDto(
-                vendor.getId(),
-                vendor.getUserId(),
-                vendor.getUsername(),
-                vendor.getName(),
-                vendor.getAddress()
-        );
     }
 
     private String getCurrentUserId() {
