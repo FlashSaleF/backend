@@ -1,8 +1,10 @@
 package com.flash.flashsale.application.service;
 
+import com.flash.flashsale.application.dto.mapper.FlashSaleMapper;
 import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
+import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
@@ -17,6 +19,7 @@ public class FlashSaleProductService {
     private final FlashSaleService flashSaleService;
 
     private final FlashSaleProductMapper flashSaleProductMapper;
+    private final FlashSaleMapper flashSaleMapper;
     private final FlashSaleProductRepository flashSaleProductRepository;
 
     @Transactional
@@ -30,7 +33,9 @@ public class FlashSaleProductService {
 
         FlashSaleProduct flashSaleProduct = flashSaleProductRepository.save(FlashSaleProduct.create(flashSale, flashSaleProductRequestDto));
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct);
+        FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
     private void validDuplicate(FlashSaleProductRequestDto flashSaleProductRequestDto) {
