@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public interface OrderRepository {
 
+    Order save(Order order);
 }
