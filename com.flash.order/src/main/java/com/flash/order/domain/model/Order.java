@@ -1,7 +1,7 @@
 package com.flash.order.domain.model;
 
 import com.flash.base.jpa.BaseEntity;
-import com.flash.order.presentation.dtos.OrderRequestDto;
+import com.flash.order.application.dtos.request.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 

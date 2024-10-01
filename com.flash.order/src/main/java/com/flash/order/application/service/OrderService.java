@@ -1,12 +1,11 @@
 package com.flash.order.application.service;
 
-import com.flash.order.application.dtos.OrderResponseDto;
+import com.flash.order.application.dtos.response.OrderResponseDto;
+import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.domain.model.Order;
 import com.flash.order.domain.model.OrderProduct;
-import com.flash.order.domain.model.OrderStatus;
 import com.flash.order.domain.repository.OrderRepository;
-import com.flash.order.presentation.dtos.OrderProductDto;
-import com.flash.order.presentation.dtos.OrderRequestDto;
+import com.flash.order.application.dtos.request.OrderRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final OrderMapper orderMapper;
 
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
@@ -51,18 +51,11 @@ public class OrderService {
                 UUID.randomUUID() // 결제 ID 생성
         );
 
+        //TODO: 결제 로직
+
         // 주문 저장
         Order savedOrder = orderRepository.save(order);
 
-        // OrderResponseDto로 변환하여 반환
-        return new OrderResponseDto(
-                savedOrder.getId(),
-                savedOrder.getUserId(),
-                orderRequestDto.orderProducts(),
-                savedOrder.getAddress(),
-                savedOrder.getStatus().name(),
-                savedOrder.getTotalPrice(),
-                savedOrder.getPaymentId()
-        );
+        return orderMapper.convertToResponseDto(savedOrder);
     }
 }

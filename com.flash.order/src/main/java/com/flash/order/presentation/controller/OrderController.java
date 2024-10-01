@@ -1,8 +1,9 @@
 package com.flash.order.presentation.controller;
 
-import com.flash.order.application.dtos.OrderResponseDto;
+import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.service.OrderService;
-import com.flash.order.presentation.dtos.OrderRequestDto;
+import com.flash.order.application.dtos.request.OrderRequestDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderResponseDto> createOrder(
-            @RequestBody OrderRequestDto orderRequestDto
+            @Valid @RequestBody OrderRequestDto orderRequestDto
     ) {
         OrderResponseDto response = orderService.createOrder(orderRequestDto);
         return ResponseEntity.ok(response);
