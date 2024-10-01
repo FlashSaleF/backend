@@ -1,7 +1,7 @@
 version: '3.8'
 
 networks:
-  delivery-system-network:
+  flash-sale-network:
     driver: bridge
 
 services:
