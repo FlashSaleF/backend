@@ -1,6 +1,6 @@
-package com.flash.order.application.dtos;
+package com.flash.order.application.dtos.response;
 
-import com.flash.order.presentation.dtos.OrderProductDto;
+import com.flash.order.application.dtos.request.OrderProductDto;
 
 import java.util.List;
 import java.util.UUID;

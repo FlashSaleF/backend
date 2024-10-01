@@ -1,4 +1,4 @@
-package com.flash.order.presentation.dtos;
+package com.flash.order.application.dtos.request;
 
 import lombok.Getter;
 

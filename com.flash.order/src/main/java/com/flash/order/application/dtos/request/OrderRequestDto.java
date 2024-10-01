@@ -1,6 +1,4 @@
-package com.flash.order.presentation.dtos;
-
-import lombok.Getter;
+package com.flash.order.application.dtos.request;
 
 import java.util.List;
 
