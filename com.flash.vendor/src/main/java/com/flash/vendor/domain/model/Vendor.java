@@ -35,4 +35,10 @@ public class Vendor extends BaseEntity {
                 .build();
     }
 
+    public Vendor updateVendor(String name, String address) {
+        this.name = name;
+        this.address = address;
+        return this;
+    }
+
 }

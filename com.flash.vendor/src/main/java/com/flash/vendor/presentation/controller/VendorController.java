@@ -44,4 +44,12 @@ public class VendorController {
 
         return ResponseEntity.ok(vendorService.getVendors(pageable));
     }
+
+    @PutMapping("/{vendorId}")
+    public ResponseEntity<VendorResponseDto> updateVendor(
+            @PathVariable UUID vendorId,
+            @Valid @RequestBody VendorRequestDto request) {
+
+        return ResponseEntity.ok(vendorService.updateVendor(vendorId, request));
+    }
 }

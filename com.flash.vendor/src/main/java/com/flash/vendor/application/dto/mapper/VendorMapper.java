@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class VendorMapper {
-    public VendorResponseDto convertToResponseDto(Vendor vendor) {
+    public static VendorResponseDto convertToResponseDto(Vendor vendor) {
         return new VendorResponseDto(
                 vendor.getId(),
                 vendor.getUserId(),

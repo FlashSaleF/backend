@@ -11,20 +11,20 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
-public class BaseEntity {
+public class BaseEntity implements Serializable {
 
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
     @CreatedBy
-    @Column(updatable = false)
     private String createdBy;
 
     @LastModifiedDate
@@ -39,9 +39,15 @@ public class BaseEntity {
 
     private boolean isDeleted = false;
 
+    // TODO: deletedBy는 Security 구현 후 수정
     public void delete(String userId) {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = userId;
         this.isDeleted = true;
+    }
+
+    public void setCreatedBy(String creater) {
+        this.createdBy = creater;
+        this.updatedBy = creater;
     }
 }
