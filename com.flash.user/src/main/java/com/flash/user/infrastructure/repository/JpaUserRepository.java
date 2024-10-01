@@ -4,6 +4,8 @@ import com.flash.user.domain.model.User;
 import com.flash.user.domain.repository.UserRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface JpaUserRepository extends JpaRepository<User, Long>, UserRepository {
 
     User save(User user);
@@ -11,4 +13,6 @@ public interface JpaUserRepository extends JpaRepository<User, Long>, UserReposi
     boolean existsByEmail(String email);
 
     boolean existsByPhone(String phone);
+
+    Optional<User> findById(String userId);
 }
