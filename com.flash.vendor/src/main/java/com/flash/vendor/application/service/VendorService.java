@@ -1,13 +1,16 @@
 package com.flash.vendor.application.service;
 
 import com.flash.vendor.application.dto.mapper.VendorMapper;
-import com.flash.vendor.infrastructure.client.UserFeignClient;
 import com.flash.vendor.application.dto.request.VendorRequestDto;
 import com.flash.vendor.application.dto.response.UserResponseDto;
+import com.flash.vendor.application.dto.response.VendorPageResponseDto;
 import com.flash.vendor.application.dto.response.VendorResponseDto;
 import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.repository.VendorRepository;
+import com.flash.vendor.infrastructure.client.UserFeignClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -51,6 +54,13 @@ public class VendorService {
                 new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
 
         return vendorMapper.convertToResponseDto(vendor);
+    }
+
+    public VendorPageResponseDto getVendors(Pageable pageable) {
+
+        Page<Vendor> vendors = vendorRepository.findAll(pageable);
+
+        return new VendorPageResponseDto(vendors.map(vendorMapper::convertToResponseDto));
     }
 
     private void validateAddressUniqueness(String address) {
