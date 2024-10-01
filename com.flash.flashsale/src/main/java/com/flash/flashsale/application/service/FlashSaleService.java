@@ -8,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-
 @Service
 @RequiredArgsConstructor
 public class FlashSaleService {
@@ -17,23 +15,21 @@ public class FlashSaleService {
 
     @Transactional
     public FlashSaleResponseDto create(FlashSaleRequestDto flashSaleRequestDto) {
-        checkAvailableDate(flashSaleRequestDto);
-        checkDuplicateDate(flashSaleRequestDto);
+        validAvailableDate(flashSaleRequestDto);
+        validDuplicateDate(flashSaleRequestDto);
+
         FlashSale flashSale = flashSaleRepository.save(FlashSale.create(flashSaleRequestDto));
         return convertResponseDto(flashSale);
     }
 
-    private void checkDuplicateDate(FlashSaleRequestDto flashSaleRequestDto) {
+    private void validDuplicateDate(FlashSaleRequestDto flashSaleRequestDto) {
         if (flashSaleRepository.findByStartDateAndEndDate(flashSaleRequestDto.startDate(), flashSaleRequestDto.endDate()).isPresent()) {
             throw new IllegalArgumentException("같은 날짜에 진행되는 세일이 있습니다.");
         }
         ;
     }
 
-    private void checkAvailableDate(FlashSaleRequestDto flashSaleRequestDto) {
-        if (flashSaleRequestDto.startDate().isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("시작일은 현재 날짜보다 빠를 수 없습니다.");
-        }
+    private void validAvailableDate(FlashSaleRequestDto flashSaleRequestDto) {
         if (flashSaleRequestDto.endDate().isBefore(flashSaleRequestDto.startDate())) {
             throw new IllegalArgumentException("종료일은 시작일보다 빠를 수 없습니다.");
         }

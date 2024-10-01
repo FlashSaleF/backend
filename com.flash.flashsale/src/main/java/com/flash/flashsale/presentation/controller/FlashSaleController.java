@@ -3,6 +3,7 @@ package com.flash.flashsale.presentation.controller;
 import com.flash.flashsale.application.dto.request.FlashSaleRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.service.FlashSaleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +17,7 @@ public class FlashSaleController {
     private final FlashSaleService flashSaleService;
 
     @PostMapping()
-    public FlashSaleResponseDto create(@RequestBody FlashSaleRequestDto flashSaleRequestDto) {
+    public FlashSaleResponseDto create(@Valid @RequestBody FlashSaleRequestDto flashSaleRequestDto) {
         return flashSaleService.create(flashSaleRequestDto);
     }
 }
