@@ -1,7 +1,9 @@
 package com.flash.order.presentation.dtos;
 
+import java.util.UUID;
+
 public record OrderProductDto(
-        String productId,  // 상품 ID
+        UUID productId,  // 상품 ID
         int quantity,  // 수량
         int price  // 가격
 ) {
