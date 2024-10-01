@@ -1,4 +1,4 @@
-package com.flash.vendor.application.client;
+package com.flash.vendor.infrastructure.client;
 
 import com.flash.vendor.application.dto.response.UserResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
