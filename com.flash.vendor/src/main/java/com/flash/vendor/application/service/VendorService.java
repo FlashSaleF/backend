@@ -25,9 +25,9 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RequiredArgsConstructor
 public class VendorService {
 
-    private final VendorMapper vendorMapper;
     private final UserFeignClient userFeignClient;
     private final VendorRepository vendorRepository;
+
     public VendorResponseDto createVendor(VendorRequestDto request) {
 
         validateAddressUniqueness(request.address());
@@ -44,28 +44,57 @@ public class VendorService {
 
         Vendor savedVendor = vendorRepository.save(vendor);
 
-        return vendorMapper.convertToResponseDto(savedVendor);
+        return VendorMapper.convertToResponseDto(savedVendor);
 
     }
 
     public VendorResponseDto getVendor(UUID vendorId) {
 
-        Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() ->
-                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
+        Vendor vendor = getVendorById(vendorId);
 
-        return vendorMapper.convertToResponseDto(vendor);
+        return VendorMapper.convertToResponseDto(vendor);
     }
 
     public VendorPageResponseDto getVendors(Pageable pageable) {
 
         Page<Vendor> vendors = vendorRepository.findAll(pageable);
 
-        return new VendorPageResponseDto(vendors.map(vendorMapper::convertToResponseDto));
+        return new VendorPageResponseDto(vendors.map(VendorMapper::convertToResponseDto));
+    }
+
+    public VendorResponseDto updateVendor(UUID vendorId, VendorRequestDto request) {
+
+        Vendor vendor = getVendorBasedOnAuthority(vendorId, getCurrentUserAuthority());
+
+        Vendor updateVendor = vendor.updateVendor(request.name(), request.address());
+
+        return VendorMapper.convertToResponseDto(updateVendor);
+    }
+
+    private Vendor getVendorBasedOnAuthority(UUID vendorId, String authority) {
+        return switch (authority) {
+            case "VENDOR" ->
+                    getVendorByIdAndUserId(vendorId, Long.valueOf(getCurrentUserId()));
+            case "MASTER" -> getVendorById(vendorId);
+            default ->
+                    throw new ResponseStatusException(BAD_REQUEST, "유효하지 않은 권한 요청입니다.");
+        };
+    }
+
+    private Vendor getVendorById(UUID vendorId) {
+        return vendorRepository.findByIdAndIsDeletedFalse(vendorId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
+    }
+
+    private Vendor getVendorByIdAndUserId(UUID vendorId, Long userId) {
+        return vendorRepository.findByIdAndUserIdIsDeletedFalse(
+                vendorId, userId).orElseThrow(() ->
+                new ResponseStatusException(BAD_REQUEST, "본인의 업체 정보만 수정할 수 있습니다."));
     }
 
     private void validateAddressUniqueness(String address) {
 
-        Optional<Vendor> optionalVendor = vendorRepository.findByAddress(address);
+        Optional<Vendor> optionalVendor = vendorRepository.findByAddressIsDeletedFalse(address);
 
         if (optionalVendor.isPresent()) {
             throw new ResponseStatusException(BAD_REQUEST, "이미 등록되어 있는 주소입니다.");
@@ -74,5 +103,15 @@ public class VendorService {
 
     private String getCurrentUserId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private String getCurrentUserAuthority() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                .getAuthority();
     }
 }
