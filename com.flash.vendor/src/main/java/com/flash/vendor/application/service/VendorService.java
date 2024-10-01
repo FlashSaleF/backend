@@ -82,19 +82,19 @@ public class VendorService {
     }
 
     private Vendor getVendorById(UUID vendorId) {
-        return vendorRepository.findById(vendorId).orElseThrow(() ->
+        return vendorRepository.findByIdAndIsDeletedFalse(vendorId).orElseThrow(() ->
                 new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
     }
 
     private Vendor getVendorByIdAndUserId(UUID vendorId, Long userId) {
-        return vendorRepository.findByIdAndUserId(
+        return vendorRepository.findByIdAndUserIdIsDeletedFalse(
                 vendorId, userId).orElseThrow(() ->
                 new ResponseStatusException(BAD_REQUEST, "본인의 업체 정보만 수정할 수 있습니다."));
     }
 
     private void validateAddressUniqueness(String address) {
 
-        Optional<Vendor> optionalVendor = vendorRepository.findByAddress(address);
+        Optional<Vendor> optionalVendor = vendorRepository.findByAddressIsDeletedFalse(address);
 
         if (optionalVendor.isPresent()) {
             throw new ResponseStatusException(BAD_REQUEST, "이미 등록되어 있는 주소입니다.");
