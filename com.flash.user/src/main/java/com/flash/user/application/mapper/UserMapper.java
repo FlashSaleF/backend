@@ -2,6 +2,7 @@ package com.flash.user.application.mapper;
 
 import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
+import com.flash.user.application.dto.response.UserResponseDto;
 import com.flash.user.domain.model.RoleEnum;
 import com.flash.user.domain.model.User;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,12 @@ public class UserMapper {
                 .id(user.getId())
                 .email(user.getEmail())
                 .role(user.getRole().getAuthority())
+                .name(user.getName())
+                .build();
+    }
+
+    public static UserResponseDto feignDtoFrom(User user) {
+        return UserResponseDto.builder()
                 .name(user.getName())
                 .build();
     }
