@@ -40,8 +40,9 @@ public class UserService {
     }
 
     public UserResponseDto getUserInfo(String userId) {
-        // TODO: 커스텀 예외 만들어서 던지기
-        User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
+                // TODO: 커스텀 예외 만들어서 던지기
+        );
         return UserMapper.feignDtoFrom(user);
     }
 

@@ -12,5 +12,7 @@ public interface UserRepository {
 
     boolean existsByPhone(String phone);
 
-    Optional<User> findById(String userId);
+    Optional<User> findById(Long userId);
+
+    Optional<User> findByEmail(String email);
 }
