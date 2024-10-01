@@ -43,7 +43,7 @@ public class FlashSaleService {
         return flashSaleMapper.convertToResponseDto(flashSale);
     }
 
-    private FlashSale excistFlashSale(UUID flashSaleId) {
+    protected FlashSale excistFlashSale(UUID flashSaleId) {
         return flashSaleRepository.findById(flashSaleId).orElseThrow(
             () -> new IllegalArgumentException("존재하지 않는 플래시 세일 입니다.")
         );
@@ -53,7 +53,6 @@ public class FlashSaleService {
         if (flashSaleRepository.findByStartDateAndEndDate(flashSaleRequestDto.startDate(), flashSaleRequestDto.endDate()).isPresent()) {
             throw new IllegalArgumentException("같은 날짜에 진행되는 세일이 있습니다.");
         }
-        ;
     }
 
     private void validAvailableDate(FlashSaleRequestDto flashSaleRequestDto) {

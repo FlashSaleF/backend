@@ -1,6 +1,7 @@
 package com.flash.flashsale.domain.model;
 
 import com.flash.base.jpa.BaseEntity;
+import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -34,4 +35,16 @@ public class FlashSaleProduct extends BaseEntity {
     private LocalDateTime startTime;
     @Column(nullable = false)
     private LocalDateTime endTime;
+
+    public static FlashSaleProduct create(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
+        return FlashSaleProduct.builder()
+            .flashSale(flashSale)
+            .productId(flashSaleProductRequestDto.productId())
+            .salePrice(flashSaleProductRequestDto.salePrice())
+            .stock(flashSaleProductRequestDto.stock())
+            .status(FlashSaleProductStatus.PENDING)
+            .startTime(flashSaleProductRequestDto.startTime())
+            .endTime(flashSaleProductRequestDto.endTime())
+            .build();
+    }
 }
