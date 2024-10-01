@@ -63,4 +63,27 @@ public class OrderService {
 
         return orderMapper.convertToResponseDto(savedOrder);
     }
+
+    @Transactional(readOnly = true)
+    public OrderResponseDto getOrderById(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+        return orderMapper.convertToResponseDto(order);
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getOrdersByUserId(Long userId) {
+        List<Order> orders = orderRepository.findByUserIdAndIsDeletedFalse(userId);
+        return orders.stream()
+                .map(orderMapper::convertToResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getAllOrders() {
+        List<Order> orders = orderRepository.findAllByIsDeletedFalse();
+        return orders.stream()
+                .map(orderMapper::convertToResponseDto)
+                .collect(Collectors.toList());
+    }
 }
