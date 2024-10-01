@@ -46,8 +46,7 @@ public class FlashSaleProductService {
     }
 
     private void validAvailableSailTime(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if ((flashSaleProductRequestDto.startTime().toLocalDate().isAfter(flashSale.getStartDate()) || flashSaleProductRequestDto.startTime().toLocalDate().isEqual(flashSale.getStartDate()))
-            && (flashSaleProductRequestDto.endTime().toLocalDate().isBefore(flashSale.getEndDate()) || flashSaleProductRequestDto.endTime().toLocalDate().isEqual(flashSale.getEndDate()))) {
+        if (flashSaleProductRequestDto.startTime().toLocalDate().isBefore(flashSale.getStartDate()) || flashSaleProductRequestDto.endTime().toLocalDate().isAfter(flashSale.getEndDate())) {
             throw new IllegalArgumentException("해당 플래시 세일이 진행중이지 않은 시간입니다.");
         }
     }
