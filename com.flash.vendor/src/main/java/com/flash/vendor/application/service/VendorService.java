@@ -45,6 +45,14 @@ public class VendorService {
 
     }
 
+    public VendorResponseDto getVendor(UUID vendorId) {
+
+        Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
+
+        return vendorMapper.convertToResponseDto(vendor);
+    }
+
     private void validateAddressUniqueness(String address) {
 
         Optional<Vendor> optionalVendor = vendorRepository.findByAddress(address);
@@ -56,13 +64,5 @@ public class VendorService {
 
     private String getCurrentUserId() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
-    }
-
-    public VendorResponseDto getVendor(UUID vendorId) {
-
-        Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(() ->
-                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
-
-        return convertToResponseDto(vendor);
     }
 }
