@@ -33,4 +33,8 @@ public class OrderProduct extends BaseEntity {
 
     @Column(nullable = false)
     private int price;
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 }

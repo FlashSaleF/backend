@@ -31,7 +31,6 @@ public class OrderService {
 
                     // OrderProduct 객체 생성
                     return OrderProduct.builder()
-                            .id(UUID.randomUUID())
                             .productId(orderProductDto.productId()) // Product 객체를 엔티티로 변환
                             .quantity(orderProductDto.quantity())
                             .price(orderProductDto.price())
@@ -50,6 +49,12 @@ public class OrderService {
                 totalPrice.intValue(),
                 UUID.randomUUID() // 결제 ID 생성
         );
+
+        // 주문에 orderProducts 설정
+        orderProducts.forEach(orderProduct -> orderProduct.setOrder(order)); // Order 객체 설정
+
+        // 주문에 orderProducts 설정
+        order.setOrderProducts(orderProducts);  // orderProducts를 설정해줍니다
 
         //TODO: 결제 로직
 

@@ -5,6 +5,7 @@ import com.flash.order.application.dtos.request.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,7 +37,11 @@ public class Order extends BaseEntity {
     private Long userId;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<OrderProduct> orderProducts;
+    private List<OrderProduct> orderProducts = new ArrayList<>();
+
+    public void setOrderProducts(List<OrderProduct> orderProducts) {
+        this.orderProducts = orderProducts;
+    }
 
     public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, UUID paymentId) {
         return Order.builder()
