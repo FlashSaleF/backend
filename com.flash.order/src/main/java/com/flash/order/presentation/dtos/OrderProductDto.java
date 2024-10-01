@@ -1,5 +1,7 @@
 package com.flash.order.presentation.dtos;
 
+import lombok.Getter;
+
 import java.util.UUID;
 
 public record OrderProductDto(
