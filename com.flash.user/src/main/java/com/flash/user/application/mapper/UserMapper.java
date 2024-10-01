@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapper {
 
-    public User entityFrom(JoinRequestDto dto) {
+    public static User entityFrom(JoinRequestDto dto) {
         return User.builder()
                 .email(dto.email())
                 .password(dto.password())
@@ -20,7 +20,7 @@ public class UserMapper {
                 .build();
     }
 
-    public JoinResponseDto dtoFrom(User user) {
+    public static JoinResponseDto dtoFrom(User user) {
         return JoinResponseDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())

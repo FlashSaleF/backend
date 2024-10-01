@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserMapper userMapper;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -33,10 +32,10 @@ public class UserService {
             throw new IllegalArgumentException("이미 존재하는 전화번호입니다.");
         }
 
-        User saved = userRepository.save(userMapper.entityFrom(joinRequestDto.withPassword(passwordEncoder.encode(joinRequestDto.password()))));
+        User saved = userRepository.save(UserMapper.entityFrom(joinRequestDto.withPassword(passwordEncoder.encode(joinRequestDto.password()))));
         saved.setCreatedBy(String.valueOf(saved.getId()));
 
-        return userMapper.dtoFrom(saved);
+        return UserMapper.dtoFrom(saved);
     }
 
 }
