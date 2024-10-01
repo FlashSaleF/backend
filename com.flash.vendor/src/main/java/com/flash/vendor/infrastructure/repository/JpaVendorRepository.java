@@ -10,4 +10,6 @@ import java.util.UUID;
 public interface JpaVendorRepository extends JpaRepository<Vendor, UUID>, VendorRepository {
 
     Optional<Vendor> findByAddress(String address);
+
+    Optional<Vendor> findByIdAndUserId(UUID vendorId, Long userId);
 }

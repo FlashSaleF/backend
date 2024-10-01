@@ -16,4 +16,6 @@ public interface VendorRepository {
     Optional<Vendor> findById(UUID vendorId);
 
     Page<Vendor> findAll(Pageable pageable);
+
+    Optional<Vendor> findByIdAndUserId(UUID vendorId, Long userId);
 }
