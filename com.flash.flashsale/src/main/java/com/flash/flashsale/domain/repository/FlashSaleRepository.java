@@ -8,7 +8,8 @@ import java.util.UUID;
 
 public interface FlashSaleRepository {
     FlashSale save(FlashSale flashSale);
-    Optional<FlashSale> findByStartDateAndEndDate(LocalDate startDate, LocalDate endDate);
 
-    Optional<FlashSale> findById(UUID id);
+    Optional<FlashSale> findByStartDateAndEndDateAndIsDeletedFalse(LocalDate startDate, LocalDate endDate);
+
+    Optional<FlashSale> findByIdAndIsDeletedFalse(UUID id);
 }

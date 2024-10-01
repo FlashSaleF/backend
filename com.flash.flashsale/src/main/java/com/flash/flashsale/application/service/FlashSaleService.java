@@ -25,6 +25,7 @@ public class FlashSaleService {
         validDuplicateDate(flashSaleRequestDto);
 
         FlashSale flashSale = flashSaleRepository.save(FlashSale.create(flashSaleRequestDto));
+
         return flashSaleMapper.convertToResponseDto(flashSale);
     }
 
@@ -32,7 +33,7 @@ public class FlashSaleService {
     public FlashSaleResponseDto update(UUID flashSaleId, FlashSaleRequestDto flashSaleRequestDto) {
         validDuplicateDate(flashSaleRequestDto);
         validAvailableDate(flashSaleRequestDto);
-        FlashSale flashSale = excistFlashSale(flashSaleId);
+        FlashSale flashSale = existFlashSale(flashSaleId);
 
         if (isOnSale(flashSale)) {
             throw new IllegalArgumentException("세일중에는 수정할 수 없습니다.");
@@ -43,17 +44,16 @@ public class FlashSaleService {
         return flashSaleMapper.convertToResponseDto(flashSale);
     }
 
-    private FlashSale excistFlashSale(UUID flashSaleId) {
-        return flashSaleRepository.findById(flashSaleId).orElseThrow(
+    private FlashSale existFlashSale(UUID flashSaleId) {
+        return flashSaleRepository.findByIdAndIsDeletedFalse(flashSaleId).orElseThrow(
             () -> new IllegalArgumentException("존재하지 않는 플래시 세일 입니다.")
         );
     }
 
     private void validDuplicateDate(FlashSaleRequestDto flashSaleRequestDto) {
-        if (flashSaleRepository.findByStartDateAndEndDate(flashSaleRequestDto.startDate(), flashSaleRequestDto.endDate()).isPresent()) {
+        if (flashSaleRepository.findByStartDateAndEndDateAndIsDeletedFalse(flashSaleRequestDto.startDate(), flashSaleRequestDto.endDate()).isPresent()) {
             throw new IllegalArgumentException("같은 날짜에 진행되는 세일이 있습니다.");
         }
-        ;
     }
 
     private void validAvailableDate(FlashSaleRequestDto flashSaleRequestDto) {
