@@ -5,6 +5,7 @@ import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.service.FlashSaleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,7 @@ public class FlashSaleController {
     private final FlashSaleService flashSaleService;
 
     @PostMapping()
-    public FlashSaleResponseDto create(@Valid @RequestBody FlashSaleRequestDto flashSaleRequestDto) {
-        return flashSaleService.create(flashSaleRequestDto);
+    public ResponseEntity<FlashSaleResponseDto> create(@Valid @RequestBody FlashSaleRequestDto flashSaleRequestDto) {
+        return ResponseEntity.ok(flashSaleService.create(flashSaleRequestDto));
     }
 }
