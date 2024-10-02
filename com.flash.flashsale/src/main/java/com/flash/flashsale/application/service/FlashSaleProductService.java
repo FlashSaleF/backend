@@ -109,6 +109,17 @@ public class FlashSaleProductService {
         flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::endSale);
     }
 
+    @Transactional
+    @Scheduled(cron = "0 0 09-20 * * *")
+    public void autoStartSale() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime fiveMinutesAgo = currentDateTime.minusMinutes(5);
+        LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
+        //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
+
+        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.APPROVE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::oneSale);
+    }
+
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
         return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
             () -> new IllegalArgumentException("존재하지 않는 플래시 세일 상품 입니다.")
