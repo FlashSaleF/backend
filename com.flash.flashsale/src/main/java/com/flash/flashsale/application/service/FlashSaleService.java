@@ -52,6 +52,12 @@ public class FlashSaleService {
         return flashSaleList.stream().map(flashSaleMapper::convertToResponseDto).toList();
     }
 
+    public List<FlashSaleResponseDto> getList() {
+        List<FlashSale> flashSaleList = flashSaleRepository.findAllByIsDeletedFalse();
+
+        return flashSaleList.stream().map(flashSaleMapper::convertToResponseDto).toList();
+    }
+
     protected FlashSale existFlashSale(UUID flashSaleId) {
         return flashSaleRepository.findByIdAndIsDeletedFalse(flashSaleId).orElseThrow(
             () -> new IllegalArgumentException("존재하지 않는 플래시 세일 입니다.")

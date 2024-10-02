@@ -36,4 +36,9 @@ public class FlashSaleController {
     ) {
         return ResponseEntity.ok(flashSaleService.availableList());
     }
+
+    @GetMapping()
+    public ResponseEntity<List<FlashSaleResponseDto>> getList() {
+        return ResponseEntity.ok(flashSaleService.getList());
+    }
 }
