@@ -99,7 +99,7 @@ public class FlashSaleProductService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 9-21 * * *")
+    @Scheduled(cron = "0 0 10-21 * * *")
     public void autoEndSale() {
         LocalDateTime currentDateTime = LocalDateTime.now();
         LocalDateTime fiveMinutesAgo = currentDateTime.minusMinutes(5);
