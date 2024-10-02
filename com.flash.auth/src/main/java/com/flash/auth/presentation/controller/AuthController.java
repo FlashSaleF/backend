@@ -2,6 +2,7 @@ package com.flash.auth.presentation.controller;
 
 import com.flash.auth.application.dto.request.JoinRequestDto;
 import com.flash.auth.application.dto.request.LoginRequestDto;
+import com.flash.auth.application.dto.response.AuthResponseDto;
 import com.flash.auth.application.dto.response.JoinResponseDto;
 import com.flash.auth.application.dto.response.LoginResponseDto;
 import com.flash.auth.application.service.AuthService;
@@ -10,11 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static com.flash.auth.application.service.util.JwtUtil.AUTHORIZATION_HEADER;
 
@@ -39,5 +38,10 @@ public class AuthController {
         response.addCookie(cookieUtil.createCookieWithRefreshToken(loginResponseDto.refreshToken()));
 
         return ResponseEntity.ok(loginResponseDto.id());
+    }
+
+    @PostMapping("/verify")
+    public AuthResponseDto verify(@RequestHeader HttpHeaders headers) {
+        return authService.verify(headers);
     }
 }
