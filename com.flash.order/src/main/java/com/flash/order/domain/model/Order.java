@@ -5,12 +5,13 @@ import com.flash.order.application.dtos.request.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Getter
+@Getter @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -51,5 +52,10 @@ public class Order extends BaseEntity {
                 .paymentId(paymentId)
                 .userId(orderRequestDto.userId())
                 .build();
+    }
+
+    public void updateOrder(OrderRequestDto orderRequestDto, int totalPrice) {
+        this.address = orderRequestDto.address();
+        this.totalPrice = totalPrice;
     }
 }

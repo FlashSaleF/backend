@@ -46,4 +46,14 @@ public class OrderController {
         List<OrderResponseDto> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
     }
+
+    @PatchMapping("/{orderId}")
+    public ResponseEntity<OrderResponseDto> updateOrder(
+            @PathVariable UUID orderId,
+            @Valid @RequestBody OrderRequestDto orderRequestDto) {
+
+        OrderResponseDto updatedOrder = orderService.updateOrder(orderId, orderRequestDto);
+
+        return ResponseEntity.ok(updatedOrder);
+    }
 }
