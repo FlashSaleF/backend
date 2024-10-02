@@ -7,12 +7,18 @@ import com.flash.order.domain.model.OrderProduct;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 @RequiredArgsConstructor
@@ -80,11 +86,9 @@ public class OrderService {
 //    }
 
     @Transactional(readOnly = true)
-    public List<OrderResponseDto> getAllOrders() {
-        List<Order> orders = orderRepository.findAllByIsDeletedFalse();
-        return orders.stream()
-                .map(orderMapper::convertToResponseDto)
-                .collect(Collectors.toList());
+    public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
+        Page<Order> orders = orderRepository.findAllByIsDeletedFalse(pageable);
+        return orders.map(orderMapper::convertToResponseDto);
     }
 
     @Transactional
@@ -120,5 +124,27 @@ public class OrderService {
         Order updatedOrder = orderRepository.save(existingOrder);
 
         return orderMapper.convertToResponseDto(updatedOrder);
+    }
+
+    @Transactional
+    public void deleteOrder(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+
+        order.delete(getCurrentUserId());
+    }
+
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private String getCurrentUserAuthority() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                .getAuthority();
     }
 }

@@ -1,7 +1,8 @@
-package com.flash.user.application.mapper;
+package com.flash.user.application.service.mapper;
 
 import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
+import com.flash.user.application.dto.response.LoginResponseDto;
 import com.flash.user.application.dto.response.UserResponseDto;
 import com.flash.user.domain.model.RoleEnum;
 import com.flash.user.domain.model.User;
@@ -30,9 +31,16 @@ public class UserMapper {
                 .build();
     }
 
-    public static UserResponseDto feignDtoFrom(User user) {
+    public static UserResponseDto toVendorFrom(User user) {
         return UserResponseDto.builder()
                 .name(user.getName())
+                .build();
+    }
+
+    public static LoginResponseDto toAuthFrom(User user) {
+        return LoginResponseDto.builder()
+                .id(String.valueOf(user.getId()))
+                .role(user.getRole().getAuthority())
                 .build();
     }
 }

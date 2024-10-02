@@ -11,6 +11,6 @@ public record FlashSaleProductResponseDto(
     String status,
     LocalDateTime startTime,
     LocalDateTime endTime,
-    FlashSaleResponseDto flashSaleResponseDto
+    FlashSaleResponseDto flashSale
 ) {
 }

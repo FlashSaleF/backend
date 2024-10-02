@@ -47,4 +47,8 @@ public class FlashSaleProduct extends BaseEntity {
             .endTime(flashSaleProductRequestDto.endTime())
             .build();
     }
+
+    public void approve() {
+        this.status = FlashSaleProductStatus.APPROVE;
+    }
 }
