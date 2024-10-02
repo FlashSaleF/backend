@@ -46,11 +46,11 @@ public class FlashSaleProductService {
     public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList;
 
-        if (flashSaleId == null && statusList.isEmpty()) {
+        if (flashSaleId == null && statusList == null) {
             flashSaleProductList = flashSaleProductRepository.findAllByIsDeletedFalse();
         } else if (flashSaleId == null) {
             flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(statusList);
-        } else if (statusList.isEmpty()) {
+        } else if (statusList == null) {
             flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
         } else {
             flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndStatusInAndIsDeletedFalse(flashSaleId, statusList);
