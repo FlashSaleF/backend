@@ -21,5 +21,4 @@ public record FlashSaleProductRequestDto(
     @FutureOrPresent(message = "과거 시간은 넣을 수 없습니다.")
     LocalDateTime endTime
 ) {
-
 }
