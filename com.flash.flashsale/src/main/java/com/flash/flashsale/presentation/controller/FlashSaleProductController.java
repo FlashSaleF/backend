@@ -24,6 +24,11 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.create(flashSaleProductRequestDto));
     }
 
+    @GetMapping("/{flashSaleProductId}")
+    public ResponseEntity<FlashSaleProductResponseDto> getOne(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.getOne(flashSaleProductId));
+    }
+
     @GetMapping()
     public ResponseEntity<List<FlashSaleProductResponseDto>> getList(
         @RequestParam(value = "flashSaleId", required = false) UUID flashSaleId,
