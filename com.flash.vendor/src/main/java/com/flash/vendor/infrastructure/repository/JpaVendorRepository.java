@@ -9,9 +9,9 @@ import java.util.UUID;
 
 public interface JpaVendorRepository extends JpaRepository<Vendor, UUID>, VendorRepository {
 
-    Optional<Vendor> findByAddressIsDeletedFalse(String address);
+    Optional<Vendor> findByAddressAndIsDeletedFalse(String address);
 
-    Optional<Vendor> findByIdAndUserIdIsDeletedFalse(UUID vendorId, Long userId);
+    Optional<Vendor> findByIdAndUserIdAndIsDeletedFalse(UUID vendorId, Long userId);
 
     Optional<Vendor> findByIdAndIsDeletedFalse(UUID vendorId);
 }

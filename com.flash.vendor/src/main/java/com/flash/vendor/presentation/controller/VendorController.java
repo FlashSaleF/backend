@@ -1,6 +1,7 @@
 package com.flash.vendor.presentation.controller;
 
 import com.flash.vendor.application.dto.request.VendorRequestDto;
+import com.flash.vendor.application.dto.response.VendorDeleteResponseDto;
 import com.flash.vendor.application.dto.response.VendorPageResponseDto;
 import com.flash.vendor.application.dto.response.VendorResponseDto;
 import com.flash.vendor.application.service.VendorService;
@@ -51,5 +52,13 @@ public class VendorController {
             @Valid @RequestBody VendorRequestDto request) {
 
         return ResponseEntity.ok(vendorService.updateVendor(vendorId, request));
+    }
+
+    @DeleteMapping("/{vendorId}")
+    public ResponseEntity<VendorDeleteResponseDto> deleteVendor(
+            @PathVariable UUID vendorId
+    ) {
+
+        return ResponseEntity.ok(vendorService.deleteVendor(vendorId));
     }
 }
