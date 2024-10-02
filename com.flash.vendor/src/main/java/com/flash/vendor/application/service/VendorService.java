@@ -87,7 +87,7 @@ public class VendorService {
         return new VendorDeleteResponseDto("업체 삭제 성공");
     }
 
-    private Vendor getVendorBasedOnAuthority(UUID vendorId, String authority) {
+    Vendor getVendorBasedOnAuthority(UUID vendorId, String authority) {
         return switch (authority) {
             case "VENDOR" ->
                     getVendorByIdAndUserId(vendorId, Long.valueOf(getCurrentUserId()));
@@ -105,7 +105,7 @@ public class VendorService {
     private Vendor getVendorByIdAndUserId(UUID vendorId, Long userId) {
         return vendorRepository.findByIdAndUserIdAndIsDeletedFalse(
                 vendorId, userId).orElseThrow(() ->
-                new ResponseStatusException(BAD_REQUEST, "본인의 업체 정보만 수정할 수 있습니다."));
+                new ResponseStatusException(BAD_REQUEST, "해당 업체 대표자가 아닙니다."));
     }
 
     private void validateAddressUniqueness(String address) {
