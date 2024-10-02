@@ -5,6 +5,10 @@ import com.flash.order.application.service.OrderService;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,8 +46,12 @@ public class OrderController {
 
     // 모든 주문 조회
     @GetMapping
-    public ResponseEntity<List<OrderResponseDto>> getAllOrders() {
-        List<OrderResponseDto> orders = orderService.getAllOrders();
+    public ResponseEntity<Page<OrderResponseDto>> getAllOrders(
+            @PageableDefault(
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<OrderResponseDto> orders = orderService.getAllOrders(pageable);
         return ResponseEntity.ok(orders);
     }
 }

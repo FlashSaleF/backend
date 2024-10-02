@@ -7,6 +7,8 @@ import com.flash.order.domain.model.OrderProduct;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,10 +82,8 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderResponseDto> getAllOrders() {
-        List<Order> orders = orderRepository.findAllByIsDeletedFalse();
-        return orders.stream()
-                .map(orderMapper::convertToResponseDto)
-                .collect(Collectors.toList());
+    public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
+        Page<Order> orders = orderRepository.findAllByIsDeletedFalse(pageable);
+        return orders.map(orderMapper::convertToResponseDto);
     }
 }
