@@ -41,4 +41,9 @@ public class FlashSaleController {
     public ResponseEntity<List<FlashSaleResponseDto>> getList() {
         return ResponseEntity.ok(flashSaleService.getList());
     }
+
+    @GetMapping("/{flashSaleId}")
+    public ResponseEntity<FlashSaleResponseDto> getOne(@PathVariable("flashSaleId") UUID flashSaleId) {
+        return ResponseEntity.ok(flashSaleService.getOne(flashSaleId));
+    }
 }
