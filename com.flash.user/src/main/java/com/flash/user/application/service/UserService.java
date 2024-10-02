@@ -1,9 +1,11 @@
 package com.flash.user.application.service;
 
 import com.flash.user.application.dto.request.JoinRequestDto;
+import com.flash.user.application.dto.request.LoginRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
+import com.flash.user.application.dto.response.LoginResponseDto;
 import com.flash.user.application.dto.response.UserResponseDto;
-import com.flash.user.application.mapper.UserMapper;
+import com.flash.user.application.service.mapper.UserMapper;
 import com.flash.user.domain.model.User;
 import com.flash.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,10 +42,28 @@ public class UserService {
     }
 
     public UserResponseDto getUserInfo(String userId) {
-        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
-                // TODO: 커스텀 예외 만들어서 던지기
-        );
-        return UserMapper.feignDtoFrom(user);
+        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(() -> {
+            // TODO: 커스텀 예외 만들어서 던지기
+            log.error("user not found by id");
+            throw new IllegalArgumentException("user not found by id");
+
+        });
+        return UserMapper.toVendorFrom(user);
+    }
+
+    public LoginResponseDto verify(LoginRequestDto loginRequestDto) {
+        User user = userRepository.findByEmail(loginRequestDto.email()).orElseThrow(() -> {
+            // TODO: 커스텀 예외 만들어서 던지기
+            log.error("user not found by email");
+            throw new IllegalArgumentException("not found");
+
+        });
+        if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {
+            // TODO: 커스텀 예외 만들어서 던지기
+            log.error("password does not match");
+            throw new IllegalArgumentException("password does not match");
+        }
+        return UserMapper.toAuthFrom(user);
     }
 
 }
