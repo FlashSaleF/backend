@@ -54,4 +54,20 @@ public class OrderController {
         Page<OrderResponseDto> orders = orderService.getAllOrders(pageable);
         return ResponseEntity.ok(orders);
     }
+
+    @PatchMapping("/{orderId}")
+    public ResponseEntity<OrderResponseDto> updateOrder(
+            @PathVariable UUID orderId,
+            @Valid @RequestBody OrderRequestDto orderRequestDto) {
+
+        OrderResponseDto updatedOrder = orderService.updateOrder(orderId, orderRequestDto);
+
+        return ResponseEntity.ok(updatedOrder);
+    }
+
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable UUID orderId) {
+        orderService.deleteOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
 }

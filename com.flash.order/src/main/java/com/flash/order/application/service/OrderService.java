@@ -9,12 +9,16 @@ import com.flash.order.application.dtos.request.OrderRequestDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +60,7 @@ public class OrderService {
         orderProducts.forEach(orderProduct -> orderProduct.setOrder(order)); // Order 객체 설정
 
         // 주문에 orderProducts 설정
-        order.setOrderProducts(orderProducts);  // orderProducts를 설정해줍니다
+        order.setOrderProducts(orderProducts);
 
         //TODO: 결제 로직
 
@@ -73,17 +77,74 @@ public class OrderService {
         return orderMapper.convertToResponseDto(order);
     }
 
-    @Transactional(readOnly = true)
-    public List<OrderResponseDto> getOrdersByUserId(Long userId) {
-        List<Order> orders = orderRepository.findByUserIdAndIsDeletedFalse(userId);
-        return orders.stream()
-                .map(orderMapper::convertToResponseDto)
-                .collect(Collectors.toList());
-    }
+//    @Transactional(readOnly = true)
+//    public List<OrderResponseDto> getOrdersByUserId(Long userId) {
+//        List<Order> orders = orderRepository.findByUserIdAndIsDeletedFalse(userId);
+//        return orders.stream()
+//                .map(orderMapper::convertToResponseDto)
+//                .collect(Collectors.toList());
+//    }
 
     @Transactional(readOnly = true)
     public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
         Page<Order> orders = orderRepository.findAllByIsDeletedFalse(pageable);
         return orders.map(orderMapper::convertToResponseDto);
+    }
+
+    @Transactional
+    public OrderResponseDto updateOrder(UUID orderId, OrderRequestDto orderRequestDto) {
+        // 기존 주문 조회
+        Order existingOrder = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+
+        // 새로운 주문 상품 목록 생성
+        List<OrderProduct> updatedOrderProducts = orderRequestDto.orderProducts().stream()
+                .map(orderProductDto -> {
+                    OrderProduct orderProduct = new OrderProduct();
+                    orderProduct.setProductId(orderProductDto.productId());
+                    orderProduct.setQuantity(orderProductDto.quantity());
+                    orderProduct.setPrice(orderProductDto.price());
+                    orderProduct.setOrder(existingOrder); // 현재 Order에 대한 참조 설정
+                    return orderProduct;
+                }).collect(Collectors.toList());
+
+        // 총 금액 다시 계산
+        Double totalPrice = updatedOrderProducts.stream()
+                .mapToDouble(orderProduct -> orderProduct.getPrice() * orderProduct.getQuantity())
+                .sum();
+
+        // 주문 업데이트
+        existingOrder.updateOrder(orderRequestDto, totalPrice.intValue());
+
+        // 기존 상품 목록과 새로운 목록을 관리
+        existingOrder.getOrderProducts().clear(); // 기존 리스트를 비우고
+        existingOrder.getOrderProducts().addAll(updatedOrderProducts); // 새 상품 추가
+
+        // 주문 다시 저장
+        Order updatedOrder = orderRepository.save(existingOrder);
+
+        return orderMapper.convertToResponseDto(updatedOrder);
+    }
+
+    @Transactional
+    public void deleteOrder(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+
+        order.delete(getCurrentUserId());
+    }
+
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private String getCurrentUserAuthority() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                .getAuthority();
     }
 }
