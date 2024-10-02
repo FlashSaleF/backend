@@ -10,7 +10,7 @@ import java.util.UUID;
 public record FlashSaleProductRequestDto(
     UUID productId,
     UUID flashSaleId,
-    @Positive(message = "공짜로 팔 수 없습니다.")
+    @Positive(message = "세일 가격은 양수가 필요합니다.")
     Integer salePrice,
     @Positive(message = "최소 1개의 재고가 필요합니다.")
     Integer stock,
