@@ -2,6 +2,7 @@ package com.flash.user.application.service;
 
 import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
+import com.flash.user.application.dto.response.UserResponseDto;
 import com.flash.user.application.mapper.UserMapper;
 import com.flash.user.domain.model.User;
 import com.flash.user.domain.repository.UserRepository;
@@ -36,6 +37,13 @@ public class UserService {
         saved.setCreatedBy(String.valueOf(saved.getId()));
 
         return UserMapper.dtoFrom(saved);
+    }
+
+    public UserResponseDto getUserInfo(String userId) {
+        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
+                // TODO: 커스텀 예외 만들어서 던지기
+        );
+        return UserMapper.feignDtoFrom(user);
     }
 
 }
