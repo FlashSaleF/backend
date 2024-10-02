@@ -2,12 +2,14 @@ package com.flash.auth.application.service;
 
 import com.flash.auth.application.dto.request.JoinRequestDto;
 import com.flash.auth.application.dto.request.LoginRequestDto;
+import com.flash.auth.application.dto.response.AuthResponseDto;
 import com.flash.auth.application.dto.response.JoinResponseDto;
 import com.flash.auth.application.dto.response.LoginResponseDto;
 import com.flash.auth.application.service.util.AuthMapper;
 import com.flash.auth.application.service.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 @Slf4j(topic = "Auth Service")
@@ -40,4 +42,21 @@ public class AuthService {
         return AuthMapper.addToken(loginResponseDto, accessToken, refreshToken);
     }
 
+    /**
+     * Access Token 추출 후 검증하는 메서드
+     *
+     * @param headers
+     * @return
+     */
+    public AuthResponseDto verify(HttpHeaders headers) {
+        String accessToken = jwtUtil.getAccessTokenFromHeader(headers);
+        if (accessToken != null && !jwtUtil.isValidateToken(accessToken) || !jwtUtil.isNotExpiredAccessToken(accessToken)) {
+            // TODO: 커스텀 예외 던지기
+            throw new RuntimeException("Invalid access token");
+        }
+        String userIdFromAccessToken = jwtUtil.getUserIdFromAccessToken(accessToken);
+        String userRoleFromAccessToken = jwtUtil.getUserRoleFromAccessToken(accessToken);
+
+        return AuthMapper.toGateway(userIdFromAccessToken, userRoleFromAccessToken);
+    }
 }

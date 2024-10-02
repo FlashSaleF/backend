@@ -1,5 +1,6 @@
 package com.flash.base.security.config;
 
+import com.flash.base.security.filter.AuthorizationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -7,10 +8,16 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    @Bean
+    public AuthorizationFilter authorizationFilter() {
+        return new AuthorizationFilter();
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -25,6 +32,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/internal/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
                 );
+
+        // 필터 추가
+        http.addFilterBefore(authorizationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         // 기본 설정인 Session 방식은 사용하지 않고 JWT 방식을 사용하기 위한 설정
         // 세션을 stateless상태로 관리!
