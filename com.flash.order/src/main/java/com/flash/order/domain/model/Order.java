@@ -40,6 +40,10 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
+    @OneToOne
+    @JoinColumn(name = "payment_id") // 외래키를 설정
+    private Payment payment;
+
     public void setOrderProducts(List<OrderProduct> orderProducts) {
         this.orderProducts = orderProducts;
     }
