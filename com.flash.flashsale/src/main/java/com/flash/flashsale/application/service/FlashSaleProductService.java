@@ -10,9 +10,11 @@ import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -83,6 +85,28 @@ public class FlashSaleProductService {
         flashSaleProduct.approve();
 
         return "승인되었습니다.";
+    }
+
+    @Transactional
+    public String endSale(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.ONSALE)).orElseThrow(
+            () -> new IllegalArgumentException("세일중인 플래시 세일 상품만 종료 할 수 있습니다.")
+        );
+
+        flashSaleProduct.endSale();
+
+        return "세일이 종료되었습니다.";
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 0 10-21 * * *")
+    public void autoEndSale() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime fiveMinutesAgo = currentDateTime.minusMinutes(5);
+        LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
+        //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
+
+        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::endSale);
     }
 
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
