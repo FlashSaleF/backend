@@ -31,4 +31,9 @@ public class FlashSaleProductController {
     ) {
         return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, status));
     }
+
+    @PatchMapping("/{flashSaleProductId}/approve")
+    public ResponseEntity<String> approve(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.approve(flashSaleProductId));
+    }
 }

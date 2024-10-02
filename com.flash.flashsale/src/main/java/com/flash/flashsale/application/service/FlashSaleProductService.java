@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -61,6 +62,27 @@ public class FlashSaleProductService {
             FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
             return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
         }).toList();
+    }
+
+    @Transactional
+    public String approve(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
+            () -> new IllegalArgumentException("승인 대기중인 플래시 세일 상품만 승인 할 수 있습니다.")
+        );
+
+        flashSaleProduct.approve();
+
+        return "승인되었습니다.";
+    }
+
+    private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
+        return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
+            () -> new IllegalArgumentException("존재하지 않는 플래시 세일 상품 입니다.")
+        );
+    }
+
+    private Optional<FlashSaleProduct> existFlashSaleProductByStatus(UUID flashSaleProductId, List<FlashSaleProductStatus> statusList) {
+        return flashSaleProductRepository.findByIdAndStatusInAndIsDeletedFalse(flashSaleProductId, statusList);
     }
 
     private void validDuplicate(FlashSaleProductRequestDto flashSaleProductRequestDto) {

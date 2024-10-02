@@ -19,4 +19,8 @@ public interface FlashSaleProductRepository {
     List<FlashSaleProduct> findAllByStatusAndIsDeletedFalse(FlashSaleProductStatus status);
 
     List<FlashSaleProduct> findAllByFlashSaleIdAndIsDeletedFalse(UUID flashSaleId);
+
+    Optional<FlashSaleProduct> findByIdAndStatusInAndIsDeletedFalse(UUID flashSaleProductId, List<FlashSaleProductStatus> status);
+
+    Optional<FlashSaleProduct> findByIdAndIsDeletedFalse(UUID flashSaleProductId);
 }
