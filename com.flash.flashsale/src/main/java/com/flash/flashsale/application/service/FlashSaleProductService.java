@@ -86,7 +86,7 @@ public class FlashSaleProductService {
     }
 
     private void validDuplicate(FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if (flashSaleProductRepository.findByFlashSaleIdAndProductId(flashSaleProductRequestDto.flashSaleId(), flashSaleProductRequestDto.productId()).isPresent()) {
+        if (flashSaleProductRepository.findByFlashSaleIdAndProductIdAndIsDeletedFalse(flashSaleProductRequestDto.flashSaleId(), flashSaleProductRequestDto.productId()).isPresent()) {
             throw new IllegalArgumentException("동일한 세일 상품이 존재합니다.");
         }
     }

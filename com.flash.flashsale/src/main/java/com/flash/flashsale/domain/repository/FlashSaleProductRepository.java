@@ -10,7 +10,7 @@ import java.util.UUID;
 public interface FlashSaleProductRepository {
     FlashSaleProduct save(FlashSaleProduct flashSaleProduct);
 
-    Optional<FlashSaleProduct> findByFlashSaleIdAndProductId(UUID flashSaleId, UUID productId);
+    Optional<FlashSaleProduct> findByFlashSaleIdAndProductIdAndIsDeletedFalse(UUID flashSaleId, UUID productId);
 
     List<FlashSaleProduct> findAllByFlashSaleIdAndStatusAndIsDeletedFalse(UUID flashSaleId, FlashSaleProductStatus status);
 
