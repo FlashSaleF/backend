@@ -85,6 +85,17 @@ public class FlashSaleProductService {
         return "승인되었습니다.";
     }
 
+    @Transactional
+    public String endSale(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.ONSALE)).orElseThrow(
+            () -> new IllegalArgumentException("세일중인 플래시 세일 상품만 종료 할 수 있습니다.")
+        );
+
+        flashSaleProduct.endSale();
+
+        return "세일이 종료되었습니다.";
+    }
+
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
         return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
             () -> new IllegalArgumentException("존재하지 않는 플래시 세일 상품 입니다.")
