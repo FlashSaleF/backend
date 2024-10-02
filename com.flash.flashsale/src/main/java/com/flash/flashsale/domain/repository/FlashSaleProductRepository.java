@@ -12,11 +12,11 @@ public interface FlashSaleProductRepository {
 
     Optional<FlashSaleProduct> findByFlashSaleIdAndProductIdAndIsDeletedFalse(UUID flashSaleId, UUID productId);
 
-    List<FlashSaleProduct> findAllByFlashSaleIdAndStatusAndIsDeletedFalse(UUID flashSaleId, FlashSaleProductStatus status);
+    List<FlashSaleProduct> findAllByFlashSaleIdAndStatusInAndIsDeletedFalse(UUID flashSaleId, List<FlashSaleProductStatus> status);
 
     List<FlashSaleProduct> findAllByIsDeletedFalse();
 
-    List<FlashSaleProduct> findAllByStatusAndIsDeletedFalse(FlashSaleProductStatus status);
+    List<FlashSaleProduct> findAllByStatusInAndIsDeletedFalse(List<FlashSaleProductStatus> status);
 
     List<FlashSaleProduct> findAllByFlashSaleIdAndIsDeletedFalse(UUID flashSaleId);
 

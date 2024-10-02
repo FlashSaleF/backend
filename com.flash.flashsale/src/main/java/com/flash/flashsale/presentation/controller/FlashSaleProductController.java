@@ -27,9 +27,9 @@ public class FlashSaleProductController {
     @GetMapping()
     public ResponseEntity<List<FlashSaleProductResponseDto>> getList(
         @RequestParam(value = "flashSaleId", required = false) UUID flashSaleId,
-        @RequestParam(value = "status", required = false) FlashSaleProductStatus status
+        @RequestParam(value = "statusList", required = false) List<FlashSaleProductStatus> statusList
     ) {
-        return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, status));
+        return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, statusList));
     }
 
     @PatchMapping("/{flashSaleProductId}/approve")

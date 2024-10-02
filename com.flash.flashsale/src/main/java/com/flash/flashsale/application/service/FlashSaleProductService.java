@@ -43,17 +43,17 @@ public class FlashSaleProductService {
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
-    public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, FlashSaleProductStatus status) {
+    public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList;
 
-        if (flashSaleId == null && status == null) {
+        if (flashSaleId == null && statusList.isEmpty()) {
             flashSaleProductList = flashSaleProductRepository.findAllByIsDeletedFalse();
         } else if (flashSaleId == null) {
-            flashSaleProductList = flashSaleProductRepository.findAllByStatusAndIsDeletedFalse(status);
-        } else if (status == null) {
+            flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(statusList);
+        } else if (statusList.isEmpty()) {
             flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
         } else {
-            flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndStatusAndIsDeletedFalse(flashSaleId, status);
+            flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndStatusInAndIsDeletedFalse(flashSaleId, statusList);
         }
 
         return flashSaleProductList.stream().map(flashSaleProduct ->
