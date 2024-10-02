@@ -43,6 +43,15 @@ public class FlashSaleProductService {
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
+    public FlashSaleProductResponseDto getOne(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
+
+        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+        FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+    }
+
     public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList;
 
@@ -60,6 +69,7 @@ public class FlashSaleProductService {
         {
             FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
             FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
             return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
         }).toList();
     }
