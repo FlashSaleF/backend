@@ -9,13 +9,13 @@ import java.util.UUID;
 
 public interface VendorRepository {
 
-    Optional<Vendor> findByAddressIsDeletedFalse(String address);
+    Optional<Vendor> findByAddressAndIsDeletedFalse(String address);
 
     Vendor save(Vendor vendor);
 
     Page<Vendor> findAll(Pageable pageable);
 
-    Optional<Vendor> findByIdAndUserIdIsDeletedFalse(UUID vendorId, Long userId);
+    Optional<Vendor> findByIdAndUserIdAndIsDeletedFalse(UUID vendorId, Long userId);
 
     Optional<Vendor> findByIdAndIsDeletedFalse(UUID vendorId);
 }
