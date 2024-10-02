@@ -1,19 +1,17 @@
-package com.flash.auth.infrastructure.client;
+package com.flash.auth.application.service;
 
 import com.flash.auth.application.dto.request.JoinRequestDto;
 import com.flash.auth.application.dto.request.LoginRequestDto;
 import com.flash.auth.application.dto.response.JoinResponseDto;
 import com.flash.auth.application.dto.response.LoginResponseDto;
-import com.flash.auth.application.service.FeignClientService;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "user")
-public interface UserFeignClient extends FeignClientService {
-    @PostMapping("/api/internal/users/save")
+@Component
+public interface FeignClientService {
+
     JoinResponseDto saveUser(@RequestBody JoinRequestDto joinRequestDto);
 
-    @PostMapping("/api/internal/users/verify")
     LoginResponseDto verifyUserCredentials(@RequestBody LoginRequestDto loginRequestDto);
+
 }
