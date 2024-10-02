@@ -55,4 +55,8 @@ public class FlashSaleProduct extends BaseEntity {
     public void endSale() {
         this.status = FlashSaleProductStatus.ENDSALE;
     }
+
+    public void oneSale() {
+        this.status = FlashSaleProductStatus.ONSALE;
+    }
 }
