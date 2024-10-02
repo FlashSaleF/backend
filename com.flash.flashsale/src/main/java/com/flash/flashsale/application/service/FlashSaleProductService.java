@@ -7,10 +7,14 @@ import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
+import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +40,27 @@ public class FlashSaleProductService {
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+    }
+
+    public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, FlashSaleProductStatus status) {
+        List<FlashSaleProduct> flashSaleProductList;
+
+        if (flashSaleId == null && status == null) {
+            flashSaleProductList = flashSaleProductRepository.findAllByIsDeletedFalse();
+        } else if (flashSaleId == null) {
+            flashSaleProductList = flashSaleProductRepository.findAllByStatusAndIsDeletedFalse(status);
+        } else if (status == null) {
+            flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
+        } else {
+            flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndStatusAndIsDeletedFalse(flashSaleId, status);
+        }
+
+        return flashSaleProductList.stream().map(flashSaleProduct ->
+        {
+            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        }).toList();
     }
 
     private void validDuplicate(FlashSaleProductRequestDto flashSaleProductRequestDto) {
