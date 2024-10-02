@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -42,17 +43,17 @@ public class FlashSaleProductService {
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
-    public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, FlashSaleProductStatus status) {
+    public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList;
 
-        if (flashSaleId == null && status == null) {
+        if (flashSaleId == null && statusList == null) {
             flashSaleProductList = flashSaleProductRepository.findAllByIsDeletedFalse();
         } else if (flashSaleId == null) {
-            flashSaleProductList = flashSaleProductRepository.findAllByStatusAndIsDeletedFalse(status);
-        } else if (status == null) {
+            flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(statusList);
+        } else if (statusList == null) {
             flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
         } else {
-            flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndStatusAndIsDeletedFalse(flashSaleId, status);
+            flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndStatusInAndIsDeletedFalse(flashSaleId, statusList);
         }
 
         return flashSaleProductList.stream().map(flashSaleProduct ->
@@ -63,8 +64,29 @@ public class FlashSaleProductService {
         }).toList();
     }
 
+    @Transactional
+    public String approve(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
+            () -> new IllegalArgumentException("승인 대기중인 플래시 세일 상품만 승인 할 수 있습니다.")
+        );
+
+        flashSaleProduct.approve();
+
+        return "승인되었습니다.";
+    }
+
+    private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
+        return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
+            () -> new IllegalArgumentException("존재하지 않는 플래시 세일 상품 입니다.")
+        );
+    }
+
+    private Optional<FlashSaleProduct> existFlashSaleProductByStatus(UUID flashSaleProductId, List<FlashSaleProductStatus> statusList) {
+        return flashSaleProductRepository.findByIdAndStatusInAndIsDeletedFalse(flashSaleProductId, statusList);
+    }
+
     private void validDuplicate(FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if (flashSaleProductRepository.findByFlashSaleIdAndProductId(flashSaleProductRequestDto.flashSaleId(), flashSaleProductRequestDto.productId()).isPresent()) {
+        if (flashSaleProductRepository.findByFlashSaleIdAndProductIdAndIsDeletedFalse(flashSaleProductRequestDto.flashSaleId(), flashSaleProductRequestDto.productId()).isPresent()) {
             throw new IllegalArgumentException("동일한 세일 상품이 존재합니다.");
         }
     }
