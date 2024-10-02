@@ -52,7 +52,7 @@ public class FlashSaleService {
         return flashSaleList.stream().map(flashSaleMapper::convertToResponseDto).toList();
     }
 
-    private FlashSale existFlashSale(UUID flashSaleId) {
+    protected FlashSale existFlashSale(UUID flashSaleId) {
         return flashSaleRepository.findByIdAndIsDeletedFalse(flashSaleId).orElseThrow(
             () -> new IllegalArgumentException("존재하지 않는 플래시 세일 입니다.")
         );
