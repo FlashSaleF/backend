@@ -2,6 +2,7 @@ package com.flash.user.application.service;
 
 import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.request.LoginRequestDto;
+import com.flash.user.application.dto.request.UpdateRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
 import com.flash.user.application.dto.response.LoginResponseDto;
 import com.flash.user.application.dto.response.UserInfoResponseDto;
@@ -42,6 +43,7 @@ public class UserService {
         return UserMapper.dtoFrom(saved);
     }
 
+    @Transactional(readOnly = true)
     public User getUser(String userId) {
         return userRepository.findById(Long.valueOf(userId)).orElseThrow(
                 () -> {
@@ -72,5 +74,14 @@ public class UserService {
 
     public UserInfoResponseDto getUserInfo(String userId) {
         return UserMapper.toUserInfoFrom(getUser(userId));
+    }
+
+    @Transactional
+    public UserInfoResponseDto updateUser(String userId, UpdateRequestDto updateRequestDto) {
+        User user = getUser(userId);
+        user.setAddress(updateRequestDto.address() != null ? updateRequestDto.address() : user.getAddress());
+        user.setPhone(updateRequestDto.phone() != null ? updateRequestDto.phone() : user.getPhone());
+        user.setName(updateRequestDto.name() != null ? updateRequestDto.name() : user.getName());
+        return UserMapper.toUserInfoFrom(user);
     }
 }

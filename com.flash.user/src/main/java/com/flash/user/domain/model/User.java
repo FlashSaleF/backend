@@ -2,10 +2,7 @@ package com.flash.user.domain.model;
 
 import com.flash.base.jpa.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.Where;
 
 @Getter
@@ -32,11 +29,14 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private RoleEnum role;
 
+    @Setter
     private String address;
 
+    @Setter
     @Column(unique = true, nullable = false)
     private String phone;
 
+    @Setter
     @Column(nullable = false)
     private String name;
 
