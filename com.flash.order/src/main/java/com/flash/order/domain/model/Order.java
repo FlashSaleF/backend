@@ -37,10 +37,12 @@ public class Order extends BaseEntity {
     @Column(nullable = false)
     private Long userId;
 
+    private String orderUid;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderProduct> orderProducts = new ArrayList<>();
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_id") // 외래키를 설정
     private Payment payment;
 
@@ -48,11 +50,12 @@ public class Order extends BaseEntity {
         this.orderProducts = orderProducts;
     }
 
-    public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, UUID paymentId) {
+    public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, String orderUid, UUID paymentId) {
         return Order.builder()
                 .address(orderRequestDto.address())
                 .totalPrice(totalPrice)
                 .status(OrderStatus.pending)
+                .orderUid(orderUid)
                 .paymentId(paymentId)
                 .userId(orderRequestDto.userId())
                 .build();

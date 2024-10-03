@@ -27,7 +27,19 @@ public class Payment extends BaseEntity {
     @Column(nullable = false)
     private PaymentStatus status;
 
+    private String paymentUid;
+
     @OneToOne(mappedBy = "payment", fetch = FetchType.LAZY)
     private Order order;
 
+    @Builder
+    public Payment(Long userId, int price){
+        this.userId = userId;
+        this.price = price;
+    }
+
+    public void changePaymentBySuccess(PaymentStatus status, String paymentUid) {
+        this.status = status;
+        this.paymentUid = paymentUid;
+    }
 }
