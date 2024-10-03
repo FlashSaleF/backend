@@ -7,6 +7,7 @@ import com.flash.user.application.service.UserService;
 import com.flash.user.application.service.util.UserAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,4 +41,16 @@ public class UserController {
         userAuthService.verifyIdentity(userId);
         return ResponseEntity.ok(userService.deleteUser(userId));
     }
+
+    @PreAuthorize("hasRole('MASTER')")
+    @GetMapping
+    public ResponseEntity<Page<UserInfoResponseDto>> getUserList(
+            @RequestParam("page") int page,
+            @RequestParam("size") int size,
+            @RequestParam("sort") String sortBy,
+            @RequestParam("isAsc") boolean isAsc) {
+
+        return ResponseEntity.ok(userService.getUserList(page - 1, size, sortBy, isAsc));
+    }
+
 }
