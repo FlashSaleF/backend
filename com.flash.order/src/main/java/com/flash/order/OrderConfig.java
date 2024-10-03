@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class AppConfig {
+public class OrderConfig {
     String apiKey = "API_KEY";
     String apiSecret = "API_SECRET";
 

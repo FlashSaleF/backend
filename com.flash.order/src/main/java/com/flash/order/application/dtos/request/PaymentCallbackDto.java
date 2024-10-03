@@ -1,6 +1,6 @@
 package com.flash.order.application.dtos.request;
 
-public record PaymentRequestDto(
+public record PaymentCallbackDto(
         String paymentUid,
         String orderUid
 ) {
