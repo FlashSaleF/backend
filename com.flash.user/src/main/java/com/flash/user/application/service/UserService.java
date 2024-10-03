@@ -4,6 +4,7 @@ import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.request.LoginRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
 import com.flash.user.application.dto.response.LoginResponseDto;
+import com.flash.user.application.dto.response.UserInfoResponseDto;
 import com.flash.user.application.dto.response.UserResponseDto;
 import com.flash.user.application.service.mapper.UserMapper;
 import com.flash.user.domain.model.User;
@@ -69,4 +70,7 @@ public class UserService {
         return UserMapper.toAuthFrom(user);
     }
 
+    public UserInfoResponseDto getUserInfo(String userId) {
+        return UserMapper.toUserInfoFrom(getUser(userId));
+    }
 }
