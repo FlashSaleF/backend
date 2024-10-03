@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +43,34 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         return ProductMapper.convertToResponseDto(savedProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductResponseDto getProduct(UUID productId) {
+
+        Product product = getProductBasedOnAuthority(productId);
+
+        return ProductMapper.convertToResponseDto(product);
+    }
+
+    private Product getProductBasedOnAuthority(UUID productId) {
+        return switch (getCurrentUserAuthority()) {
+            case "CUSTOMER", "VENDOR" ->
+                    getProductByIdAndIsDeletedFalse(productId);
+            case "MANAGER", "MASTER" -> getProductById(productId);
+            default ->
+                    throw new ResponseStatusException(BAD_REQUEST, "유효하지 않은 권한 요청입니다.");
+        };
+    }
+
+    private Product getProductByIdAndIsDeletedFalse(UUID productId) {
+        return productRepository.findByIdAndIsDeletedFalse(productId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 상품이 없습니다."));
+    }
+
+    private Product getProductById(UUID productId) {
+        return productRepository.findById(productId).orElseThrow(() ->
+                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 상품이 없습니다."));
     }
 
     private ProductStatus updateStatusBasedOnStock(Integer stock) {
