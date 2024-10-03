@@ -91,7 +91,7 @@ public class VendorService {
         return switch (authority) {
             case "VENDOR" ->
                     getVendorByIdAndUserId(vendorId, Long.valueOf(getCurrentUserId()));
-            case "MASTER" -> getVendorById(vendorId);
+            case "MANAGER", "MASTER" -> getVendorById(vendorId);
             default ->
                     throw new ResponseStatusException(BAD_REQUEST, "유효하지 않은 권한 요청입니다.");
         };
