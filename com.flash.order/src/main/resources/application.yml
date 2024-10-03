@@ -18,3 +18,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+#결제 api
+iamport:
+  apiKey: ${IAMPORT_API_KEY}
+  apiSecret: ${IAMPORT_API_SECRET}

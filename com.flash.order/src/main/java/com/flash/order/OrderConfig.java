@@ -1,12 +1,16 @@
 package com.flash.order;
 
 import com.siot.IamportRestClient.IamportClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OrderConfig {
-    String apiKey = "API_KEY";
+    @Value("${iamport.apiKey}")
+    String apiKey;
+
+    @Value("${iamport.apiSecret}")
     String apiSecret = "API_SECRET";
 
     @Bean
