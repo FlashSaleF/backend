@@ -8,6 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -38,9 +39,9 @@ public class BaseEntity implements Serializable {
     private boolean isDeleted = false;
 
     // TODO: deletedBy는 Security 구현 후 수정
-    public void delete(String userId) {
+    public void delete() {
         this.deletedAt = LocalDateTime.now();
-        this.deletedBy = userId;
+        this.deletedBy = SecurityContextHolder.getContext().getAuthentication().getName();
         this.isDeleted = true;
     }
 
