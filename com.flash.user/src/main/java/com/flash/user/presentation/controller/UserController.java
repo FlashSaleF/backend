@@ -33,4 +33,13 @@ public class UserController {
 
         return ResponseEntity.ok(userService.updateUser(userId, updateRequestDto));
     }
+
+    @PreAuthorize("hasRole('MASTER')")
+    @PatchMapping("/{userId}")
+    public ResponseEntity<UserInfoResponseDto> updateUserByMaster(@PathVariable String userId, @RequestBody UpdateRequestDto updateRequestDto) {
+
+        return ResponseEntity.ok(userService.updateUser(userId, updateRequestDto));
+    }
+
+
 }
