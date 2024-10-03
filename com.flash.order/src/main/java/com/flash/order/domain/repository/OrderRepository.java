@@ -24,5 +24,5 @@ public interface OrderRepository {
     void delete(Order order);
 
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.payment WHERE o.id = :orderId")
-    Optional<Order> findOrderAndPayment(UUID orderId);
+    Optional<Order> findOrderAndPayment(String orderUid);
 }
