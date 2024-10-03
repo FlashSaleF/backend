@@ -2,12 +2,15 @@ package com.flash.vendor.application.service;
 
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
+import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,9 +51,17 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductResponseDto getProduct(UUID productId) {
 
-        Product product = getProductBasedOnAuthority(productId);
+        Product product = getProductByIdAndIsDeletedFalse(productId);
 
         return ProductMapper.convertToResponseDto(product);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductPageResponseDto getProducts(Pageable pageable) {
+
+        Page<Product> products = productRepository.findAllByIsDeletedFalse(pageable);
+
+        return new ProductPageResponseDto(products.map(ProductMapper::convertToResponseDto));
     }
 
     private Product getProductBasedOnAuthority(UUID productId) {
