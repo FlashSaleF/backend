@@ -1,6 +1,6 @@
 package com.flash.order.application.service;
 
-import com.flash.order.application.dtos.request.PaymentRequestDto;
+import com.flash.order.application.dtos.request.PaymentCallbackDto;
 import com.flash.order.domain.model.Order;
 //import com.flash.order.domain.model.Payment;
 import com.flash.order.domain.model.PaymentStatus;
@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -28,7 +27,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final IamportClient iamportClient;
 
-    public IamportResponse<Payment> processPayment(PaymentRequestDto request) {
+    public IamportResponse<Payment> processPayment(PaymentCallbackDto request) {
         try {
             // 주문 내역 조회
             Order order = orderRepository.findOrderAndPayment(request.orderUid())
@@ -54,7 +53,7 @@ public class PaymentService {
                 throw new RuntimeException("결제 금액 위변조가 의심됩니다.");
             }
 
-            // 결제 성공 처리: 결제 상태를 업데이트
+            // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
             order.getPayment().changePaymentBySuccess(PaymentStatus.completed, iamportResponse.getResponse().getImpUid());
             orderRepository.save(order); // 주문 상태 저장
 
