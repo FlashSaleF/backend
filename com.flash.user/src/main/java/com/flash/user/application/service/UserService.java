@@ -7,7 +7,7 @@ import com.flash.user.application.dto.response.JoinResponseDto;
 import com.flash.user.application.dto.response.LoginResponseDto;
 import com.flash.user.application.dto.response.UserInfoResponseDto;
 import com.flash.user.application.dto.response.UserResponseDto;
-import com.flash.user.application.service.mapper.UserMapper;
+import com.flash.user.application.service.util.UserMapper;
 import com.flash.user.domain.model.User;
 import com.flash.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -54,9 +54,10 @@ public class UserService {
     }
 
     public UserResponseDto getUserInfoForVendor(String userId) {
-        return UserMapper.toVendorFrom(getUser(userId));
+        return UserMapper.getNameFrom(getUser(userId));
     }
 
+    @Transactional(readOnly = true)
     public LoginResponseDto verify(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.email()).orElseThrow(() -> {
             // TODO: 커스텀 예외 만들어서 던지기
@@ -84,4 +85,13 @@ public class UserService {
         user.setName(updateRequestDto.name() != null ? updateRequestDto.name() : user.getName());
         return UserMapper.toUserInfoFrom(user);
     }
+
+    @Transactional
+    public UserResponseDto deleteUser(String userId) {
+        User user = getUser(userId);
+        user.delete();
+
+        return UserMapper.getNameFrom(user);
+    }
+
 }

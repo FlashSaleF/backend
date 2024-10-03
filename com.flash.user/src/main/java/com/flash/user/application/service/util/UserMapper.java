@@ -1,4 +1,4 @@
-package com.flash.user.application.service.mapper;
+package com.flash.user.application.service.util;
 
 import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.response.JoinResponseDto;
@@ -32,7 +32,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static UserResponseDto toVendorFrom(User user) {
+    public static UserResponseDto getNameFrom(User user) {
         return UserResponseDto.builder()
                 .name(user.getName())
                 .build();
