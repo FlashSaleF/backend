@@ -41,14 +41,17 @@ public class UserService {
         return UserMapper.dtoFrom(saved);
     }
 
-    public UserResponseDto getUserInfo(String userId) {
-        User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(() -> {
-            // TODO: 커스텀 예외 만들어서 던지기
-            log.error("user not found by id");
-            throw new IllegalArgumentException("user not found by id");
+    public User getUser(String userId) {
+        return userRepository.findById(Long.valueOf(userId)).orElseThrow(
+                () -> {
+                    log.error("getUser method: user not found by id");
+                    throw new IllegalArgumentException("user not found by id");
+                }
+        );
+    }
 
-        });
-        return UserMapper.toVendorFrom(user);
+    public UserResponseDto getUserInfoForVendor(String userId) {
+        return UserMapper.toVendorFrom(getUser(userId));
     }
 
     public LoginResponseDto verify(LoginRequestDto loginRequestDto) {
