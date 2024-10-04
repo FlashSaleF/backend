@@ -20,7 +20,7 @@ public class RouteConfig {
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://USER")
                 )
-                .route("vendor", r -> r.path("/api/vendors", "/api/vendors/**")
+                .route("vendor", r -> r.path("/api/vendors", "/api/vendors/**", "/api/products", "/api/products/**")
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://VENDOR")
                 )
