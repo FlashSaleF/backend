@@ -2,6 +2,7 @@ package com.flash.vendor.application.service;
 
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
+import com.flash.vendor.application.dto.response.ProductListResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.domain.model.Product;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -61,6 +63,15 @@ public class ProductService {
         Page<Product> products = productRepository.findAllByIsDeletedFalse(pageable);
 
         return new ProductPageResponseDto(products.map(ProductMapper::convertToResponseDto));
+    }
+
+    @Transactional(readOnly = true)
+    public ProductListResponseDto getProductsByIds(List<UUID> productIds) {
+
+        List<Product> productList = productRepository.findAllById(productIds);
+
+        return new ProductListResponseDto(
+                productList.stream().map(ProductMapper::convertToResponseDto).toList());
     }
 
     @Transactional(readOnly = true)
