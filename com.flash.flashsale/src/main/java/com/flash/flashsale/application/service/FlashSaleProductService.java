@@ -96,6 +96,18 @@ public class FlashSaleProductService {
         }).toList();
     }
 
+    public List<FlashSaleProductResponseDto> getListByTime(LocalDateTime startTime, LocalDateTime endTime) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStartTimeBetweenAndIsDeletedFalse(startTime, endTime);
+
+        return flashSaleProductList.stream().map(flashSaleProduct ->
+        {
+            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        }).toList();
+    }
+
     @Transactional
     public String approve(UUID flashSaleProductId) {
         FlashSaleProduct flashSaleProduct = existFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
