@@ -6,9 +6,11 @@ import com.flash.flashsale.application.service.FlashSaleProductService;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,6 +37,14 @@ public class FlashSaleProductController {
         @RequestParam(value = "statusList", required = false) List<FlashSaleProductStatus> statusList
     ) {
         return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, statusList));
+    }
+
+    @GetMapping("/time")
+    public ResponseEntity<List<FlashSaleProductResponseDto>> getListByTime(
+        @DateTimeFormat(pattern = "yyyy-MM-dd HH") @RequestParam(value = "startTime") LocalDateTime startTime,
+        @DateTimeFormat(pattern = "yyyy-MM-dd HH") @RequestParam(value = "endTime") LocalDateTime endTime
+    ) {
+        return ResponseEntity.ok(flashSaleProductService.getListByTime(startTime, endTime));
     }
 
     @PatchMapping("/{flashSaleProductId}")
