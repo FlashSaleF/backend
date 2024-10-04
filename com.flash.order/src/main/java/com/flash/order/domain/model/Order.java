@@ -32,9 +32,6 @@ public class Order extends BaseEntity {
     private OrderStatus status;
 
     @Column(nullable = false)
-    private UUID paymentId;
-
-    @Column(nullable = false)
     private Long userId;
 
     private String orderUid;
@@ -50,13 +47,12 @@ public class Order extends BaseEntity {
         this.orderProducts = orderProducts;
     }
 
-    public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, String orderUid, UUID paymentId) {
+    public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, String orderUid) {
         return Order.builder()
                 .address(orderRequestDto.address())
                 .totalPrice(totalPrice)
                 .status(OrderStatus.pending)
                 .orderUid(orderUid)
-                .paymentId(paymentId)
                 .userId(orderRequestDto.userId())
                 .build();
     }
@@ -64,5 +60,9 @@ public class Order extends BaseEntity {
     public void updateOrder(OrderRequestDto orderRequestDto, int totalPrice) {
         this.address = orderRequestDto.address();
         this.totalPrice = totalPrice;
+    }
+
+    public void addPayment(Payment payment) {
+        this.payment = payment; // Order에 Payment 설정
     }
 }
