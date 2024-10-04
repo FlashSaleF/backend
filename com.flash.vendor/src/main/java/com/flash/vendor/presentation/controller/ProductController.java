@@ -45,4 +45,19 @@ public class ProductController {
 
         return ResponseEntity.ok(productService.getProducts(pageable));
     }
+
+    @GetMapping("/search")
+    private ResponseEntity<ProductPageResponseDto> searchProducts(
+            @RequestParam(name = "name") String name,
+            @RequestParam(name = "lprice", required = false) Integer lprice,
+            @RequestParam(name = "hprice", required = false) Integer hprice,
+            @RequestParam(name = "status", required = false, defaultValue = "AVAILABLE") String status,
+            @PageableDefault(
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+
+        return ResponseEntity.ok(productService.searchProducts(name, lprice, hprice, status, pageable));
+    }
 }
