@@ -2,16 +2,21 @@ package com.flash.vendor.application.service;
 
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
+import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -40,6 +45,34 @@ public class ProductService {
         Product savedProduct = productRepository.save(product);
 
         return ProductMapper.convertToResponseDto(savedProduct);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductResponseDto getProduct(UUID productId) {
+
+        Product product = productRepository.findByIdAndIsDeletedFalse(productId);
+
+        return ProductMapper.convertToResponseDto(product);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductPageResponseDto getProducts(Pageable pageable) {
+
+        Page<Product> products = productRepository.findAllByIsDeletedFalse(pageable);
+
+        return new ProductPageResponseDto(products.map(ProductMapper::convertToResponseDto));
+    }
+
+    @Transactional(readOnly = true)
+    public ProductPageResponseDto searchProducts(
+            String name, Integer lprice, Integer hprice, String status, Pageable pageable
+    ) {
+
+        Page<Product> products =
+                productRepository.searchProductsByFilters(
+                        name, lprice, hprice, ProductStatus.fromString(status), pageable);
+
+        return new ProductPageResponseDto(products.map(ProductMapper::convertToResponseDto));
     }
 
     private ProductStatus updateStatusBasedOnStock(Integer stock) {
