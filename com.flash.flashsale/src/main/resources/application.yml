@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: flash-sale
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/

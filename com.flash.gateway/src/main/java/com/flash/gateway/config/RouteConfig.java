@@ -13,12 +13,24 @@ public class RouteConfig {
     public RouteLocator customRoutes(RouteLocatorBuilder builder, TokenValidationFilter authFilter) {
 
         return builder.routes()
-                .route("auth", r -> r.path("/api/auth/**")
+                .route("auth", r -> r.path("/api/auth", "/api/auth/**")
                         .uri("lb://AUTH")
                 )
-                .route("user", r -> r.path("/api/users/**")
+                .route("user", r -> r.path("/api/users", "/api/users/**")
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://USER")
+                )
+                .route("vendor", r -> r.path("/api/vendors", "/api/vendors/**")
+                        .filters(f -> f.filter(authFilter))
+                        .uri("lb://VENDOR")
+                )
+                .route("order", r -> r.path("/api/orders", "/api/orders/**")
+                        .filters(f -> f.filter(authFilter))
+                        .uri("lb://ORDER")
+                )
+                .route("flash-sale", r -> r.path("/api/flash-sales", "/api/flash-sales/**", "/api/flash-sale-products", "/api/flash-sale-products/**")
+                        .filters(f -> f.filter(authFilter))
+                        .uri("lb://FLASH-SALE")
                 )
                 .build();
     }
