@@ -97,7 +97,7 @@ public class FlashSaleProductService {
     }
 
     public List<FlashSaleProductResponseDto> getListByTime(LocalDateTime startTime, LocalDateTime endTime) {
-        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStartTimeBetweenAndIsDeletedFalse(startTime, endTime);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStartTimeLessThanEqualAndEndTimeGreaterThanEqualAndIsDeletedFalse(endTime, startTime);
 
         return flashSaleProductList.stream().map(flashSaleProduct ->
         {
