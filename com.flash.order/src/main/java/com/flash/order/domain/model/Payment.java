@@ -25,7 +25,7 @@ public class Payment extends BaseEntity {
     private int price;
 
     @Column(nullable = false)
-    private PaymentStatus status = PaymentStatus.pending;
+    private PaymentStatus status;
 
     private String paymentUid;
 
@@ -36,6 +36,7 @@ public class Payment extends BaseEntity {
     public Payment(Long userId, int price){
         this.userId = userId;
         this.price = price;
+        this.status = PaymentStatus.pending;
     }
 
     public void changePaymentBySuccess(PaymentStatus status, String paymentUid) {
