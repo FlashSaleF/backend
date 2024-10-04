@@ -64,8 +64,7 @@ public class OrderService {
         Order order = Order.createOrder(
                 orderRequestDto,
                 totalPrice.intValue(),
-                UUID.randomUUID().toString(), // 주문 고유 UID 생성
-                UUID.randomUUID() // 결제 ID 생성
+                UUID.randomUUID().toString() // 주문 고유 UID 생성
         );
 
         // 주문에 orderProducts 설정
@@ -74,7 +73,8 @@ public class OrderService {
         // 주문에 orderProducts 설정
         order.setOrderProducts(orderProducts);
 
-        //TODO: 결제 로직
+        //order에 payment 매핑
+        order.setPayment(payment);
 
         // 주문 저장
         Order savedOrder = orderRepository.save(order);
