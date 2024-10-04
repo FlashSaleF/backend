@@ -5,6 +5,7 @@ import com.flash.vendor.domain.model.ProductStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ProductRepository {
@@ -15,4 +16,6 @@ public interface ProductRepository {
     Page<Product> findAllByIsDeletedFalse(Pageable pageable);
 
     Page<Product> searchProductsByFilters(String name, Integer lprice, Integer hprice, ProductStatus status, Pageable pageable);
+
+    List<Product> findAllById(List<UUID> productIds);
 }
