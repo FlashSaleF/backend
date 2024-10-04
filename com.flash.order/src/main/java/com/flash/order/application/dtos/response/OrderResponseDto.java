@@ -12,6 +12,6 @@ public record OrderResponseDto(
         String address,  // 배송지 주소
         String orderStatus,  // 주문 상태
         int totalPrice,  // 총 가격
-        UUID paymentId  // 결제 ID
+        String orderUid  // 주문 고유번호
 ) {
 }

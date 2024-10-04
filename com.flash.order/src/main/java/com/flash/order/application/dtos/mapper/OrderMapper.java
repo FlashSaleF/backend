@@ -23,7 +23,7 @@ public class OrderMapper {
                 order.getAddress(),
                 order.getStatus().name(),
                 order.getTotalPrice(),
-                order.getPaymentId()
+                order.getOrderUid()
         );
     }
 }
