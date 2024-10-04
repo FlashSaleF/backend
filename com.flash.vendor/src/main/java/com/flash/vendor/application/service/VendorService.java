@@ -82,7 +82,7 @@ public class VendorService {
 
         Vendor vendor = getVendorBasedOnAuthority(vendorId, getCurrentUserAuthority());
 
-        vendor.delete(getCurrentUserId());
+        vendor.delete();
 
         return new VendorDeleteResponseDto("업체 삭제 성공");
     }
