@@ -37,6 +37,14 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, statusList));
     }
 
+    @PatchMapping("/{flashSaleProductId}")
+    public ResponseEntity<FlashSaleProductResponseDto> update(
+        @PathVariable("flashSaleProductId") UUID flashSaleProductId,
+        @Valid @RequestBody FlashSaleProductRequestDto flashSaleProductRequestDto
+    ) {
+        return ResponseEntity.ok(flashSaleProductService.update(flashSaleProductId, flashSaleProductRequestDto));
+    }
+
     @PatchMapping("/{flashSaleProductId}/approve")
     public ResponseEntity<String> approve(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
         return ResponseEntity.ok(flashSaleProductService.approve(flashSaleProductId));

@@ -45,6 +45,26 @@ public class FlashSaleProductService {
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
+    @Transactional
+    public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductRequestDto flashSaleProductRequestDto) {
+        validDuplicate(flashSaleProductRequestDto);
+        validAvailableDateTime(flashSaleProductRequestDto);
+
+        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
+
+        validAvailableSailTime(flashSale, flashSaleProductRequestDto);
+
+        FlashSaleProduct flashSaleProduct = existFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
+            () -> new IllegalArgumentException("승인 중이거나 승인 대기중인 플래시 세일 상품만 수정 할 수 있습니다.")
+        );
+
+        flashSaleProduct.update(flashSale, flashSaleProductRequestDto);
+
+        FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+    }
+
     public FlashSaleProductResponseDto getOne(UUID flashSaleProductId) {
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
 
