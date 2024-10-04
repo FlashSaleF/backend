@@ -15,4 +15,6 @@ public interface FlashSaleRepository {
     Optional<FlashSale> findByIdAndIsDeletedFalse(UUID id);
 
     List<FlashSale> findAllByEndDateGreaterThanEqualAndIsDeletedFalse(LocalDate endDate);
+
+    List<FlashSale> findAllByIsDeletedFalse();
 }

@@ -47,4 +47,26 @@ public class FlashSaleProduct extends BaseEntity {
             .endTime(flashSaleProductRequestDto.endTime())
             .build();
     }
+
+    public void approve() {
+        this.status = FlashSaleProductStatus.APPROVE;
+    }
+
+    public void endSale() {
+        this.status = FlashSaleProductStatus.ENDSALE;
+    }
+
+    public void oneSale() {
+        this.status = FlashSaleProductStatus.ONSALE;
+    }
+
+    public void update(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
+        this.flashSale = flashSale;
+        this.productId = flashSaleProductRequestDto.productId();
+        this.salePrice = flashSaleProductRequestDto.salePrice();
+        this.stock = flashSaleProductRequestDto.stock();
+        this.status = FlashSaleProductStatus.PENDING;
+        this.startTime = flashSaleProductRequestDto.startTime();
+        this.endTime = flashSaleProductRequestDto.endTime();
+    }
 }

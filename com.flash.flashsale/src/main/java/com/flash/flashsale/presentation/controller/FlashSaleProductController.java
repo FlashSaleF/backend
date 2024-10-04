@@ -6,9 +6,11 @@ import com.flash.flashsale.application.service.FlashSaleProductService;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,11 +26,42 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.create(flashSaleProductRequestDto));
     }
 
+    @GetMapping("/{flashSaleProductId}")
+    public ResponseEntity<FlashSaleProductResponseDto> getOne(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.getOne(flashSaleProductId));
+    }
+
     @GetMapping()
     public ResponseEntity<List<FlashSaleProductResponseDto>> getList(
         @RequestParam(value = "flashSaleId", required = false) UUID flashSaleId,
-        @RequestParam(value = "status", required = false) FlashSaleProductStatus status
+        @RequestParam(value = "statusList", required = false) List<FlashSaleProductStatus> statusList
     ) {
-        return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, status));
+        return ResponseEntity.ok(flashSaleProductService.getList(flashSaleId, statusList));
+    }
+
+    @GetMapping("/time")
+    public ResponseEntity<List<FlashSaleProductResponseDto>> getListByTime(
+        @DateTimeFormat(pattern = "yyyy-MM-dd HH") @RequestParam(value = "startTime") LocalDateTime startTime,
+        @DateTimeFormat(pattern = "yyyy-MM-dd HH") @RequestParam(value = "endTime") LocalDateTime endTime
+    ) {
+        return ResponseEntity.ok(flashSaleProductService.getListByTime(startTime, endTime));
+    }
+
+    @PatchMapping("/{flashSaleProductId}")
+    public ResponseEntity<FlashSaleProductResponseDto> update(
+        @PathVariable("flashSaleProductId") UUID flashSaleProductId,
+        @Valid @RequestBody FlashSaleProductRequestDto flashSaleProductRequestDto
+    ) {
+        return ResponseEntity.ok(flashSaleProductService.update(flashSaleProductId, flashSaleProductRequestDto));
+    }
+
+    @PatchMapping("/{flashSaleProductId}/approve")
+    public ResponseEntity<String> approve(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.approve(flashSaleProductId));
+    }
+
+    @PatchMapping("/{flashSaleProductId}/end")
+    public ResponseEntity<String> endSale(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.endSale(flashSaleProductId));
     }
 }

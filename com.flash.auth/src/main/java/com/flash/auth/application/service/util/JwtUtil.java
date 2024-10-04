@@ -1,9 +1,15 @@
 package com.flash.auth.application.service.util;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.SecurityException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -66,6 +72,63 @@ public class JwtUtil {
                 .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_TIME))
                 .signWith(refreshSecretKey)
                 .compact();
+    }
+
+    /**
+     * Header에서 Access Token 추출
+     */
+    public String getAccessTokenFromHeader(HttpHeaders headers) {
+        String bearerToken = headers.getFirst(AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+            return bearerToken.substring(7).trim(); // 순순한 토큰을 추출하기 위해 substring(prefix 자름)
+        }
+        return null;
+    }
+
+    /**
+     * 토큰 검증하는 메서드
+     *
+     * @param token
+     * @return
+     */
+    public boolean isValidateToken(String token) {
+        try {
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+            return true;
+        } catch (UnsupportedJwtException e) {
+            log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
+        } catch (MalformedJwtException | SecurityException e) {
+            log.error("Invalid JWT token, 유효하지 않은 JWT token 입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims is empty, 잘못된 JWT 토큰 입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
+        }
+        return false;
+    }
+
+    /**
+     * Access Token 만료되었는지 검증하는 메서드
+     *
+     * @param token
+     * @return
+     */
+    public Boolean isNotExpiredAccessToken(String token) {
+        try {
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.error("Expired JWT token, 만료된 Access 토큰입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
+        }
+        return false;
+    }
+
+    // Access 토큰에서 사용자 id 가져오기
+    public String getUserIdFromAccessToken(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get(AUTHENTICATION_KEY, String.class);
+    }
+
+    // Access 토큰에서 사용자 role 가져오기
+    public String getUserRoleFromAccessToken(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get(AUTHORIZATION_KEY, String.class);
     }
 
 }
