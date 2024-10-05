@@ -5,6 +5,7 @@ import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.domain.model.Order;
 import com.flash.order.domain.model.OrderProduct;
 import com.flash.order.domain.model.Payment;
+import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
@@ -56,6 +57,7 @@ public class OrderService {
         Payment payment = Payment.builder()
                 .userId(orderRequestDto.userId())
                 .price(totalPrice.intValue())
+                .status(PaymentStatus.pending)
                 .build();
 
         paymentRepository.save(payment);
@@ -143,7 +145,7 @@ public class OrderService {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
 
-        order.delete(getCurrentUserId());
+        order.delete();
     }
 
     private String getCurrentUserId() {
