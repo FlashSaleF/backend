@@ -4,6 +4,7 @@ import com.flash.vendor.application.dto.request.ProductRequestDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.application.service.ProductService;
+import com.flash.vendor.domain.model.ProductStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -51,13 +52,13 @@ public class ProductController {
             @RequestParam(name = "name") String name,
             @RequestParam(name = "lprice", required = false) Integer lprice,
             @RequestParam(name = "hprice", required = false) Integer hprice,
-            @RequestParam(name = "status", required = false, defaultValue = "AVAILABLE") String status,
+            @RequestParam(name = "status", required = false, defaultValue = "AVAILABLE") ProductStatus status,
             @PageableDefault(
                     size = 10,
                     sort = "createdAt",
                     direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        return ResponseEntity.ok(productService.searchProducts(name, lprice, hprice, status, pageable));
+        return ResponseEntity.ok(productService.searchProducts(name, lprice, hprice, status.name(), pageable));
     }
 }

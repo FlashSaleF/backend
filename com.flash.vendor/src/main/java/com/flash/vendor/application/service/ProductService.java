@@ -2,6 +2,7 @@ package com.flash.vendor.application.service;
 
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
+import com.flash.vendor.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.vendor.application.dto.response.ProductListResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
@@ -11,14 +12,18 @@ import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -28,6 +33,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final VendorService vendorService;
+    private final FeignClientService feignClientService;
 
     @Transactional
     public ProductResponseDto createProduct(ProductRequestDto request) {
@@ -46,7 +52,7 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        return ProductMapper.convertToResponseDto(savedProduct);
+        return ProductMapper.toResponseDto(savedProduct);
     }
 
     @Transactional(readOnly = true)
@@ -54,7 +60,13 @@ public class ProductService {
 
         Product product = productRepository.findByIdAndIsDeletedFalse(productId);
 
-        return ProductMapper.convertToResponseDto(product);
+        if (ProductStatus.ON_SALE.equals(product.getStatus())) {
+            FlashSaleProductResponseDto flashSaleProductInfo =
+                    feignClientService.getFlashSaleProductInfo(productId);
+            return ProductMapper.toResponseDtoWithFlashSale(product, flashSaleProductInfo);
+        }
+
+        return ProductMapper.toResponseDto(product);
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +74,10 @@ public class ProductService {
 
         Page<Product> products = productRepository.findAllByIsDeletedFalse(pageable);
 
-        return new ProductPageResponseDto(products.map(ProductMapper::convertToResponseDto));
+        Map<UUID, FlashSaleProductResponseDto> saleProductListMap =
+                getSaleProductListMap(products);
+
+        return getProductPageResponseDto(products, saleProductListMap);
     }
 
     @Transactional(readOnly = true)
@@ -70,8 +85,10 @@ public class ProductService {
 
         List<Product> productList = productRepository.findAllById(productIds);
 
-        return new ProductListResponseDto(
-                productList.stream().map(ProductMapper::convertToResponseDto).toList());
+        Map<UUID, FlashSaleProductResponseDto> saleProductListMap =
+                getSaleProductListMap(productList);
+
+        return getProductListResponseDto(productList, saleProductListMap);
     }
 
     @Transactional(readOnly = true)
@@ -83,7 +100,45 @@ public class ProductService {
                 productRepository.searchProductsByFilters(
                         name, lprice, hprice, ProductStatus.fromString(status), pageable);
 
-        return new ProductPageResponseDto(products.map(ProductMapper::convertToResponseDto));
+        Map<UUID, FlashSaleProductResponseDto> saleProductListMap =
+                getSaleProductListMap(products);
+
+        return getProductPageResponseDto(products, saleProductListMap);
+    }
+
+    private Map<UUID, FlashSaleProductResponseDto> getSaleProductListMap(
+            Iterable<Product> products
+    ) {
+        List<UUID> saleProductIds =
+                StreamSupport.stream(products.spliterator(), false)
+                        .filter(product -> ProductStatus.ON_SALE.equals(product.getStatus()))
+                        .map(Product::getId)
+                        .toList();
+
+        return saleProductIds.isEmpty()
+                ? Collections.emptyMap()
+                : feignClientService.getFlashSaleProductListMap(saleProductIds);
+    }
+
+    private ProductPageResponseDto getProductPageResponseDto(
+            Page<Product> products,
+            Map<UUID, FlashSaleProductResponseDto> saleProductListMap
+    ) {
+        List<ProductResponseDto> productResponseDtos =
+                ProductMapper.toResponseDtoList(products, saleProductListMap);
+
+        return new ProductPageResponseDto(new PageImpl<>(
+                productResponseDtos, products.getPageable(), products.getTotalElements()));
+    }
+
+    private ProductListResponseDto getProductListResponseDto(
+            List<Product> products,
+            Map<UUID, FlashSaleProductResponseDto> saleProductListMap
+    ) {
+        List<ProductResponseDto> productResponseDtos =
+                ProductMapper.toResponseDtoList(products, saleProductListMap);
+
+        return new ProductListResponseDto(productResponseDtos);
     }
 
     private ProductStatus updateStatusBasedOnStock(Integer stock) {
