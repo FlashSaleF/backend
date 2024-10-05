@@ -30,7 +30,7 @@ public class PaymentService {
     public IamportResponse<Payment> processPayment(PaymentCallbackDto request) {
         try {
             // 주문 내역 조회
-            Order order = orderRepository.findOrderAndPayment(request.orderUid())
+            Order order = orderRepository.findOrderByOrderUid(request.orderUid())
                     .orElseThrow(() -> new IllegalArgumentException("해당 주문 내역을 찾을 수 없습니다."));
 
             // 결제 단건 조회 (아임포트)
