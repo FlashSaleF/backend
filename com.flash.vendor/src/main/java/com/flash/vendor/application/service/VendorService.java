@@ -8,7 +8,6 @@ import com.flash.vendor.application.dto.response.VendorPageResponseDto;
 import com.flash.vendor.application.dto.response.VendorResponseDto;
 import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.repository.VendorRepository;
-import com.flash.vendor.infrastructure.client.UserFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +26,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RequiredArgsConstructor
 public class VendorService {
 
-    private final UserFeignClient userFeignClient;
+    private final FeignClientService feignClientService;
     private final VendorRepository vendorRepository;
 
     @Transactional
@@ -35,8 +34,7 @@ public class VendorService {
 
         validateAddressUniqueness(request.address());
 
-        //TODO FeignClient Exception Handling
-        UserResponseDto userInfo = userFeignClient.getUserInfo(getCurrentUserId());
+        UserResponseDto userInfo = feignClientService.getUserInfo(getCurrentUserId());
 
         Vendor vendor = Vendor.createVendor(
                 Long.valueOf(getCurrentUserId()),
@@ -89,9 +87,9 @@ public class VendorService {
 
     Vendor getVendorBasedOnAuthority(UUID vendorId, String authority) {
         return switch (authority) {
-            case "VENDOR" ->
+            case "ROLE_VENDOR" ->
                     getVendorByIdAndUserId(vendorId, Long.valueOf(getCurrentUserId()));
-            case "MANAGER", "MASTER" -> getVendorById(vendorId);
+            case "ROLE_MANAGER", "ROLE_MASTER" -> getVendorById(vendorId);
             default ->
                     throw new ResponseStatusException(BAD_REQUEST, "유효하지 않은 권한 요청입니다.");
         };
