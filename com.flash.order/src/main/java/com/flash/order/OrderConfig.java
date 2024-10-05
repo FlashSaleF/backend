@@ -11,7 +11,7 @@ public class OrderConfig {
     String apiKey;
 
     @Value("${iamport.apiSecret}")
-    String apiSecret = "API_SECRET";
+    String apiSecret;
 
     @Bean
     public IamportClient iamportClient() {
