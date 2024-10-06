@@ -1,5 +1,8 @@
 package com.flash.vendor.application.dto.response;
 
+import com.flash.vendor.domain.model.ProductStatus;
+
+import java.util.Optional;
 import java.util.UUID;
 
 public record ProductResponseDto(
@@ -7,9 +10,16 @@ public record ProductResponseDto(
 		String name,
 		Integer price,
 		Integer stock,
-		String status,
+		ProductStatus status,
 		String description,
-		UUID vendorId
-
+		UUID vendorId,
+		Optional<FlashSaleProductResponseDto> flashSaleProductResponseDto
 ) {
+	public ProductResponseDto(UUID id, String name, Integer price, Integer stock, ProductStatus status, String description, UUID vendorId) {
+		this(id, name, price, stock, status, description, vendorId, Optional.empty());
+	}
+
+	public ProductResponseDto(UUID id, String name, Integer price, Integer stock, ProductStatus status, String description, UUID vendorId, FlashSaleProductResponseDto flashSaleProductResponseDto) {
+		this(id, name, price, stock, status, description, vendorId, Optional.ofNullable(flashSaleProductResponseDto));
+	}
 }
