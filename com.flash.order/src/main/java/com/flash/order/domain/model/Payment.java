@@ -43,4 +43,10 @@ public class Payment extends BaseEntity {
         this.status = status;
         this.paymentUid = paymentUid;
     }
+
+    public void changePaymentByCancell(PaymentStatus status, String paymentUid) {
+        this.status = status;
+        this.paymentUid = paymentUid;
+        this.delete();
+    }
 }
