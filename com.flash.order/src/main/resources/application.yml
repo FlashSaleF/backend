@@ -23,3 +23,9 @@ spring:
 iamport:
   apiKey: ${IAMPORT_API_KEY}
   apiSecret: ${IAMPORT_API_SECRET}
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
