@@ -4,10 +4,7 @@ import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
 import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
 import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
-import com.flash.vendor.application.dto.response.FlashSaleProductResponseDto;
-import com.flash.vendor.application.dto.response.ProductListResponseDto;
-import com.flash.vendor.application.dto.response.ProductPageResponseDto;
-import com.flash.vendor.application.dto.response.ProductResponseDto;
+import com.flash.vendor.application.dto.response.*;
 import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
@@ -108,6 +105,7 @@ public class ProductService {
         return getProductPageResponseDto(products, saleProductListMap);
     }
 
+    @Transactional
     public ProductResponseDto updateProduct(
             UUID productId, ProductUpdateRequestDto request
     ) {
@@ -125,6 +123,7 @@ public class ProductService {
         return ProductMapper.toResponseDto(updatedProduct);
     }
 
+    @Transactional
     public ProductResponseDto updateProductStatus(
             UUID productId, ProductStatusUpdateDto request
     ) {
@@ -135,6 +134,16 @@ public class ProductService {
         Product updatedProduct = product.updateProductStatus(request.status());
 
         return ProductMapper.toResponseDto(updatedProduct);
+    }
+
+    @Transactional
+    public ProductDeleteResponseDto deleteProduct(UUID productId) {
+
+        Product product = validateUserPermission(productId);
+
+        product.delete();
+
+        return new ProductDeleteResponseDto("상품 삭제 성공");
     }
 
     private Product validateUserPermission(UUID productId) {
