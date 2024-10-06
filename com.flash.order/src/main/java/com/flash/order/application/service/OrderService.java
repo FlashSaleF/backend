@@ -4,8 +4,11 @@ import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.domain.model.Order;
 import com.flash.order.domain.model.OrderProduct;
+import com.flash.order.domain.model.Payment;
+import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
+import com.flash.order.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +27,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @RequiredArgsConstructor
 public class OrderService {
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
     private final OrderMapper orderMapper;
 
     @Transactional
@@ -49,11 +53,20 @@ public class OrderService {
                 .mapToDouble(orderProduct -> orderProduct.getPrice() * orderProduct.getQuantity())
                 .sum();
 
+        //임시로 결제 생성(결제 로직에서 결제가 제대로 진행되지 않으면 db서 삭제됨)
+        Payment payment = Payment.builder()
+                .userId(orderRequestDto.userId())
+                .price(totalPrice.intValue())
+                .status(PaymentStatus.pending)
+                .build();
+
+        paymentRepository.save(payment);
+
         // 주문 생성
         Order order = Order.createOrder(
                 orderRequestDto,
                 totalPrice.intValue(),
-                UUID.randomUUID() // 결제 ID 생성
+                UUID.randomUUID().toString() // 주문 고유 UID 생성
         );
 
         // 주문에 orderProducts 설정
@@ -62,7 +75,8 @@ public class OrderService {
         // 주문에 orderProducts 설정
         order.setOrderProducts(orderProducts);
 
-        //TODO: 결제 로직
+        //order에 payment 매핑
+        order.setPayment(payment);
 
         // 주문 저장
         Order savedOrder = orderRepository.save(order);
@@ -131,7 +145,7 @@ public class OrderService {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
 
-        order.delete(getCurrentUserId());
+        order.delete();
     }
 
     private String getCurrentUserId() {

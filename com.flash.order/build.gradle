@@ -4,6 +4,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	//아임포트 관련
+	implementation group: 'com.github.iamport', name: 'iamport-rest-client-java', version: '0.2.23'
+
 //	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
