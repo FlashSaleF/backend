@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -40,5 +41,10 @@ public class ProductRepositoryImpl implements ProductRepository {
             String name, Integer lprice, Integer hprice, ProductStatus status, Pageable pageable
     ) {
         return jpaProductRepository.searchProducts(name, lprice, hprice, status, pageable);
+    }
+
+    @Override
+    public List<Product> findAllById(List<UUID> productIds) {
+        return jpaProductRepository.findAllById(productIds);
     }
 }

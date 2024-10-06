@@ -21,3 +21,8 @@ spring:
 client:
   url:
     user: localhost:${USER_PORT}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
