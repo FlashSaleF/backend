@@ -1,6 +1,8 @@
 package com.flash.order.presentation.controller;
 
 import com.flash.order.application.dtos.request.PaymentCallbackDto;
+import com.flash.order.application.dtos.response.PaymentResponseDto;
+import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.flash.order.application.service.PaymentService;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
@@ -8,10 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,6 +37,20 @@ public class PaymentController {
             // 결제 오류 발생 시
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+    }
+
+    //실제 결제 조회
+    @GetMapping("/{paymentUid}")
+    public ResponseEntity<PaymentResponseDto> getPaymentDetails(@PathVariable String paymentUid) {
+        PaymentResponseDto paymentDetails = paymentService.getPaymentDetails(paymentUid);
+        return ResponseEntity.ok(paymentDetails);
+    }
+
+    //실제 결제 취소
+    @PostMapping("/refund/{paymentUid}")
+    public ResponseEntity<RefundResponseDto> refundPayment(@PathVariable String paymentUid) {
+        RefundResponseDto response = paymentService.refundPayment(paymentUid);
+        return ResponseEntity.ok(response);
     }
 
 }

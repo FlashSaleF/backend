@@ -1,6 +1,10 @@
 package com.flash.order.application.service;
 
+import com.flash.order.application.dtos.mapper.OrderMapper;
+import com.flash.order.application.dtos.mapper.PaymentMapper;
 import com.flash.order.application.dtos.request.PaymentCallbackDto;
+import com.flash.order.application.dtos.response.PaymentResponseDto;
+import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.flash.order.domain.model.Order;
 //import com.flash.order.domain.model.Payment;
 import com.flash.order.domain.model.PaymentStatus;
@@ -26,6 +30,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final IamportClient iamportClient;
+    private final PaymentMapper paymentMapper;
 
     public IamportResponse<Payment> processPayment(PaymentCallbackDto request) {
         try {
@@ -80,4 +85,49 @@ public class PaymentService {
         CancelData cancelData = new CancelData(impUid, true, new BigDecimal(paidAmount));
         iamportClient.cancelPaymentByImpUid(cancelData);
     }
+
+    // 실제 결제 조회 메소드
+    public PaymentResponseDto getPaymentDetails(String paymentUid) {
+        try {
+            IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(paymentUid);
+
+            if (iamportResponse.getResponse() == null) {
+                throw new IllegalArgumentException("결제 정보를 찾을 수 없습니다.");
+            }
+
+            // 조회한 Payment 엔티티를 PaymentResponseDto로 변환
+            return paymentMapper.convertToResponseDto(iamportResponse.getResponse());
+
+        } catch (IamportResponseException | IOException e) {
+            throw new RuntimeException("결제 조회 중 오류 발생", e);
+        }
+    }
+
+    //실제 결제 취소
+    @Transactional
+    public RefundResponseDto refundPayment(String paymentUid) {
+        // 결제 내역 조회
+        com.flash.order.domain.model.Payment payment = paymentRepository.findByPaymentUid(paymentUid)
+                .orElseThrow(() -> new IllegalArgumentException("해당 결제 내역을 찾을 수 없습니다."));
+
+        try {
+            // 아임포트 API를 이용한 환불 요청
+            CancelData cancelData = new CancelData(payment.getPaymentUid(), true, new BigDecimal(payment.getPrice()));
+            IamportResponse<Payment> response = iamportClient.cancelPaymentByImpUid(cancelData);
+
+            if ("cancelled".equals(response.getResponse().getStatus())) {
+                // 환불 성공 처리: 필요시 결제 상태 업데이트
+                payment.changePaymentByCancell(PaymentStatus.cancelled, response.getResponse().getImpUid());
+                paymentRepository.save(payment); // 환불된 결제 정보 저장
+            } else {
+                throw new RuntimeException("환불에 실패했습니다.");
+            }
+
+            return paymentMapper.convertToRefundResponseDto(response.getResponse());
+
+        } catch (IamportResponseException | IOException e) {
+            throw new RuntimeException("환불 처리 중 오류 발생", e);
+        }
+    }
+
 }
