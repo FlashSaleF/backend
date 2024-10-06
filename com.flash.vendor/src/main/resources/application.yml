@@ -5,22 +5,19 @@ spring:
   application:
     name: vendor
   datasource:
-    url: ${DATABASE_URL_VENDOR}
+    url: ${DB_DATABASE}/vendors
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    driver-class-name: ${DRIVER_CLASS}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${DDL}
     properties:
       hibernate:
         format_sql: true
         show_sql: true
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-client:
-  url:
-    user: localhost:${USER_PORT}
 
 eureka:
   client:
