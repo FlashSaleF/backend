@@ -3,6 +3,7 @@ package com.flash.vendor.presentation.controller;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
 import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
 import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
+import com.flash.vendor.application.dto.response.ProductDeleteResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.application.service.ProductService;
@@ -78,5 +79,13 @@ public class ProductController {
     ) {
 
         return ResponseEntity.ok(productService.updateProductStatus(productId, request));
+    }
+
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<ProductDeleteResponseDto> deleteProduct(
+            @PathVariable UUID productId
+    ) {
+
+        return ResponseEntity.ok(productService.deleteProduct(productId));
     }
 }
