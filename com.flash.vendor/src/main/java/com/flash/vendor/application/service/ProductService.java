@@ -2,6 +2,8 @@ package com.flash.vendor.application.service;
 
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
+import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
+import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
 import com.flash.vendor.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.vendor.application.dto.response.ProductListResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
@@ -104,6 +106,47 @@ public class ProductService {
                 getSaleProductListMap(products);
 
         return getProductPageResponseDto(products, saleProductListMap);
+    }
+
+    public ProductResponseDto updateProduct(
+            UUID productId, ProductUpdateRequestDto request
+    ) {
+
+        //TODO 캐시 업데이트 AND.. 어디에 영향을 미칠까?
+        Product product = validateUserPermission(productId);
+
+        Product updatedProduct = product.updateProduct(
+                request.name(),
+                request.price(),
+                request.stock(),
+                request.description()
+        );
+
+        return ProductMapper.toResponseDto(updatedProduct);
+    }
+
+    public ProductResponseDto updateProductStatus(
+            UUID productId, ProductStatusUpdateDto request
+    ) {
+
+        //TODO 캐시 업데이트 AND.. 어디에 영향을 미칠까?
+        Product product = validateUserPermission(productId);
+
+        Product updatedProduct = product.updateProductStatus(request.status());
+
+        return ProductMapper.toResponseDto(updatedProduct);
+    }
+
+    private Product validateUserPermission(UUID productId) {
+        Product product = productRepository.findByIdAndIsDeletedFalse(productId);
+
+        Vendor vendor = vendorService.getVendorBasedOnAuthority(
+                product.getVendorId(), getCurrentUserAuthority());
+
+        if (!product.getVendorId().equals(vendor.getId())) {
+            throw new ResponseStatusException(BAD_REQUEST, "해당 업체의 상품만 수정할 수 있습니다.");
+        }
+        return product;
     }
 
     private Map<UUID, FlashSaleProductResponseDto> getSaleProductListMap(
