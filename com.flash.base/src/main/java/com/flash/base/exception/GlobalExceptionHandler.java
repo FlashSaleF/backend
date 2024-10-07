@@ -30,8 +30,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         ErrorResponse response = ErrorResponse.builder()
-                .errorCode(ErrorCode.INTERNAL_SERVER_ERROR)
-                .message(ErrorCode.INTERNAL_SERVER_ERROR.getMessage())
+                .errorCode(BaseErrorCode.INTERNAL_SERVER_ERROR)
+                .message(BaseErrorCode.INTERNAL_SERVER_ERROR.getMessage())
                 .build();
 
         log.error("Exception is occurred.", e);
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
         }
 
         ErrorResponse response = ErrorResponse.builder()
-                .errorCode(ErrorCode.INVALID_REQUEST)
+                .errorCode(BaseErrorCode.INVALID_REQUEST)
                 .message(errorMessage.toString())
                 .build();
 
@@ -59,8 +59,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
         ErrorResponse response = ErrorResponse.builder()
-                .errorCode(ErrorCode.INVALID_REQUEST)
-                .message(ErrorCode.INVALID_REQUEST.getMessage())
+                .errorCode(BaseErrorCode.INVALID_REQUEST)
+                .message(BaseErrorCode.INVALID_REQUEST.getMessage())
                 .build();
 
         log.error("DataIntegrityViolationException is occurred.", e);
@@ -70,7 +70,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
         ErrorResponse response = ErrorResponse.builder()
-                .errorCode(ErrorCode.FORBIDDEN)
+                .errorCode(BaseErrorCode.FORBIDDEN)
                 .message("접근이 거부되었습니다. 권한이 없습니다.")
                 .build();
 

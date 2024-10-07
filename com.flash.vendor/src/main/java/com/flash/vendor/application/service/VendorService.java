@@ -1,11 +1,13 @@
 package com.flash.vendor.application.service;
 
+import com.flash.base.exception.CustomException;
 import com.flash.vendor.application.dto.mapper.VendorMapper;
 import com.flash.vendor.application.dto.request.VendorRequestDto;
 import com.flash.vendor.application.dto.response.UserResponseDto;
 import com.flash.vendor.application.dto.response.VendorDeleteResponseDto;
 import com.flash.vendor.application.dto.response.VendorPageResponseDto;
 import com.flash.vendor.application.dto.response.VendorResponseDto;
+import com.flash.vendor.domain.exception.VendorErrorCode;
 import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -91,19 +89,19 @@ public class VendorService {
                     getVendorByIdAndUserId(vendorId, Long.valueOf(getCurrentUserId()));
             case "ROLE_MANAGER", "ROLE_MASTER" -> getVendorById(vendorId);
             default ->
-                    throw new ResponseStatusException(BAD_REQUEST, "유효하지 않은 권한 요청입니다.");
+                    throw new CustomException(VendorErrorCode.INVALID_PERMISSION_REQUEST);
         };
     }
 
     private Vendor getVendorById(UUID vendorId) {
         return vendorRepository.findByIdAndIsDeletedFalse(vendorId).orElseThrow(() ->
-                new ResponseStatusException(NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."));
+                new CustomException(VendorErrorCode.COMPANY_NOT_FOUND));
     }
 
     private Vendor getVendorByIdAndUserId(UUID vendorId, Long userId) {
         return vendorRepository.findByIdAndUserIdAndIsDeletedFalse(
                 vendorId, userId).orElseThrow(() ->
-                new ResponseStatusException(BAD_REQUEST, "해당 업체 대표자가 아닙니다."));
+                new CustomException(VendorErrorCode.NOT_COMPANY_OWNER));
     }
 
     private void validateAddressUniqueness(String address) {
@@ -111,7 +109,7 @@ public class VendorService {
         Optional<Vendor> optionalVendor = vendorRepository.findByAddressAndIsDeletedFalse(address);
 
         if (optionalVendor.isPresent()) {
-            throw new ResponseStatusException(BAD_REQUEST, "이미 등록되어 있는 주소입니다.");
+            throw new CustomException(VendorErrorCode.ADDRESS_ALREADY_EXISTS);
         }
     }
 
@@ -125,7 +123,7 @@ public class VendorService {
                 .stream()
                 .findFirst()
                 .orElseThrow(() ->
-                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                        new CustomException(VendorErrorCode.USER_PERMISSION_NOT_FOUND))
                 .getAuthority();
     }
 }
