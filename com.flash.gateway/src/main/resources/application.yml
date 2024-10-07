@@ -10,6 +10,11 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+  data:
+    redis:
+      host: ${REDIS_DOMAIN}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
 
 eureka:
   client:
