@@ -38,7 +38,6 @@ public class BaseEntity implements Serializable {
 
     private boolean isDeleted = false;
 
-    // TODO: deletedBy는 Security 구현 후 수정
     public void delete() {
         this.deletedAt = LocalDateTime.now();
         this.deletedBy = SecurityContextHolder.getContext().getAuthentication().getName();
