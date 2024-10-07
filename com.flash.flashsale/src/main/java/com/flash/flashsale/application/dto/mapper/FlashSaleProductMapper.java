@@ -10,27 +10,27 @@ import org.springframework.stereotype.Component;
 public class FlashSaleProductMapper {
     public FlashSaleProductResponseDto convertToResponseDto(FlashSaleProduct flashSaleProduct, FlashSaleResponseDto flashSaleResponseDto) {
         return new FlashSaleProductResponseDto(
-            flashSaleProduct.getId(),
-            flashSaleProduct.getProductId(),
-            flashSaleProduct.getSalePrice(),
-            flashSaleProduct.getStock(),
-            flashSaleProduct.getStatus(),
-            flashSaleProduct.getStartTime(),
-            flashSaleProduct.getEndTime(),
-            flashSaleResponseDto
+                flashSaleProduct.getId(),
+                flashSaleProduct.getProductId(),
+                flashSaleProduct.getSalePrice(),
+                flashSaleProduct.getStock(),
+                flashSaleProduct.getStatus(),
+                flashSaleProduct.getStartTime(),
+                flashSaleProduct.getEndTime(),
+                flashSaleResponseDto
         );
     }
 
     public InternalProductResponseDto convertToInternalProductResponseDto(FlashSaleProduct flashSaleProduct, FlashSaleResponseDto flashSaleResponseDto) {
         return new InternalProductResponseDto(
-            flashSaleProduct.getId(),
-            flashSaleProduct.getProductId(),
-            flashSaleProduct.getSalePrice(),
-            flashSaleProduct.getStock(),
-            flashSaleProduct.getStatus(),
-            flashSaleProduct.getStartTime(),
-            flashSaleProduct.getEndTime(),
-            flashSaleResponseDto
+                flashSaleProduct.getId(),
+                flashSaleProduct.getProductId(),
+                flashSaleProduct.getSalePrice(),
+                flashSaleProduct.getStock(),
+                flashSaleProduct.getStatus(),
+                flashSaleProduct.getStartTime(),
+                flashSaleProduct.getEndTime(),
+                flashSaleResponseDto
         );
     }
 }

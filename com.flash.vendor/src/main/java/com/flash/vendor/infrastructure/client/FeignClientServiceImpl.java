@@ -21,13 +21,13 @@ public class FeignClientServiceImpl implements FeignClientService {
 
     @Override
     public UserResponseDto getUserInfo(String userId) {
-        //TODO FeignClient Exception
+
         return userFeignClient.getUserInfo(userId);
     }
 
     @Override
     public FlashSaleProductResponseDto getFlashSaleProductInfo(UUID productId) {
-        //TODO FeignClient Exception
+
         return flashSaleFeignClient.getFlashSaleProductInfo(productId);
     }
 
@@ -37,6 +37,7 @@ public class FeignClientServiceImpl implements FeignClientService {
     ) {
         List<FlashSaleProductResponseDto> saleProducts =
                 getFlashSaleProductInfoList(productIds);
+
         return saleProducts.stream()
                 .collect(Collectors.toMap(
                         FlashSaleProductResponseDto::getProductId, Function.identity()));
@@ -45,7 +46,7 @@ public class FeignClientServiceImpl implements FeignClientService {
     public List<FlashSaleProductResponseDto> getFlashSaleProductInfoList(
             List<UUID> productIds
     ) {
-        //TODO FeignClient Exception
+
         return flashSaleFeignClient.getFlashSaleProductInfoList(productIds);
     }
 }

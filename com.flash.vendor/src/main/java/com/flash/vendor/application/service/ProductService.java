@@ -1,10 +1,12 @@
 package com.flash.vendor.application.service;
 
+import com.flash.base.exception.CustomException;
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
 import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
 import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
 import com.flash.vendor.application.dto.response.*;
+import com.flash.vendor.domain.exception.ProductErrorCode;
 import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
@@ -16,15 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 @RequiredArgsConstructor
@@ -153,7 +152,7 @@ public class ProductService {
                 product.getVendorId(), getCurrentUserAuthority());
 
         if (!product.getVendorId().equals(vendor.getId())) {
-            throw new ResponseStatusException(BAD_REQUEST, "해당 업체의 상품만 수정할 수 있습니다.");
+            throw new CustomException(ProductErrorCode.CANNOT_MODIFY_PRODUCT);
         }
         return product;
     }
@@ -207,7 +206,7 @@ public class ProductService {
                 .stream()
                 .findFirst()
                 .orElseThrow(() ->
-                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                        new CustomException(ProductErrorCode.INVALID_PERMISSION_REQUEST))
                 .getAuthority();
     }
 }
