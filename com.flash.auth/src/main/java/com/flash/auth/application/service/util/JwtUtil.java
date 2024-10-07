@@ -95,28 +95,14 @@ public class JwtUtil {
         try {
             Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
             return true;
-        } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
-        } catch (MalformedJwtException | SecurityException e) {
-            log.error("Invalid JWT token, 유효하지 않은 JWT token 입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
-        } catch (IllegalArgumentException e) {
-            log.error("JWT claims is empty, 잘못된 JWT 토큰 입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
-        }
-        return false;
-    }
-
-    /**
-     * Access Token 만료되었는지 검증하는 메서드
-     *
-     * @param token
-     * @return
-     */
-    public Boolean isNotExpiredAccessToken(String token) {
-        try {
-            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
-            return true;
         } catch (ExpiredJwtException e) {
-            log.error("Expired JWT token, 만료된 Access 토큰입니다. 사용자 ID: {}", getUserIdFromAccessToken(token));
+            log.error("Expired JWT token, 만료된 Access 토큰입니다.");
+        } catch (UnsupportedJwtException e) {
+            log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+        } catch (MalformedJwtException | SecurityException e) {
+            log.error("Invalid JWT token, 유효하지 않은 JWT token 입니다.");
+        } catch (IllegalArgumentException e) {
+            log.error("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
         }
         return false;
     }

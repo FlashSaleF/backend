@@ -1,4 +1,4 @@
-package com.flash.gateway.util;
+package com.flash.gateway.util.dto;
 
 public record AuthResponseDto(
         String id,
