@@ -28,4 +28,8 @@ public interface FlashSaleProductRepository {
     List<FlashSaleProduct> findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus flashSaleProductStatus, LocalDateTime fiveMinutesAgo, LocalDateTime fiveMinutesLater);
 
     List<FlashSaleProduct> findAllByStartTimeLessThanEqualAndEndTimeGreaterThanEqualAndIsDeletedFalse(LocalDateTime endTime, LocalDateTime startTime);
+
+    FlashSaleProduct findByProductIdAndStatusAndIsDeletedFalse(UUID productId, FlashSaleProductStatus flashSaleProductStatus);
+
+    List<FlashSaleProduct> findAllByProductIdInAndStatusAndIsDeletedFalse(List<UUID> productIds, FlashSaleProductStatus flashSaleProductStatus);
 }

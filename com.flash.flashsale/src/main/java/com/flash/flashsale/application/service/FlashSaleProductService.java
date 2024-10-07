@@ -5,6 +5,7 @@ import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
+import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
@@ -178,5 +179,24 @@ public class FlashSaleProductService {
         if (flashSaleProductRequestDto.startTime().toLocalDate().isBefore(flashSale.getStartDate()) || flashSaleProductRequestDto.endTime().toLocalDate().isAfter(flashSale.getEndDate())) {
             throw new IllegalArgumentException("해당 플래시 세일이 진행중이지 않은 시간입니다.");
         }
+    }
+
+    public InternalProductResponseDto getOneByProductId(UUID productId) {
+        FlashSaleProduct flashSaleProduct = flashSaleProductRepository.findByProductIdAndStatusAndIsDeletedFalse(productId, FlashSaleProductStatus.ONSALE);
+        FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSaleProduct.getFlashSale());
+
+        return flashSaleProductMapper.convertToInternalProductResponseDto(flashSaleProduct, flashSaleResponseDto);
+    }
+
+    public List<InternalProductResponseDto> getListByProductIds(List<UUID> productIds) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdInAndStatusAndIsDeletedFalse(productIds, FlashSaleProductStatus.ONSALE);
+
+        return flashSaleProductList.stream().map(flashSaleProduct ->
+        {
+            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+            return flashSaleProductMapper.convertToInternalProductResponseDto(flashSaleProduct, flashSaleResponseDto);
+        }).toList();
     }
 }
