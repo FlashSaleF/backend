@@ -187,4 +187,16 @@ public class FlashSaleProductService {
 
         return flashSaleProductMapper.convertToInternalProductResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
+
+    public List<InternalProductResponseDto> getListByProductIds(List<UUID> productIds) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdInAndStatusAndIsDeletedFalse(productIds, FlashSaleProductStatus.ONSALE);
+
+        return flashSaleProductList.stream().map(flashSaleProduct ->
+        {
+            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+            return flashSaleProductMapper.convertToInternalProductResponseDto(flashSaleProduct, flashSaleResponseDto);
+        }).toList();
+    }
 }

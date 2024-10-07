@@ -17,7 +17,7 @@ public interface FlashSaleFeignClient {
     @GetMapping("/api/internal/flash-sale-products/{productId}")
     FlashSaleProductResponseDto getFlashSaleProductInfo(@PathVariable UUID productId);
 
-    @PostMapping()
+    @PostMapping("/api/internal/flash-sale-products")
     List<FlashSaleProductResponseDto> getFlashSaleProductInfoList(@RequestBody List<UUID> productIds);
 
 }
