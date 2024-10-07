@@ -32,11 +32,11 @@ public class AuthController {
         return ResponseEntity.ok(authService.join(joinRequestDto));
     }
 
-    // 로그인 요청을 계속 보내지 못하도록 막는 방법은?
+    // TODO: 로그인 요청을 계속 보내지 못하도록 막는 방법은?
     // @PreAuthorize("isAnonymous()")
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody @Valid LoginRequestDto loginRequestDto, HttpServletResponse response) {
-        // refresh token을 redis에 저장할 예정인데, 그게 있으면 return ?
+        // TODO: refresh token을 redis에 저장할 예정인데, 그게 있으면 return ?
         LoginResponseDto loginResponseDto = authService.attemptAuthentication(loginRequestDto);
         response.addHeader(AUTHORIZATION_HEADER, loginResponseDto.accessToken());
         response.addCookie(cookieUtil.createCookieWithRefreshToken(loginResponseDto.refreshToken()));
