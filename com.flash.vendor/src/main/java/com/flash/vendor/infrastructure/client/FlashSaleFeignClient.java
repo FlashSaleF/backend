@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.UUID;
 
 // TODO route id or url
-@FeignClient(name = "flashsale")
+@FeignClient(name = "flash-sale")
 public interface FlashSaleFeignClient {
 
-    @GetMapping()
+    @GetMapping("/api/internal/flash-sale-products/{productId}")
     FlashSaleProductResponseDto getFlashSaleProductInfo(@PathVariable UUID productId);
 
-    @PostMapping()
+    @PostMapping("/api/internal/flash-sale-products")
     List<FlashSaleProductResponseDto> getFlashSaleProductInfoList(@RequestBody List<UUID> productIds);
 
 }
