@@ -1,4 +1,4 @@
-package com.flash.order;
+package com.flash.order.infrastructure.configuration;
 
 import com.siot.IamportRestClient.IamportClient;
 import org.springframework.beans.factory.annotation.Value;

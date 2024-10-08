@@ -2,13 +2,12 @@ package com.flash.order.application.service;
 
 import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
-import com.flash.order.domain.model.Order;
-import com.flash.order.domain.model.OrderProduct;
-import com.flash.order.domain.model.Payment;
-import com.flash.order.domain.model.PaymentStatus;
+import com.flash.order.application.dtos.response.ProductResponseDto;
+import com.flash.order.domain.model.*;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +27,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
 
     @Transactional
@@ -38,12 +38,18 @@ public class OrderService {
                 .map(orderProductDto -> {
 
                     //TODO Product 존재 여부 확인 (FeignClient 사용)
+                    ProductResponseDto productResponseDto;
+                    try {
+                        productResponseDto = feignClientService.getProduct(orderProductDto.productId());
+                    } catch (FeignException.NotFound e) {
+                        throw new IllegalArgumentException("해당 상품을 찾을 수 없습니다.");    // CustomException과 ErrorCode 활용
+                    }
 
                     // OrderProduct 객체 생성
                     return OrderProduct.builder()
                             .productId(orderProductDto.productId()) // Product 객체를 엔티티로 변환
                             .quantity(orderProductDto.quantity())
-                            .price(orderProductDto.price())
+                            .price(productResponseDto.price())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -55,7 +61,7 @@ public class OrderService {
 
         //임시로 결제 생성(결제 로직에서 결제가 제대로 진행되지 않으면 db서 삭제됨)
         Payment payment = Payment.builder()
-                .userId(orderRequestDto.userId())
+                .userId(Long.valueOf(getCurrentUserId()))
                 .price(totalPrice.intValue())
                 .status(PaymentStatus.pending)
                 .build();
@@ -63,11 +69,13 @@ public class OrderService {
         paymentRepository.save(payment);
 
         // 주문 생성
-        Order order = Order.createOrder(
-                orderRequestDto,
-                totalPrice.intValue(),
-                UUID.randomUUID().toString() // 주문 고유 UID 생성
-        );
+        Order order = Order.builder()
+                .address(orderRequestDto.address())
+                .totalPrice(totalPrice.intValue())
+                .status(OrderStatus.pending)
+                .orderUid(UUID.randomUUID().toString())
+                .userId(Long.valueOf(getCurrentUserId()))
+                .build();
 
         // 주문에 orderProducts 설정
         orderProducts.forEach(orderProduct -> orderProduct.setOrder(order)); // Order 객체 설정
@@ -114,10 +122,18 @@ public class OrderService {
         // 새로운 주문 상품 목록 생성
         List<OrderProduct> updatedOrderProducts = orderRequestDto.orderProducts().stream()
                 .map(orderProductDto -> {
+
+                    ProductResponseDto productResponseDto;
+                    try {
+                        productResponseDto = feignClientService.getProduct(orderProductDto.productId());
+                    } catch (FeignException.NotFound e) {
+                        throw new IllegalArgumentException("해당 상품을 찾을 수 없습니다. 상품 ID: " + orderProductDto.productId());
+                    }
+
                     OrderProduct orderProduct = new OrderProduct();
                     orderProduct.setProductId(orderProductDto.productId());
                     orderProduct.setQuantity(orderProductDto.quantity());
-                    orderProduct.setPrice(orderProductDto.price());
+                    orderProduct.setPrice(productResponseDto.price());
                     orderProduct.setOrder(existingOrder); // 현재 Order에 대한 참조 설정
                     return orderProduct;
                 }).collect(Collectors.toList());

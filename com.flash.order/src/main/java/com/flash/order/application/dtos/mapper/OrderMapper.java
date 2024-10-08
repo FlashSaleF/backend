@@ -16,8 +16,7 @@ public class OrderMapper {
                 order.getOrderProducts().stream()
                         .map(orderProduct -> new OrderProductDto(
                                 orderProduct.getProductId(),
-                                orderProduct.getQuantity(),
-                                orderProduct.getPrice()
+                                orderProduct.getQuantity()
                         ))
                         .collect(Collectors.toList()),
                 order.getAddress(),
