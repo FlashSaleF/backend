@@ -2,6 +2,7 @@ package com.flash.order.application.service;
 
 import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
+import com.flash.order.application.dtos.response.ProductResponseDto;
 import com.flash.order.domain.model.Order;
 import com.flash.order.domain.model.OrderProduct;
 import com.flash.order.domain.model.Payment;
@@ -9,6 +10,7 @@ import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
 
     @Transactional
@@ -38,12 +41,18 @@ public class OrderService {
                 .map(orderProductDto -> {
 
                     //TODO Product 존재 여부 확인 (FeignClient 사용)
+                    ProductResponseDto productResponseDto;
+                    try {
+                        productResponseDto = feignClientService.getProduct(orderProductDto.productId());
+                    } catch (FeignException.NotFound e) {
+                        throw new IllegalArgumentException("해당 상품을 찾을 수 없습니다.");    // CustomException과 ErrorCode 활용
+                    }
 
                     // OrderProduct 객체 생성
                     return OrderProduct.builder()
                             .productId(orderProductDto.productId()) // Product 객체를 엔티티로 변환
                             .quantity(orderProductDto.quantity())
-                            .price(orderProductDto.price())
+                            .price(productResponseDto.price())
                             .build();
                 })
                 .collect(Collectors.toList());
