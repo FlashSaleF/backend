@@ -1,7 +1,5 @@
 package com.flash.order.application.dtos.request;
 
-import lombok.Getter;
-
 import java.util.UUID;
 
 public record OrderProductDto(
