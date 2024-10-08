@@ -50,8 +50,9 @@ public class AuthService {
      */
     public AuthResponseDto verify(HttpHeaders headers) {
         String accessToken = jwtUtil.getAccessTokenFromHeader(headers);
-        if (accessToken != null && !jwtUtil.isValidateToken(accessToken) || !jwtUtil.isNotExpiredAccessToken(accessToken)) {
+        if (accessToken != null && !jwtUtil.isValidateToken(accessToken)) {
             // TODO: 커스텀 예외 던지기
+            // 근데 발생하는 예외에 대해서 각각 ErrorCode를 정의하려면, throw를 JwtUtil에서 해야할 것 같은데..?
             throw new RuntimeException("Invalid access token");
         }
         String userIdFromAccessToken = jwtUtil.getUserIdFromAccessToken(accessToken);

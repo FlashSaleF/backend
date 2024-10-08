@@ -5,7 +5,7 @@ import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public record FlashSaleProductResponseDto(
+public record InternalProductResponseDto(
         UUID flashSaleProductId,
         UUID productId,
         Integer salePrice,

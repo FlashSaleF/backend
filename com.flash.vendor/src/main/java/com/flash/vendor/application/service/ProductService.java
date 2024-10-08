@@ -1,11 +1,12 @@
 package com.flash.vendor.application.service;
 
+import com.flash.base.exception.CustomException;
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
-import com.flash.vendor.application.dto.response.FlashSaleProductResponseDto;
-import com.flash.vendor.application.dto.response.ProductListResponseDto;
-import com.flash.vendor.application.dto.response.ProductPageResponseDto;
-import com.flash.vendor.application.dto.response.ProductResponseDto;
+import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
+import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
+import com.flash.vendor.application.dto.response.*;
+import com.flash.vendor.domain.exception.ProductErrorCode;
 import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
@@ -17,15 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Service
 @RequiredArgsConstructor
@@ -106,6 +104,59 @@ public class ProductService {
         return getProductPageResponseDto(products, saleProductListMap);
     }
 
+    @Transactional
+    public ProductResponseDto updateProduct(
+            UUID productId, ProductUpdateRequestDto request
+    ) {
+
+        //TODO 캐시 업데이트 AND.. 어디에 영향을 미칠까?
+        Product product = validateUserPermission(productId);
+
+        Product updatedProduct = product.updateProduct(
+                request.name(),
+                request.price(),
+                request.stock(),
+                request.description()
+        );
+
+        return ProductMapper.toResponseDto(updatedProduct);
+    }
+
+    @Transactional
+    public ProductResponseDto updateProductStatus(
+            UUID productId, ProductStatusUpdateDto request
+    ) {
+
+        //TODO 캐시 업데이트 AND.. 어디에 영향을 미칠까?
+        Product product = validateUserPermission(productId);
+
+        Product updatedProduct = product.updateProductStatus(request.status());
+
+        return ProductMapper.toResponseDto(updatedProduct);
+    }
+
+    @Transactional
+    public ProductDeleteResponseDto deleteProduct(UUID productId) {
+
+        Product product = validateUserPermission(productId);
+
+        product.delete();
+
+        return new ProductDeleteResponseDto("상품 삭제 성공");
+    }
+
+    private Product validateUserPermission(UUID productId) {
+        Product product = productRepository.findByIdAndIsDeletedFalse(productId);
+
+        Vendor vendor = vendorService.getVendorBasedOnAuthority(
+                product.getVendorId(), getCurrentUserAuthority());
+
+        if (!product.getVendorId().equals(vendor.getId())) {
+            throw new CustomException(ProductErrorCode.CANNOT_MODIFY_PRODUCT);
+        }
+        return product;
+    }
+
     private Map<UUID, FlashSaleProductResponseDto> getSaleProductListMap(
             Iterable<Product> products
     ) {
@@ -155,7 +206,7 @@ public class ProductService {
                 .stream()
                 .findFirst()
                 .orElseThrow(() ->
-                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                        new CustomException(ProductErrorCode.INVALID_PERMISSION_REQUEST))
                 .getAuthority();
     }
 }

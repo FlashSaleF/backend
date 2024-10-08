@@ -1,6 +1,9 @@
 package com.flash.vendor.presentation.controller;
 
 import com.flash.vendor.application.dto.request.ProductRequestDto;
+import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
+import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
+import com.flash.vendor.application.dto.response.ProductDeleteResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.application.service.ProductService;
@@ -37,7 +40,7 @@ public class ProductController {
     }
 
     @GetMapping
-    private ResponseEntity<ProductPageResponseDto> getProducts(
+    public ResponseEntity<ProductPageResponseDto> getProducts(
             @PageableDefault(
                     size = 10,
                     sort = "createdAt",
@@ -48,7 +51,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    private ResponseEntity<ProductPageResponseDto> searchProducts(
+    public ResponseEntity<ProductPageResponseDto> searchProducts(
             @RequestParam(name = "name") String name,
             @RequestParam(name = "lprice", required = false) Integer lprice,
             @RequestParam(name = "hprice", required = false) Integer hprice,
@@ -60,5 +63,29 @@ public class ProductController {
     ) {
 
         return ResponseEntity.ok(productService.searchProducts(name, lprice, hprice, status.name(), pageable));
+    }
+
+    @PutMapping("/{productId}")
+    public ResponseEntity<ProductResponseDto> updateProduct(
+            @PathVariable UUID productId, @RequestBody ProductUpdateRequestDto request
+    ) {
+
+        return ResponseEntity.ok(productService.updateProduct(productId, request));
+    }
+
+    @PatchMapping("/{productId}")
+    public ResponseEntity<ProductResponseDto> updateProductStatus(
+            @PathVariable UUID productId, @RequestBody ProductStatusUpdateDto request
+    ) {
+
+        return ResponseEntity.ok(productService.updateProductStatus(productId, request));
+    }
+
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<ProductDeleteResponseDto> deleteProduct(
+            @PathVariable UUID productId
+    ) {
+
+        return ResponseEntity.ok(productService.deleteProduct(productId));
     }
 }

@@ -47,4 +47,17 @@ public class Product extends BaseEntity {
                 .description(description)
                 .build();
     }
+
+    public Product updateProduct(String name, int price, int stock, String description) {
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        this.description = description;
+        return this;
+    }
+
+    public Product updateProductStatus(ProductStatus status) {
+        this.status = status;
+        return this;
+    }
 }
