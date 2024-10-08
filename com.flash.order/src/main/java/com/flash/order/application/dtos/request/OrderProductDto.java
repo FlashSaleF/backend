@@ -4,7 +4,6 @@ import java.util.UUID;
 
 public record OrderProductDto(
         UUID productId,  // 상품 ID
-        int quantity,  // 수량
-        int price  // 가격
+        int quantity  // 수량
 ) {
 }
