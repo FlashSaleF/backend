@@ -46,16 +46,6 @@ public class Order extends BaseEntity {
         this.orderProducts = orderProducts;
     }
 
-    public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, String orderUid) {
-        return Order.builder()
-                .address(orderRequestDto.address())
-                .totalPrice(totalPrice)
-                .status(OrderStatus.pending)
-                .orderUid(orderUid)
-                .userId(orderRequestDto.userId())
-                .build();
-    }
-
     public void updateOrder(OrderRequestDto orderRequestDto, int totalPrice) {
         this.address = orderRequestDto.address();
         this.totalPrice = totalPrice;
