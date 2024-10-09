@@ -13,6 +13,7 @@ import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FlashSaleProductService {
 
     private final FlashSaleService flashSaleService;
@@ -74,6 +76,7 @@ public class FlashSaleProductService {
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
+    @Transactional(readOnly = true)
     public FlashSaleProductResponseDto getOne(UUID flashSaleProductId) {
         FlashSaleProduct flashSaleProduct = getAvailableFlashSaleProduct(flashSaleProductId);
 
@@ -83,8 +86,11 @@ public class FlashSaleProductService {
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
     }
 
+    @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList = getAvailableFlashSaleProductList(flashSaleId, statusList);
+
+        log.info("test");
 
         return flashSaleProductList.stream().map(flashSaleProduct ->
         {
@@ -95,6 +101,7 @@ public class FlashSaleProductService {
         }).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getListByTime(LocalDateTime startTime, LocalDateTime endTime) {
         List<FlashSaleProduct> flashSaleProductList = getAvailableFlashSaleProductListByTime(startTime, endTime);
 
@@ -301,7 +308,12 @@ public class FlashSaleProductService {
 
     private String getAuthority() {
         return SecurityContextHolder.getContext().getAuthentication()
-            .getAuthorities().toString();
+            .getAuthorities()
+            .stream()
+            .findFirst()
+            .orElseThrow(() ->
+                new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
+            .getAuthority();
     }
 
     public String getCurrentUserId() {

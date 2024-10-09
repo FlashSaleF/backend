@@ -112,7 +112,12 @@ public class FlashSaleService {
 
     private String getAuthority() {
         return SecurityContextHolder.getContext().getAuthentication()
-            .getAuthorities().toString();
+            .getAuthorities()
+            .stream()
+            .findFirst()
+            .orElseThrow(() ->
+                new CustomException(FlashSaleErrorCode.INVALID_PERMISSION_REQUEST))
+            .getAuthority();
     }
 
     private void validAuthority() {
