@@ -1,8 +1,10 @@
 package com.flash.order.application.service;
 
+import com.flash.base.exception.CustomException;
 import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.application.dtos.response.ProductResponseDto;
+import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.model.*;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
@@ -42,7 +44,7 @@ public class OrderService {
                     try {
                         productResponseDto = feignClientService.getProduct(orderProductDto.productId());
                     } catch (FeignException.NotFound e) {
-                        throw new IllegalArgumentException("해당 상품을 찾을 수 없습니다.");    // CustomException과 ErrorCode 활용
+                        throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
                     }
 
                     // OrderProduct 객체 생성
@@ -95,7 +97,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponseDto getOrderById(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
         return orderMapper.convertToResponseDto(order);
     }
 
@@ -117,7 +119,7 @@ public class OrderService {
     public OrderResponseDto updateOrder(UUID orderId, OrderRequestDto orderRequestDto) {
         // 기존 주문 조회
         Order existingOrder = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 새로운 주문 상품 목록 생성
         List<OrderProduct> updatedOrderProducts = orderRequestDto.orderProducts().stream()
@@ -127,7 +129,7 @@ public class OrderService {
                     try {
                         productResponseDto = feignClientService.getProduct(orderProductDto.productId());
                     } catch (FeignException.NotFound e) {
-                        throw new IllegalArgumentException("해당 상품을 찾을 수 없습니다. 상품 ID: " + orderProductDto.productId());
+                        throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
                     }
 
                     OrderProduct orderProduct = new OrderProduct();
@@ -159,7 +161,7 @@ public class OrderService {
     @Transactional
     public void deleteOrder(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         order.delete();
     }
@@ -174,7 +176,7 @@ public class OrderService {
                 .stream()
                 .findFirst()
                 .orElseThrow(() ->
-                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                        new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST))
                 .getAuthority();
     }
 }
