@@ -30,6 +30,10 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
                         .requestMatchers("/api/internal/**").permitAll()
+                        .requestMatchers("/api/users/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/flash-sales/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/orders/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/vendors/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
                 );
 
