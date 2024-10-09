@@ -1,8 +1,10 @@
 package com.flash.vendor.presentation.controller;
 
 import com.flash.vendor.application.dto.request.ProductListRequestDto;
+import com.flash.vendor.application.dto.request.ProductStockDecreaseRequestDto;
 import com.flash.vendor.application.dto.response.ProductListResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
+import com.flash.vendor.application.dto.response.ProductStockDecreaseResponseDto;
 import com.flash.vendor.application.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,14 @@ public class ProductInternalController {
             @RequestBody ProductListRequestDto request
     ) {
         return ResponseEntity.ok(productService.getProductsByIds(request.productIds()));
+    }
+
+    @PatchMapping("/{productId}/stock/decrease")
+    public ResponseEntity<ProductStockDecreaseResponseDto> decreaseProductStock(
+            @PathVariable UUID productId,
+            @RequestBody ProductStockDecreaseRequestDto request
+    ) {
+        return ResponseEntity.ok(productService.decreaseProductStock(productId, request));
     }
 
 }
