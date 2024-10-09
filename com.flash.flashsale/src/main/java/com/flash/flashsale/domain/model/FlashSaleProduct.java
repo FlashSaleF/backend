@@ -67,4 +67,8 @@ public class FlashSaleProduct extends BaseEntity {
         this.startTime = flashSaleProductRequestDto.startTime();
         this.endTime = flashSaleProductRequestDto.endTime();
     }
+
+    public void refuse() {
+        this.status = FlashSaleProductStatus.REFUSE;
+    }
 }

@@ -60,6 +60,11 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.approve(flashSaleProductId));
     }
 
+    @PatchMapping("/{flashSaleProductId}/refuse")
+    public ResponseEntity<String> refuse(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.refuse(flashSaleProductId));
+    }
+
     @PatchMapping("/{flashSaleProductId}/end")
     public ResponseEntity<String> endSale(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
         return ResponseEntity.ok(flashSaleProductService.endSale(flashSaleProductId));

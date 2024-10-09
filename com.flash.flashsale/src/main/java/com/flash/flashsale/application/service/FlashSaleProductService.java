@@ -117,7 +117,20 @@ public class FlashSaleProductService {
 
         flashSaleProduct.approve();
 
-        return "승인되었습니다.";
+        return "승인 되었습니다.";
+    }
+
+    @Transactional
+    public String refuse(UUID flashSaleProductId) {
+        validAdmin();
+
+        FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
+            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
+        );
+
+        flashSaleProduct.refuse();
+
+        return "승인 거절 되었습니다.";
     }
 
     @Transactional
