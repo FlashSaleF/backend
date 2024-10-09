@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum FlashSaleProductStatus {
     PENDING("PENDING"),
     APPROVE("APPROVE"),
+    REFUSE("REFUSE"),
     ONSALE("ONSALE"),
     ENDSALE("ENDSALE");
 
