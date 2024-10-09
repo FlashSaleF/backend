@@ -114,6 +114,19 @@ public class FlashSaleProductService {
         }).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<FlashSaleProductResponseDto> getOnSaleList() {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(List.of(FlashSaleProductStatus.ONSALE));
+
+        return flashSaleProductList.stream().map(flashSaleProduct ->
+        {
+            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+
+            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        }).toList();
+    }
+
     @Transactional
     public String approve(UUID flashSaleProductId) {
         validAdmin();

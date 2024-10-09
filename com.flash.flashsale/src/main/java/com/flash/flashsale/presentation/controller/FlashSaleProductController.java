@@ -47,6 +47,11 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.getListByTime(startTime, endTime));
     }
 
+    @GetMapping("/on-sale")
+    public ResponseEntity<List<FlashSaleProductResponseDto>> getOnSaleList() {
+        return ResponseEntity.ok(flashSaleProductService.getOnSaleList());
+    }
+
     @PatchMapping("/{flashSaleProductId}")
     public ResponseEntity<FlashSaleProductResponseDto> update(
         @PathVariable("flashSaleProductId") UUID flashSaleProductId,
