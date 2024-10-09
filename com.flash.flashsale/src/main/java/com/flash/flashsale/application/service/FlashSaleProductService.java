@@ -55,7 +55,6 @@ public class FlashSaleProductService {
     @Transactional
     public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductRequestDto flashSaleProductRequestDto) {
         validAuthority();
-        validDuplicate(flashSaleProductRequestDto);
         validAvailableDateTime(flashSaleProductRequestDto);
 
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
@@ -68,7 +67,7 @@ public class FlashSaleProductService {
 
         validAvailableFlashSale(flashSaleProduct);
 
-        flashSaleProduct.update(flashSale, flashSaleProductRequestDto);
+        flashSaleProduct.update(flashSaleProductRequestDto);
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 

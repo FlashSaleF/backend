@@ -60,9 +60,7 @@ public class FlashSaleProduct extends BaseEntity {
         this.status = FlashSaleProductStatus.ONSALE;
     }
 
-    public void update(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        this.flashSale = flashSale;
-        this.productId = flashSaleProductRequestDto.productId();
+    public void update(FlashSaleProductRequestDto flashSaleProductRequestDto) {
         this.salePrice = flashSaleProductRequestDto.salePrice();
         this.stock = flashSaleProductRequestDto.stock();
         this.status = FlashSaleProductStatus.PENDING;
