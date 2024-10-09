@@ -76,6 +76,16 @@ public class FlashSaleService {
         return flashSaleMapper.convertToResponseDto(flashSale);
     }
 
+    @Transactional
+    public String delete(UUID flashSaleId) {
+        validAdmin();
+
+        FlashSale flashSale = existFlashSale(flashSaleId);
+        flashSale.delete();
+
+        return "삭제되었습니다.";
+    }
+
     protected FlashSale existFlashSale(UUID flashSaleId) {
         return flashSaleRepository.findByIdAndIsDeletedFalse(flashSaleId).orElseThrow(
             () -> new CustomException(FlashSaleErrorCode.NOT_FOUND)

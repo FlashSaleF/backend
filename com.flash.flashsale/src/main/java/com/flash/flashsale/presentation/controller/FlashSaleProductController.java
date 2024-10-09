@@ -64,4 +64,11 @@ public class FlashSaleProductController {
     public ResponseEntity<String> endSale(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
         return ResponseEntity.ok(flashSaleProductService.endSale(flashSaleProductId));
     }
+
+    @DeleteMapping("/{flashSaleProductId}")
+    public ResponseEntity<String> delete(
+        @PathVariable("flashSaleProductId") UUID flashSaleProductId
+    ) {
+        return ResponseEntity.ok(flashSaleProductService.delete(flashSaleProductId));
+    }
 }

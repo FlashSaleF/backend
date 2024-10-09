@@ -46,4 +46,11 @@ public class FlashSaleController {
     public ResponseEntity<FlashSaleResponseDto> getOne(@PathVariable("flashSaleId") UUID flashSaleId) {
         return ResponseEntity.ok(flashSaleService.getOne(flashSaleId));
     }
+
+    @DeleteMapping("/{flashSaleId}")
+    public ResponseEntity<String> delete(
+        @PathVariable("flashSaleId") UUID flashSaleId
+    ) {
+        return ResponseEntity.ok(flashSaleService.delete(flashSaleId));
+    }
 }

@@ -137,6 +137,16 @@ public class FlashSaleProductService {
     }
 
     @Transactional
+    public String delete(UUID flashSaleId) {
+        validAuthority();
+
+        FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleId);
+        flashSaleProduct.delete();
+
+        return "삭제되었습니다.";
+    }
+
+    @Transactional
     @Scheduled(cron = "0 0 10-21 * * *")
     public void autoEndSale() {
         LocalDateTime currentDateTime = LocalDateTime.now();
