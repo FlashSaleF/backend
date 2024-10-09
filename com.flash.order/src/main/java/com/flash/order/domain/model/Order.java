@@ -5,7 +5,6 @@ import com.flash.order.application.dtos.request.OrderRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,16 +44,6 @@ public class Order extends BaseEntity {
 
     public void setOrderProducts(List<OrderProduct> orderProducts) {
         this.orderProducts = orderProducts;
-    }
-
-    public static Order createOrder(OrderRequestDto orderRequestDto, int totalPrice, String orderUid) {
-        return Order.builder()
-                .address(orderRequestDto.address())
-                .totalPrice(totalPrice)
-                .status(OrderStatus.pending)
-                .orderUid(orderUid)
-                .userId(orderRequestDto.userId())
-                .build();
     }
 
     public void updateOrder(OrderRequestDto orderRequestDto, int totalPrice) {

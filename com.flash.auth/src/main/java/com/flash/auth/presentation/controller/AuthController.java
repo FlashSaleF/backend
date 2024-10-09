@@ -46,6 +46,7 @@ public class AuthController {
 
     @PostMapping("/verify")
     public AuthResponseDto verify(@RequestHeader HttpHeaders headers) {
+        log.info("유효한 캐시가 존재할 때 여기로 요청이 오지 않아야 함");
         return authService.verify(headers);
     }
 }

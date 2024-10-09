@@ -1,14 +1,15 @@
 package com.flash.order.application.service;
 
+import com.flash.base.exception.CustomException;
 import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
-import com.flash.order.domain.model.Order;
-import com.flash.order.domain.model.OrderProduct;
-import com.flash.order.domain.model.Payment;
-import com.flash.order.domain.model.PaymentStatus;
+import com.flash.order.application.dtos.response.ProductResponseDto;
+import com.flash.order.domain.exception.OrderErrorCode;
+import com.flash.order.domain.model.*;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
 
     @Transactional
@@ -38,12 +40,18 @@ public class OrderService {
                 .map(orderProductDto -> {
 
                     //TODO Product 존재 여부 확인 (FeignClient 사용)
+                    ProductResponseDto productResponseDto;
+                    try {
+                        productResponseDto = feignClientService.getProduct(orderProductDto.productId());
+                    } catch (FeignException.NotFound e) {
+                        throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
+                    }
 
                     // OrderProduct 객체 생성
                     return OrderProduct.builder()
                             .productId(orderProductDto.productId()) // Product 객체를 엔티티로 변환
                             .quantity(orderProductDto.quantity())
-                            .price(orderProductDto.price())
+                            .price(productResponseDto.price())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -55,7 +63,7 @@ public class OrderService {
 
         //임시로 결제 생성(결제 로직에서 결제가 제대로 진행되지 않으면 db서 삭제됨)
         Payment payment = Payment.builder()
-                .userId(orderRequestDto.userId())
+                .userId(Long.valueOf(getCurrentUserId()))
                 .price(totalPrice.intValue())
                 .status(PaymentStatus.pending)
                 .build();
@@ -63,11 +71,13 @@ public class OrderService {
         paymentRepository.save(payment);
 
         // 주문 생성
-        Order order = Order.createOrder(
-                orderRequestDto,
-                totalPrice.intValue(),
-                UUID.randomUUID().toString() // 주문 고유 UID 생성
-        );
+        Order order = Order.builder()
+                .address(orderRequestDto.address())
+                .totalPrice(totalPrice.intValue())
+                .status(OrderStatus.pending)
+                .orderUid(UUID.randomUUID().toString())
+                .userId(Long.valueOf(getCurrentUserId()))
+                .build();
 
         // 주문에 orderProducts 설정
         orderProducts.forEach(orderProduct -> orderProduct.setOrder(order)); // Order 객체 설정
@@ -87,7 +97,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public OrderResponseDto getOrderById(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
         return orderMapper.convertToResponseDto(order);
     }
 
@@ -109,15 +119,23 @@ public class OrderService {
     public OrderResponseDto updateOrder(UUID orderId, OrderRequestDto orderRequestDto) {
         // 기존 주문 조회
         Order existingOrder = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         // 새로운 주문 상품 목록 생성
         List<OrderProduct> updatedOrderProducts = orderRequestDto.orderProducts().stream()
                 .map(orderProductDto -> {
+
+                    ProductResponseDto productResponseDto;
+                    try {
+                        productResponseDto = feignClientService.getProduct(orderProductDto.productId());
+                    } catch (FeignException.NotFound e) {
+                        throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
+                    }
+
                     OrderProduct orderProduct = new OrderProduct();
                     orderProduct.setProductId(orderProductDto.productId());
                     orderProduct.setQuantity(orderProductDto.quantity());
-                    orderProduct.setPrice(orderProductDto.price());
+                    orderProduct.setPrice(productResponseDto.price());
                     orderProduct.setOrder(existingOrder); // 현재 Order에 대한 참조 설정
                     return orderProduct;
                 }).collect(Collectors.toList());
@@ -143,7 +161,7 @@ public class OrderService {
     @Transactional
     public void deleteOrder(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. 주문 ID: " + orderId));
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         order.delete();
     }
@@ -158,7 +176,7 @@ public class OrderService {
                 .stream()
                 .findFirst()
                 .orElseThrow(() ->
-                        new ResponseStatusException(BAD_REQUEST, "권한이 존재하지 않습니다."))
+                        new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST))
                 .getAuthority();
     }
 }
