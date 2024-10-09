@@ -27,6 +27,12 @@ public class TokenValidationFilter implements GatewayFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+
+        String path = exchange.getRequest().getURI().getPath();
+        if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/swagger-resources")) {
+            return chain.filter(exchange);  // 필터 통과
+        }
+
         HttpHeaders headers = exchange.getRequest().getHeaders();
         String bearerAccessToken = headers.getFirst(HttpHeaders.AUTHORIZATION);
 
