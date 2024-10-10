@@ -20,3 +20,22 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
+
+springdoc:
+  swagger-ui:
+    use-root-path: true
+    urls[0]:
+      name: 인증 API
+      url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${AUTH_API_DOCS_PATH}
+    urls[1]:
+      name: 사용자 API
+      url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${USER_API_DOCS_PATH}
+    urls[2]:
+      name: 플래시 세일 API
+      url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${FLASH_SALE_API_DOCS_PATH}
+    urls[3]:
+      name: 주문 결제 API
+      url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${ORDER_API_DOCS_PATH}
+    urls[4]:
+      name: 업체 상품 API
+      url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${VENDOR_API_DOCS_PATH}
