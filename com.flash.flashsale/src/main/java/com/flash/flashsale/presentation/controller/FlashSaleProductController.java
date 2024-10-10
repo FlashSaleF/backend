@@ -47,6 +47,11 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.getListByTime(startTime, endTime));
     }
 
+    @GetMapping("/on-sale")
+    public ResponseEntity<List<FlashSaleProductResponseDto>> getOnSaleList() {
+        return ResponseEntity.ok(flashSaleProductService.getOnSaleList());
+    }
+
     @PatchMapping("/{flashSaleProductId}")
     public ResponseEntity<FlashSaleProductResponseDto> update(
         @PathVariable("flashSaleProductId") UUID flashSaleProductId,
@@ -60,8 +65,20 @@ public class FlashSaleProductController {
         return ResponseEntity.ok(flashSaleProductService.approve(flashSaleProductId));
     }
 
+    @PatchMapping("/{flashSaleProductId}/refuse")
+    public ResponseEntity<String> refuse(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        return ResponseEntity.ok(flashSaleProductService.refuse(flashSaleProductId));
+    }
+
     @PatchMapping("/{flashSaleProductId}/end")
     public ResponseEntity<String> endSale(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
         return ResponseEntity.ok(flashSaleProductService.endSale(flashSaleProductId));
+    }
+
+    @DeleteMapping("/{flashSaleProductId}")
+    public ResponseEntity<String> delete(
+        @PathVariable("flashSaleProductId") UUID flashSaleProductId
+    ) {
+        return ResponseEntity.ok(flashSaleProductService.delete(flashSaleProductId));
     }
 }
