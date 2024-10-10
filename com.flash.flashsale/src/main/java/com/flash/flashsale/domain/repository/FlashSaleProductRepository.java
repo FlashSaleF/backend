@@ -32,4 +32,14 @@ public interface FlashSaleProductRepository {
     FlashSaleProduct findByProductIdAndStatusAndIsDeletedFalse(UUID productId, FlashSaleProductStatus flashSaleProductStatus);
 
     List<FlashSaleProduct> findAllByProductIdInAndStatusAndIsDeletedFalse(List<UUID> productIds, FlashSaleProductStatus flashSaleProductStatus);
+
+    List<FlashSaleProduct> findAllByCreatedByAndIsDeletedFalse(String currentUserId);
+
+    List<FlashSaleProduct> findAllByCreatedByAndStatusInAndIsDeletedFalse(String currentUserId, List<FlashSaleProductStatus> statusList);
+
+    List<FlashSaleProduct> findAllByCreatedByAndFlashSaleIdAndIsDeletedFalse(String currentUserId, UUID flashSaleId);
+
+    List<FlashSaleProduct> findAllByCreatedByAndFlashSaleIdAndStatusInAndIsDeletedFalse(String currentUserId, UUID flashSaleId, List<FlashSaleProductStatus> statusList);
+
+    List<FlashSaleProduct> findAllByCreatedByAndStartTimeLessThanEqualAndEndTimeGreaterThanEqualAndIsDeletedFalse(String currentUserId, LocalDateTime endTime, LocalDateTime startTime);
 }
