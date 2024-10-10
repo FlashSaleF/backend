@@ -4,6 +4,7 @@ import com.flash.base.exception.CustomException;
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.ProductRequestDto;
 import com.flash.vendor.application.dto.request.ProductStatusUpdateDto;
+import com.flash.vendor.application.dto.request.ProductStockDecreaseRequestDto;
 import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
 import com.flash.vendor.application.dto.response.*;
 import com.flash.vendor.domain.exception.ProductErrorCode;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,6 +145,17 @@ public class ProductService {
         product.delete();
 
         return new ProductDeleteResponseDto("상품 삭제 성공");
+    }
+
+    @Transactional
+    public ProductStockDecreaseResponseDto decreaseProductStock(
+            UUID productId, ProductStockDecreaseRequestDto request
+    ) {
+        Product product = productRepository.findByIdAndIsDeletedFalse(productId);
+
+        product.decreaseProductStock(request.quantity());
+
+        return new ProductStockDecreaseResponseDto(productId, HttpStatus.OK.value());
     }
 
     private Product validateUserPermission(UUID productId) {
