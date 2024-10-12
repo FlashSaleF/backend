@@ -22,8 +22,11 @@ public class OrderProduct extends BaseEntity {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private UUID productId;
+
+    @Column(nullable = true)
+    private UUID flashSaleProductId;
 
     @Column(nullable = false)
     private int quantity;

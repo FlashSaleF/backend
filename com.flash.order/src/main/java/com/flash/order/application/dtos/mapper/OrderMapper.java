@@ -16,6 +16,7 @@ public class OrderMapper {
                 order.getOrderProducts().stream()
                         .map(orderProduct -> new OrderProductDto(
                                 orderProduct.getProductId(),
+                                orderProduct.getFlashSaleProductId(),
                                 orderProduct.getQuantity()
                         ))
                         .collect(Collectors.toList()),
