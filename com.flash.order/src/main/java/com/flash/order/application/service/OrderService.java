@@ -1,6 +1,7 @@
 package com.flash.order.application.service;
 
 import com.flash.base.exception.CustomException;
+import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
 import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.application.dtos.response.ProductResponseDto;
@@ -47,11 +48,17 @@ public class OrderService {
                         throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
                     }
 
+                    UUID flashSaleProductId = null;
+                    if(productResponseDto.flashSaleProductResponseDto() != null) {
+                        flashSaleProductId = productResponseDto.flashSaleProductResponseDto().get().flashSaleProductId();
+                    }
+
                     // OrderProduct 객체 생성
                     return OrderProduct.builder()
-                            .productId(orderProductDto.productId()) // Product 객체를 엔티티로 변환
+                            .productId(flashSaleProductId == null ? orderProductDto.productId() : null) // Product 객체를 엔티티로 변환
+                            .flashSaleProductId(flashSaleProductId)
                             .quantity(orderProductDto.quantity())
-                            .price(productResponseDto.price())
+                            .price(flashSaleProductId == null ? productResponseDto.price() : productResponseDto.flashSaleProductResponseDto().get().salePrice())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -87,6 +94,18 @@ public class OrderService {
 
         //order에 payment 매핑
         order.setPayment(payment);
+
+        // 재고 감소 처리 (flashSaleProductId가 없는 상품만)
+//        orderProducts.stream()
+//                .filter(orderProduct -> orderProduct.getFlashSaleProductId() == null)  // flashSaleProduct가 아닌 상품들만 처리
+//                .forEach(orderProduct -> {
+//                    ProductStockDecreaseRequestDto request = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+//                    feignClientService.decreaseProductStock(orderProduct.getProductId(), request);
+//                });
+        //ToDO: flashSaleProduct의 재고 감소 처리 + 결제 완료 되면 처리되도록 변경 필요 -> payment 쪽에서 처리할 예정
+        //재고 감소 처리는 반환값에 따라 다르게
+        //flashsale id 반환시 flashsale 호출 -> 재고 감소
+        //product id 반환시 product 호출 -> 재고 감소
 
         // 주문 저장
         Order savedOrder = orderRepository.save(order);
