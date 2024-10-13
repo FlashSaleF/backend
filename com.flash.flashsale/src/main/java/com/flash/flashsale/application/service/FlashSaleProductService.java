@@ -359,4 +359,11 @@ public class FlashSaleProductService {
             throw new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST);
         }
     }
+
+    @Transactional
+    public void increaseStock(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
+
+        flashSaleProduct.increaseStock();
+    }
 }

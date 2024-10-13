@@ -71,4 +71,8 @@ public class FlashSaleProduct extends BaseEntity {
     public void refuse() {
         this.status = FlashSaleProductStatus.REFUSE;
     }
+
+    public void increaseStock() {
+        this.stock++;
+    }
 }

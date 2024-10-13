@@ -24,4 +24,9 @@ public class FlashSaleProductInternalController {
     public List<InternalProductResponseDto> getList(@RequestBody List<UUID> productIds) {
         return flashSaleProductService.getListByProductIds(productIds);
     }
+
+    @PatchMapping("/{productId}/increaseStock")
+    public void increaseStock(@PathVariable("productId") UUID productId) {
+        flashSaleProductService.increaseStock(productId);
+    }
 }
