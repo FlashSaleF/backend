@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface FeignClientService {
     ProductResponseDto getProductInfo(UUID productId);
-
     Map<UUID, ProductResponseDto> getProductInfoListMap(List<UUID> productIds);
+
+    void decreaseProductStock(UUID productId, Integer stock);
 }

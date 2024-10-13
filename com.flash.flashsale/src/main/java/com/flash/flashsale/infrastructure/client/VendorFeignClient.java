@@ -1,14 +1,13 @@
 package com.flash.flashsale.infrastructure.client;
 
 import com.flash.flashsale.application.dto.request.ProductListRequestDto;
+import com.flash.flashsale.application.dto.request.ProductStockDecreaseRequestDto;
 import com.flash.flashsale.application.dto.response.ProductListResponseDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
+import com.flash.flashsale.application.dto.response.ProductStockDecreaseResponseDto;
 import com.flash.flashsale.infrastructure.configuration.FeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -20,4 +19,11 @@ public interface VendorFeignClient {
 
     @PostMapping("/api/internal/products/batch")
     ProductListResponseDto getProductInfoList(@RequestBody ProductListRequestDto productIds);
+
+    @PatchMapping("/api/internal/products/{productId}/stock/decrease")
+    ProductStockDecreaseResponseDto decreaseProductStock(
+        @RequestHeader(value = "X-HTTP-Method-Override", defaultValue = "PATCH") String xHttpMethodOveride,
+        @PathVariable UUID productId,
+        @RequestBody ProductStockDecreaseRequestDto request
+    );
 }

@@ -53,6 +53,8 @@ public class FlashSaleProductService {
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
+        feignClientService.decreaseProductStock(flashSaleProductRequestDto.productId(), flashSaleProductRequestDto.stock());
+
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
     }
 
