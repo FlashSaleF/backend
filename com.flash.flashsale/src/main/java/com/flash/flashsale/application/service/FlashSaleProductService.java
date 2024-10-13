@@ -57,15 +57,16 @@ public class FlashSaleProductService {
 
         feignClientService.decreaseProductStock(flashSaleProductRequestDto.productId(), flashSaleProductRequestDto.stock());
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
+        ProductResponseDto productResponseDto = getProductInfo(flashSaleProduct.getProductId());
+        validSalePrice(productResponseDto, flashSaleProductRequestDto.salePrice());
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
     }
 
     @Transactional
     public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductUpdateRequestDto flashSaleProductUpdateRequestDto) {
         validAuthority();
         validAvailableDateTime(flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
-
-
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
             () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
@@ -80,7 +81,10 @@ public class FlashSaleProductService {
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
+        ProductResponseDto productResponseDto = getProductInfo(flashSaleProduct.getProductId());
+        validSalePrice(productResponseDto, flashSaleProductUpdateRequestDto.salePrice());
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +94,7 @@ public class FlashSaleProductService {
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, getProductInfo(flashSaleProduct.getProductId()));
     }
 
     @Transactional(readOnly = true)
@@ -386,6 +390,12 @@ public class FlashSaleProductService {
         }
     }
 
+    private void validSalePrice(ProductResponseDto productResponseDto, Integer salePrice) {
+        if (productResponseDto.price() <= salePrice) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_PRICE);
+        }
+    }
+
     @Transactional
     public void increaseStock(UUID flashSaleProductId) {
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
@@ -402,5 +412,9 @@ public class FlashSaleProductService {
         if (flashSaleProduct.getStock() == 0) {
             endSale(flashSaleProductId);
         }
+    }
+
+    private ProductResponseDto getProductInfo(UUID productId) {
+        return feignClientService.getProductInfo(productId);
     }
 }
