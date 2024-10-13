@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -291,6 +292,14 @@ public class FlashSaleProductService {
     private void validAvailableDateTime(FlashSaleProductRequestDto flashSaleProductRequestDto) {
         if (flashSaleProductRequestDto.endTime().isBefore(flashSaleProductRequestDto.startTime())) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_DATE);
+        }
+
+        if (flashSaleProductRequestDto.startTime().toLocalTime().isBefore(LocalTime.of(10, 0)) || flashSaleProductRequestDto.startTime().toLocalTime().isAfter(LocalTime.of(21, 0))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_START_TIME);
+        }
+
+        if (flashSaleProductRequestDto.endTime().toLocalTime().isBefore(LocalTime.of(11, 0)) || flashSaleProductRequestDto.endTime().toLocalTime().isAfter(LocalTime.of(22, 0))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_END_TIME);
         }
 
         if (flashSaleProductRequestDto.startTime().isBefore(LocalDateTime.now().plusHours(1))) {
