@@ -75,4 +75,8 @@ public class FlashSaleProduct extends BaseEntity {
     public void increaseStock() {
         this.stock++;
     }
+
+    public void decreaseStock() {
+        this.stock--;
+    }
 }

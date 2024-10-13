@@ -366,4 +366,15 @@ public class FlashSaleProductService {
 
         flashSaleProduct.increaseStock();
     }
+
+    @Transactional
+    public void decreaseStock(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
+
+        flashSaleProduct.decreaseStock();
+
+        if (flashSaleProduct.getStock() == 0) {
+            endSale(flashSaleProductId);
+        }
+    }
 }

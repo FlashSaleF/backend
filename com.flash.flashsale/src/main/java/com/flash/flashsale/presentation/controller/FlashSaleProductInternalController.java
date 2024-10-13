@@ -29,4 +29,9 @@ public class FlashSaleProductInternalController {
     public void increaseStock(@PathVariable("productId") UUID productId) {
         flashSaleProductService.increaseStock(productId);
     }
+
+    @PatchMapping("/{productId}/decreaseStock")
+    public void decreaseStock(@PathVariable("productId") UUID productId) {
+        flashSaleProductService.decreaseStock(productId);
+    }
 }
