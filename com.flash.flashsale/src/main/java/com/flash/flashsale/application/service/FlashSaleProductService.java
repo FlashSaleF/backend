@@ -292,6 +292,10 @@ public class FlashSaleProductService {
         if (flashSaleProductRequestDto.endTime().isBefore(flashSaleProductRequestDto.startTime())) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_DATE);
         }
+
+        if (flashSaleProductRequestDto.startTime().isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_TIME);
+        }
     }
 
     private void validAvailableSailTime(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
