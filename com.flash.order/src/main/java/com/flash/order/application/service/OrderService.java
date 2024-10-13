@@ -14,6 +14,8 @@ import com.flash.order.infrastructure.messaging.MessagingProducerService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -36,6 +39,7 @@ public class OrderService {
     private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
     private final MessagingProducerService messagingProducerService;
+    private final RedissonClient redissonClient;
 
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
@@ -120,19 +124,34 @@ public class OrderService {
 
         // 재고 감소 처리
         for (OrderProduct orderProduct : order.getOrderProducts()) {
-            ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+            String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
+            RLock lock = redissonClient.getLock(lockKey); //redis lock 생성
 
             try {
-                if (orderProduct.getFlashSaleProductId() == null) { // 일반 상품인 경우
-                    messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
-                } else { // 플래시 세일 상품인 경우
-                    messagingProducerService.sendDecreaseFlashProductStock(orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS); // 락을 500ms 대기, 3000ms 락 유지 시도
+
+                if (available) { // 락을 얻었을 경우
+                    ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+
+                    if (orderProduct.getFlashSaleProductId() == null) { // 일반 상품인 경우
+                        messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
+                    } else { // 플래시 세일 상품인 경우
+                        messagingProducerService.sendDecreaseFlashProductStock(orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                    }
+                } else {  // 락을 얻지 못했을 경우
+                    stockDecreasedSuccessfully = false;
+                    log.error("재고 감소 처리 중 락을 얻지 못했습니다. productId: {}", orderProduct.getProductId());
+                    break;
                 }
             } catch (Exception e) {
                 // 재고 감소 실패 처리
                 stockDecreasedSuccessfully = false;
                 log.error("재고 감소 처리 중 오류 발생: {}", e.getMessage());
                 break; // 오류 발생 시 루프 종료
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock(); // 락 해제
+                }
             }
         }
 
