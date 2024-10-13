@@ -7,13 +7,13 @@ import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
+import com.flash.flashsale.application.dto.response.ProductResponseDto;
 import com.flash.flashsale.domain.exception.FlashSaleProductErrorCode;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,18 +23,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FlashSaleProductService {
 
     private final FlashSaleService flashSaleService;
+    private final FeignClientService feignClientService;
 
     private final FlashSaleProductMapper flashSaleProductMapper;
     private final FlashSaleMapper flashSaleMapper;
+
     private final FlashSaleProductRepository flashSaleProductRepository;
 
     @Transactional
@@ -51,7 +53,7 @@ public class FlashSaleProductService {
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
     }
 
     @Transactional
@@ -73,7 +75,7 @@ public class FlashSaleProductService {
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
     }
 
     @Transactional(readOnly = true)
@@ -83,48 +85,38 @@ public class FlashSaleProductService {
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, feignClientService.getProductInfo(flashSaleProduct.getProductId()));
     }
 
     @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList = getAvailableFlashSaleProductList(flashSaleId, statusList);
-
-        log.info("test");
-
-        return flashSaleProductList.stream().map(flashSaleProduct ->
-        {
-            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
-            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
-
-            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
-        }).toList();
+        return getFlashSaleProductDtoList(flashSaleProductList);
     }
 
     @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getListByTime(LocalDateTime startTime, LocalDateTime endTime) {
         List<FlashSaleProduct> flashSaleProductList = getAvailableFlashSaleProductListByTime(startTime, endTime);
+        return getFlashSaleProductDtoList(flashSaleProductList);
+    }
+
+    private List<FlashSaleProductResponseDto> getFlashSaleProductDtoList(List<FlashSaleProduct> flashSaleProductList) {
+        Map<UUID, ProductResponseDto> productListMap = getProductListMap(flashSaleProductList);
 
         return flashSaleProductList.stream().map(flashSaleProduct ->
         {
             FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
             FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+            ProductResponseDto productResponseDto = productListMap.get(flashSaleProduct.getProductId());
 
-            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
         }).toList();
     }
 
     @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getOnSaleList() {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(List.of(FlashSaleProductStatus.ONSALE));
-
-        return flashSaleProductList.stream().map(flashSaleProduct ->
-        {
-            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
-            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
-
-            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
-        }).toList();
+        return getFlashSaleProductDtoList(flashSaleProductList);
     }
 
     @Transactional
@@ -272,6 +264,12 @@ public class FlashSaleProductService {
 
     private Optional<FlashSaleProduct> getFlashSaleProductByStatus(UUID flashSaleProductId, List<FlashSaleProductStatus> statusList) {
         return flashSaleProductRepository.findByIdAndStatusInAndIsDeletedFalse(flashSaleProductId, statusList);
+    }
+
+    private Map<UUID, ProductResponseDto> getProductListMap(List<FlashSaleProduct> flashSaleProductList) {
+        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+
+        return feignClientService.getProductInfoListMap(productIdList);
     }
 
     private void validAvailableFlashSale(FlashSaleProduct flashSaleProduct) {
