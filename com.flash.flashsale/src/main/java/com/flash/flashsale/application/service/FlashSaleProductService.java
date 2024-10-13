@@ -185,6 +185,17 @@ public class FlashSaleProductService {
     }
 
     @Transactional
+    @Scheduled(cron = "0 30 9-20 * * *")
+    public void autoRefuse() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime fiveMinutesAgo = currentDateTime.plusMinutes(25);
+        LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(35);
+        //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
+
+        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::refuse);
+    }
+
+    @Transactional
     @Scheduled(cron = "0 0 09-20 * * *")
     public void autoStartSale() {
         LocalDateTime currentDateTime = LocalDateTime.now();
