@@ -10,8 +10,10 @@ import com.flash.order.domain.model.*;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
+import com.flash.order.infrastructure.messaging.MessagingProducerService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -32,6 +35,7 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
+    private final MessagingProducerService messagingProducerService;
 
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
@@ -95,22 +99,48 @@ public class OrderService {
         //order에 payment 매핑
         order.setPayment(payment);
 
-        // 재고 감소 처리 (flashSaleProductId가 없는 상품만)
-//        orderProducts.stream()
-//                .filter(orderProduct -> orderProduct.getFlashSaleProductId() == null)  // flashSaleProduct가 아닌 상품들만 처리
-//                .forEach(orderProduct -> {
-//                    ProductStockDecreaseRequestDto request = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
-//                    feignClientService.decreaseProductStock(orderProduct.getProductId(), request);
-//                });
-        //ToDO: flashSaleProduct의 재고 감소 처리 + 결제 완료 되면 처리되도록 변경 필요 -> payment 쪽에서 처리할 예정
-        //재고 감소 처리는 반환값에 따라 다르게
-        //flashsale id 반환시 flashsale 호출 -> 재고 감소
-        //product id 반환시 product 호출 -> 재고 감소
-
         // 주문 저장
         Order savedOrder = orderRepository.save(order);
 
+        //주문 생성 시 이벤트 발행
+        messagingProducerService.sendPaymentRequest(savedOrder);
+
         return orderMapper.convertToResponseDto(savedOrder);
+    }
+
+    @Transactional
+    public void handlePaymentCompleted(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        order.getPayment().changeStatus(PaymentStatus.completed);
+
+        // 재고 감소 처리 플래그
+        boolean stockDecreasedSuccessfully = true;
+
+        // 재고 감소 처리
+        for (OrderProduct orderProduct : order.getOrderProducts()) {
+            ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+
+            try {
+                if (orderProduct.getFlashSaleProductId() == null) { // 일반 상품인 경우
+                    messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
+                } else { // 플래시 세일 상품인 경우
+                    messagingProducerService.sendDecreaseFlashProductStock(orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                }
+            } catch (Exception e) {
+                // 재고 감소 실패 처리
+                stockDecreasedSuccessfully = false;
+                log.error("재고 감소 처리 중 오류 발생: {}", e.getMessage());
+                break; // 오류 발생 시 루프 종료
+            }
+        }
+
+        // 재고 감소가 실패한 경우 결제 취소
+        if (!stockDecreasedSuccessfully) {
+            order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
+        }
+
     }
 
     @Transactional(readOnly = true)
