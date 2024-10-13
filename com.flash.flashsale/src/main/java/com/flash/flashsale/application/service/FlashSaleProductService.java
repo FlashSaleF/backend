@@ -4,6 +4,7 @@ import com.flash.base.exception.CustomException;
 import com.flash.flashsale.application.dto.mapper.FlashSaleMapper;
 import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
+import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
@@ -44,11 +45,11 @@ public class FlashSaleProductService {
     public FlashSaleProductResponseDto create(FlashSaleProductRequestDto flashSaleProductRequestDto) {
         validVendor();
         validDuplicate(flashSaleProductRequestDto);
-        validAvailableDateTime(flashSaleProductRequestDto);
+        validAvailableDateTime(flashSaleProductRequestDto.startTime(), flashSaleProductRequestDto.endTime());
 
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
 
-        validAvailableSailTime(flashSale, flashSaleProductRequestDto);
+        validAvailableSailTime(flashSale, flashSaleProductRequestDto.startTime(), flashSaleProductRequestDto.endTime());
 
         FlashSaleProduct flashSaleProduct = flashSaleProductRepository.save(FlashSaleProduct.create(flashSale, flashSaleProductRequestDto));
 
@@ -60,21 +61,22 @@ public class FlashSaleProductService {
     }
 
     @Transactional
-    public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductRequestDto flashSaleProductRequestDto) {
+    public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductUpdateRequestDto flashSaleProductUpdateRequestDto) {
         validAuthority();
-        validAvailableDateTime(flashSaleProductRequestDto);
+        validAvailableDateTime(flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
 
-        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
 
-        validAvailableSailTime(flashSale, flashSaleProductRequestDto);
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
             () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
         );
 
+        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+        validAvailableSailTime(flashSale, flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
+
         validAvailableFlashSale(flashSaleProduct);
 
-        flashSaleProduct.update(flashSaleProductRequestDto);
+        flashSaleProduct.update(flashSaleProductUpdateRequestDto);
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
@@ -300,26 +302,26 @@ public class FlashSaleProductService {
         }
     }
 
-    private void validAvailableDateTime(FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if (flashSaleProductRequestDto.endTime().isBefore(flashSaleProductRequestDto.startTime())) {
+    private void validAvailableDateTime(LocalDateTime startTime, LocalDateTime endTime) {
+        if (endTime.isBefore(startTime)) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_DATE);
         }
 
-        if (flashSaleProductRequestDto.startTime().toLocalTime().isBefore(LocalTime.of(10, 0)) || flashSaleProductRequestDto.startTime().toLocalTime().isAfter(LocalTime.of(21, 0))) {
+        if (startTime.toLocalTime().isBefore(LocalTime.of(10, 0)) || startTime.toLocalTime().isAfter(LocalTime.of(21, 0))) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_START_TIME);
         }
 
-        if (flashSaleProductRequestDto.endTime().toLocalTime().isBefore(LocalTime.of(11, 0)) || flashSaleProductRequestDto.endTime().toLocalTime().isAfter(LocalTime.of(22, 0))) {
+        if (endTime.toLocalTime().isBefore(LocalTime.of(11, 0)) || endTime.toLocalTime().isAfter(LocalTime.of(22, 0))) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_END_TIME);
         }
 
-        if (flashSaleProductRequestDto.startTime().isBefore(LocalDateTime.now().plusHours(1))) {
+        if (startTime.isBefore(LocalDateTime.now().plusHours(1))) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_TIME);
         }
     }
 
-    private void validAvailableSailTime(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if (flashSaleProductRequestDto.startTime().toLocalDate().isBefore(flashSale.getStartDate()) || flashSaleProductRequestDto.endTime().toLocalDate().isAfter(flashSale.getEndDate())) {
+    private void validAvailableSailTime(FlashSale flashSale, LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime.toLocalDate().isBefore(flashSale.getStartDate()) || endTime.toLocalDate().isAfter(flashSale.getEndDate())) {
             throw new CustomException(FlashSaleProductErrorCode.IS_NOT_ON_SALE_TIME);
         }
     }

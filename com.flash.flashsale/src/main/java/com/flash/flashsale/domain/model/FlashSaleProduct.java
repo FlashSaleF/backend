@@ -2,6 +2,7 @@ package com.flash.flashsale.domain.model;
 
 import com.flash.base.jpa.BaseEntity;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
+import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -60,12 +61,11 @@ public class FlashSaleProduct extends BaseEntity {
         this.status = FlashSaleProductStatus.ONSALE;
     }
 
-    public void update(FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        this.salePrice = flashSaleProductRequestDto.salePrice();
-        this.stock = flashSaleProductRequestDto.stock();
+    public void update(FlashSaleProductUpdateRequestDto flashSaleProductUpdateRequestDto) {
+        this.salePrice = flashSaleProductUpdateRequestDto.salePrice();
         this.status = FlashSaleProductStatus.PENDING;
-        this.startTime = flashSaleProductRequestDto.startTime();
-        this.endTime = flashSaleProductRequestDto.endTime();
+        this.startTime = flashSaleProductUpdateRequestDto.startTime();
+        this.endTime = flashSaleProductUpdateRequestDto.endTime();
     }
 
     public void refuse() {
