@@ -49,4 +49,8 @@ public class Payment extends BaseEntity {
         this.paymentUid = paymentUid;
         this.delete();
     }
+
+    public void changeStatus(PaymentStatus status) {
+        this.status = status;
+    }
 }

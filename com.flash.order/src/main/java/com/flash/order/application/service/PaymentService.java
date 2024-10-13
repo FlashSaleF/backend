@@ -1,9 +1,9 @@
 package com.flash.order.application.service;
 
 import com.flash.base.exception.CustomException;
-import com.flash.base.exception.ErrorCode;
 import com.flash.order.application.dtos.mapper.PaymentMapper;
 import com.flash.order.application.dtos.request.PaymentCallbackDto;
+import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
 import com.flash.order.application.dtos.response.PaymentResponseDto;
 import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.flash.order.domain.exception.OrderErrorCode;
@@ -13,6 +13,7 @@ import com.flash.order.domain.model.Order;
 import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.domain.repository.PaymentRepository;
+import com.flash.order.infrastructure.messaging.MessagingProducerService;
 import com.siot.IamportRestClient.IamportClient;
 import com.siot.IamportRestClient.exception.IamportResponseException;
 import com.siot.IamportRestClient.request.CancelData;
@@ -34,6 +35,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final IamportClient iamportClient;
     private final PaymentMapper paymentMapper;
+    private final MessagingProducerService messagingProducerService;
 
     public IamportResponse<Payment> processPayment(PaymentCallbackDto request) {
         try {
@@ -64,6 +66,24 @@ public class PaymentService {
             // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
             order.getPayment().changePaymentBySuccess(PaymentStatus.completed, iamportResponse.getResponse().getImpUid());
             orderRepository.save(order); // 주문 상태 저장
+
+            // 결제 완료 후 재고 감소 처리 이벤트 발행 (비동기)
+//            order.getOrderProducts().stream()
+//                    .filter(orderProduct -> orderProduct.getFlashSaleProductId() == null)  // flashSaleProduct가 아닌 상품들만 처리
+//                    .forEach(orderProduct -> {
+//                        ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+//                        messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
+//                    });
+
+            order.getOrderProducts().forEach(orderProduct -> {
+                ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+
+                if(orderProduct.getFlashSaleProductId() == null){  //일반 상품인 경우
+                    messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
+                } else{  //플래시 세일 상품인 경우
+                    messagingProducerService.sendDecreaseFlashProductStock(orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                }
+            });
 
             return iamportResponse;
 
