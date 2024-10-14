@@ -10,6 +10,7 @@ import com.flash.order.domain.model.Order;
 import com.flash.order.domain.model.OrderStatus;
 import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
+import com.flash.order.infrastructure.messaging.event.FlashProductStockDecreaseEvent;
 import com.flash.order.infrastructure.messaging.event.OrderPaymentEvent;
 import com.flash.order.infrastructure.messaging.event.ProductStockDecreaseEvent;
 import com.flash.order.infrastructure.messaging.serialization.EventSerializer;
@@ -39,7 +40,7 @@ public class MessagingConsumerService {
     @KafkaListener(topics = "flash-product-stock-decrease", groupId = "order-group")
     public void listenFlashProductStockDecreaseEvent(String message) {
         // 메시지 수신
-        ProductStockDecreaseEvent event = EventSerializer.deserialize(message, ProductStockDecreaseEvent.class);
+        FlashProductStockDecreaseEvent event = EventSerializer.deserialize(message, FlashProductStockDecreaseEvent.class);
         //feignclient로 flashSaleProduct의 재고 감소 처리
 
     }
