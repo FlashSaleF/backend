@@ -42,4 +42,6 @@ public interface FlashSaleProductRepository {
     List<FlashSaleProduct> findAllByCreatedByAndFlashSaleIdAndStatusInAndIsDeletedFalse(String currentUserId, UUID flashSaleId, List<FlashSaleProductStatus> statusList);
 
     List<FlashSaleProduct> findAllByCreatedByAndStartTimeLessThanEqualAndEndTimeGreaterThanEqualAndIsDeletedFalse(String currentUserId, LocalDateTime endTime, LocalDateTime startTime);
+
+    boolean existsByFlashSaleIdAndIsDeletedFalse(UUID flashSaleId);
 }

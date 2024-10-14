@@ -9,6 +9,7 @@ import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
+import com.flash.flashsale.domain.exception.FlashSaleErrorCode;
 import com.flash.flashsale.domain.exception.FlashSaleProductErrorCode;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
@@ -297,6 +298,12 @@ public class FlashSaleProductService {
         List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
 
         return feignClientService.getProductInfoListMap(productIdList);
+    }
+
+    protected void validUpdateFlashSale(UUID flashSaleId) {
+        if (flashSaleProductRepository.existsByFlashSaleIdAndIsDeletedFalse(flashSaleId)) {
+            throw new CustomException(FlashSaleErrorCode.NOT_AVAILABLE_UPDATE);
+        }
     }
 
     private void validAvailableFlashSale(FlashSaleProduct flashSaleProduct) {
