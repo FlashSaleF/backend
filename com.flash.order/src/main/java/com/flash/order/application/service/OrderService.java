@@ -56,7 +56,7 @@ public class OrderService {
                     }
 
                     UUID flashSaleProductId = null;
-                    if(productResponseDto.flashSaleProductResponseDto() != null) {
+                    if(productResponseDto.flashSaleProductResponseDto().isPresent()) {
                         flashSaleProductId = productResponseDto.flashSaleProductResponseDto().get().flashSaleProductId();
                     }
 
