@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -121,43 +122,63 @@ public class OrderService {
         // 재고 감소 처리 플래그
         boolean stockDecreasedSuccessfully = true;
 
-        // 재고 감소 처리
+        // 모든 상품에 대한 재고 검증
         for (OrderProduct orderProduct : order.getOrderProducts()) {
             String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
-            RLock lock = redissonClient.getLock(lockKey); //redis lock 생성
+            RLock lock = redissonClient.getLock(lockKey);
 
             try {
-                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS); // 락을 500ms 대기, 3000ms 락 유지 시도
+                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS);
 
-                if (available) { // 락을 얻었을 경우
-                    ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+                if (available) {
+                    ProductResponseDto productResponseDto = feignClientService.getProduct(orderProduct.getProductId());
 
-                    if (orderProduct.getFlashSaleProductId() == null) { // 일반 상품인 경우
-                        messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
-                    } else { // 플래시 세일 상품인 경우
-                        messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                    if (productResponseDto.stock() < orderProduct.getQuantity()) {
+                        // 재고 부족 시 결제 및 주문 상태 취소
+                        cancelOrderAndPayment(order);
+                        throw new CustomException(OrderErrorCode.PRODUCT_OUT_OF_STOCK);
                     }
-                } else {  // 락을 얻지 못했을 경우
-                    stockDecreasedSuccessfully = false;
-                    log.error("재고 감소 처리 중 락을 얻지 못했습니다. productId: {}", orderProduct.getProductId());
-                    break;
+                } else {
+                    log.error("재고 검증 중 락을 얻지 못했습니다. productId: {}", orderProduct.getProductId());
+                    cancelOrderAndPayment(order);
+                    throw new CustomException(OrderErrorCode.PRODUCT_STOCK_LOCK_FAILED);
                 }
             } catch (Exception e) {
-                // 재고 감소 실패 처리
-                stockDecreasedSuccessfully = false;
-                log.error("재고 감소 처리 중 오류 발생: {}", e.getMessage());
-                break; // 오류 발생 시 루프 종료
+                log.error("재고 검증 중 오류 발생: {}", e.getMessage());
+                cancelOrderAndPayment(order);
+                throw new CustomException(OrderErrorCode.PRODUCT_STOCK_VERIFICATION_FAILED);
             } finally {
                 if (lock.isHeldByCurrentThread()) {
-                    lock.unlock(); // 락 해제
+                    lock.unlock();
                 }
             }
         }
 
-        // 재고 감소가 실패한 경우 결제 취소
-        if (!stockDecreasedSuccessfully) {
-            order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
-            order.setStatus(OrderStatus.cancelled); // 주문 상태를 취소로 변경
+        // 재고 감소가 성공한 경우에만 계속 처리
+        for (OrderProduct orderProduct : order.getOrderProducts()) {
+            String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
+            RLock lock = redissonClient.getLock(lockKey);
+
+            try {
+                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS);
+
+                if (available) {
+                    ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+                    if (orderProduct.getFlashSaleProductId() == null) {
+                        messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto);
+                    } else {
+                        messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto);
+                    }
+                }
+            } catch (Exception e) {
+                stockDecreasedSuccessfully = false;
+                log.error("재고 감소 처리 중 오류 발생: {}", e.getMessage());
+                throw new CustomException(OrderErrorCode.PRODUCT_STOCK_DECREASE_FAILED);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            }
         }
 
     }
@@ -168,6 +189,21 @@ public class OrderService {
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         order.setStatus(OrderStatus.completed);
+    }
+
+    @Transactional
+    public void handleOrderCancelled(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        order.setStatus(OrderStatus.cancelled);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cancelOrderAndPayment(Order order) {
+        order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
+        order.setStatus(OrderStatus.cancelled); // 주문 상태를 취소로 변경
+        orderRepository.save(order); // 상태 변경 후 저장
     }
 
     @Transactional(readOnly = true)
