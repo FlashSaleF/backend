@@ -21,7 +21,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
   data:
     redis:
-      host: ${REDIS_HOST}
+      host: ${REDIS_DOMAIN}
       port: ${REDIS_PORT}
 
   jpa:
