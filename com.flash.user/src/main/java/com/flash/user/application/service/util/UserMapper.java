@@ -32,9 +32,11 @@ public class UserMapper {
                 .build();
     }
 
-    public static UserResponseDto getNameFrom(User user) {
+    public static UserResponseDto getInfoFrom(User user) {
         return UserResponseDto.builder()
                 .name(user.getName())
+                .email(user.getEmail())
+                .id(user.getId())
                 .build();
     }
 

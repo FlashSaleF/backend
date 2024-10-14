@@ -57,8 +57,8 @@ public class UserService {
         );
     }
 
-    public UserResponseDto getUserInfoForVendor(String userId) {
-        return UserMapper.getNameFrom(getUser(userId));
+    public UserResponseDto getUserInfoForAuth(String userId) {
+        return UserMapper.getInfoFrom(getUser(userId));
     }
 
     @Transactional(readOnly = true)
@@ -95,7 +95,7 @@ public class UserService {
         User user = getUser(userId);
         user.delete();
 
-        return UserMapper.getNameFrom(user);
+        return UserMapper.getInfoFrom(user);
     }
 
     public Page<UserInfoResponseDto> getUserList(int page, int size, String sortBy, boolean isAsc) {
