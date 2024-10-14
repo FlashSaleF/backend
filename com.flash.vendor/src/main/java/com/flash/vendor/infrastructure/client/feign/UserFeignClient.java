@@ -1,4 +1,4 @@
-package com.flash.vendor.infrastructure.client;
+package com.flash.vendor.infrastructure.client.feign;
 
 import com.flash.vendor.application.dto.response.UserResponseDto;
 import com.flash.vendor.infrastructure.configuration.FeignConfig;

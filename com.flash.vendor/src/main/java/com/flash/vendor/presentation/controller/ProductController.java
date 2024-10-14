@@ -6,7 +6,7 @@ import com.flash.vendor.application.dto.request.ProductUpdateRequestDto;
 import com.flash.vendor.application.dto.response.ProductDeleteResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
-import com.flash.vendor.application.service.ProductService;
+import com.flash.vendor.application.service.ProductApplicationService;
 import com.flash.vendor.domain.model.ProductStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,20 +23,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductService productService;
+    private final ProductApplicationService productApplicationService;
 
     @PostMapping
     public ResponseEntity<ProductResponseDto> createProduct(
             @Valid @RequestBody ProductRequestDto request
     ) {
 
-        return ResponseEntity.ok(productService.createProduct(request));
+        return ResponseEntity.ok(productApplicationService.createProduct(request));
     }
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponseDto> getProduct(@PathVariable UUID productId) {
 
-        return ResponseEntity.ok(productService.getProduct(productId));
+        return ResponseEntity.ok(productApplicationService.getProduct(productId));
     }
 
     @GetMapping
@@ -47,7 +47,7 @@ public class ProductController {
                     direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        return ResponseEntity.ok(productService.getProducts(pageable));
+        return ResponseEntity.ok(productApplicationService.getProducts(pageable));
     }
 
     @GetMapping("/search")
@@ -62,7 +62,7 @@ public class ProductController {
                     direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        return ResponseEntity.ok(productService.searchProducts(name, lprice, hprice, status.name(), pageable));
+        return ResponseEntity.ok(productApplicationService.searchProducts(name, lprice, hprice, status.name(), pageable));
     }
 
     @PutMapping("/{productId}")
@@ -70,7 +70,7 @@ public class ProductController {
             @PathVariable UUID productId, @RequestBody ProductUpdateRequestDto request
     ) {
 
-        return ResponseEntity.ok(productService.updateProduct(productId, request));
+        return ResponseEntity.ok(productApplicationService.updateProduct(productId, request));
     }
 
     @PatchMapping("/{productId}")
@@ -78,7 +78,7 @@ public class ProductController {
             @PathVariable UUID productId, @RequestBody ProductStatusUpdateDto request
     ) {
 
-        return ResponseEntity.ok(productService.updateProductStatus(productId, request));
+        return ResponseEntity.ok(productApplicationService.updateProductStatus(productId, request));
     }
 
     @DeleteMapping("/{productId}")
@@ -86,6 +86,6 @@ public class ProductController {
             @PathVariable UUID productId
     ) {
 
-        return ResponseEntity.ok(productService.deleteProduct(productId));
+        return ResponseEntity.ok(productApplicationService.deleteProduct(productId));
     }
 }

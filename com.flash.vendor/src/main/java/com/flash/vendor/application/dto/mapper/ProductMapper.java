@@ -1,8 +1,12 @@
 package com.flash.vendor.application.dto.mapper;
 
 import com.flash.vendor.application.dto.response.FlashSaleProductResponseDto;
+import com.flash.vendor.application.dto.response.ProductListResponseDto;
+import com.flash.vendor.application.dto.response.ProductPageResponseDto;
 import com.flash.vendor.application.dto.response.ProductResponseDto;
 import com.flash.vendor.domain.model.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -40,7 +44,28 @@ public class ProductMapper {
         );
     }
 
-    public static List<ProductResponseDto> toResponseDtoList(
+    public static ProductPageResponseDto toProductPageResponseDto(
+            Page<Product> products,
+            Map<UUID, FlashSaleProductResponseDto> saleProductListMap
+    ) {
+        List<ProductResponseDto> productResponseDtos =
+                toResponseDtoList(products, saleProductListMap);
+
+        return new ProductPageResponseDto(new PageImpl<>(
+                productResponseDtos, products.getPageable(), products.getTotalElements()));
+    }
+
+    public static ProductListResponseDto toProductListResponseDto(
+            List<Product> products,
+            Map<UUID, FlashSaleProductResponseDto> saleProductListMap
+    ) {
+        List<ProductResponseDto> productResponseDtos =
+                toResponseDtoList(products, saleProductListMap);
+
+        return new ProductListResponseDto(productResponseDtos);
+    }
+
+    private static List<ProductResponseDto> toResponseDtoList(
             Iterable<Product> products,
             Map<UUID, FlashSaleProductResponseDto> saleProductListMap
     ) {

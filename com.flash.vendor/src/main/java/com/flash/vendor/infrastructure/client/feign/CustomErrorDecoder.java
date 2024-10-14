@@ -1,4 +1,4 @@
-package com.flash.vendor.infrastructure.client;
+package com.flash.vendor.infrastructure.client.feign;
 
 import com.flash.base.exception.CustomException;
 import feign.Response;
