@@ -23,8 +23,8 @@ public class MessagingProducerService {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
 
-    public void sendDecreaseProductStock(UUID productId, ProductStockDecreaseRequestDto request) {
-        ProductStockDecreaseEvent event = new ProductStockDecreaseEvent(productId, request);
+    public void sendDecreaseProductStock(UUID orderId, UUID productId, ProductStockDecreaseRequestDto request) {
+        ProductStockDecreaseEvent event = new ProductStockDecreaseEvent(orderId, productId, request);
 
         try{
             String eventJson = objectMapper.writeValueAsString(event);
@@ -34,8 +34,8 @@ public class MessagingProducerService {
         }
     }
 
-    public void sendDecreaseFlashProductStock(UUID flashSaleProductId, ProductStockDecreaseRequestDto request) {
-        FlashProductStockDecreaseEvent event = new FlashProductStockDecreaseEvent(flashSaleProductId, request);
+    public void sendDecreaseFlashProductStock(UUID orderId, UUID flashSaleProductId, ProductStockDecreaseRequestDto request) {
+        FlashProductStockDecreaseEvent event = new FlashProductStockDecreaseEvent(orderId, flashSaleProductId, request);
 
         try{
             String eventJson = objectMapper.writeValueAsString(event);

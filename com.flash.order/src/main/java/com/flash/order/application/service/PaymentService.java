@@ -79,9 +79,9 @@ public class PaymentService {
                 ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
 
                 if(orderProduct.getFlashSaleProductId() == null){  //일반 상품인 경우
-                    messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
+                    messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
                 } else{  //플래시 세일 상품인 경우
-                    messagingProducerService.sendDecreaseFlashProductStock(orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                    messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
                 }
             });
 
