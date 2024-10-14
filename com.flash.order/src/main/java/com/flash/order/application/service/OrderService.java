@@ -48,7 +48,6 @@ public class OrderService {
         List<OrderProduct> orderProducts = orderRequestDto.orderProducts().stream()
                 .map(orderProductDto -> {
 
-                    //TODO Product 존재 여부 확인 (FeignClient 사용)
                     ProductResponseDto productResponseDto;
                     try {
                         productResponseDto = feignClientService.getProduct(orderProductDto.productId());
@@ -134,9 +133,9 @@ public class OrderService {
                     ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
 
                     if (orderProduct.getFlashSaleProductId() == null) { // 일반 상품인 경우
-                        messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
+                        messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
                     } else { // 플래시 세일 상품인 경우
-                        messagingProducerService.sendDecreaseFlashProductStock(orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+                        messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
                     }
                 } else {  // 락을 얻지 못했을 경우
                     stockDecreasedSuccessfully = false;
@@ -158,8 +157,17 @@ public class OrderService {
         // 재고 감소가 실패한 경우 결제 취소
         if (!stockDecreasedSuccessfully) {
             order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
+            order.setStatus(OrderStatus.cancelled); // 주문 상태를 취소로 변경
         }
 
+    }
+
+    @Transactional
+    public void handleOrderCompleted(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        order.setStatus(OrderStatus.completed);
     }
 
     @Transactional(readOnly = true)
