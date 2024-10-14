@@ -11,7 +11,5 @@ public interface JpaVendorRepository extends JpaRepository<Vendor, UUID>, Vendor
 
     Optional<Vendor> findByAddressAndIsDeletedFalse(String address);
 
-    Optional<Vendor> findByIdAndUserIdAndIsDeletedFalse(UUID vendorId, Long userId);
-
     Optional<Vendor> findByIdAndIsDeletedFalse(UUID vendorId);
 }

@@ -1,8 +1,6 @@
 package com.flash.vendor.domain.model;
 
-import com.flash.base.exception.CustomException;
 import com.flash.base.jpa.BaseEntity;
-import com.flash.vendor.domain.exception.ProductErrorCode;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -63,13 +61,13 @@ public class Product extends BaseEntity {
         return this;
     }
 
-    public void decreaseProductStock(Integer quantity) {
-        if (quantity <= 0) {
-            throw new CustomException(ProductErrorCode.INVALID_QUANTITY);
-        }
-        if (this.stock < quantity) {
-            throw new CustomException(ProductErrorCode.INSUFFICIENT_STOCK);
-        }
+    public Product decreaseProductStock(Integer quantity) {
         this.stock -= quantity;
+        return this;
+    }
+
+    public Product increaseProductStock(Integer quantity) {
+        this.stock += quantity;
+        return this;
     }
 }

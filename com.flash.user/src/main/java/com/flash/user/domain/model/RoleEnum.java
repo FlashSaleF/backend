@@ -22,7 +22,7 @@ public enum RoleEnum {
      */
     public static RoleEnum fromRoleCode(String roleCode) {
         for (RoleEnum role : RoleEnum.values()) {
-            if (role.authority.equals(roleCode)) {
+            if (role.authority.equalsIgnoreCase(roleCode)) {
                 return role;
             }
         }

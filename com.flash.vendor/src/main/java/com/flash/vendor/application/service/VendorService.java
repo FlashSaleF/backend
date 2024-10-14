@@ -66,7 +66,7 @@ public class VendorService {
     @Transactional
     public VendorResponseDto updateVendor(UUID vendorId, VendorRequestDto request) {
 
-        Vendor vendor = getVendorBasedOnAuthority(vendorId, getCurrentUserAuthority());
+        Vendor vendor = getVendorBasedOnAuthority(vendorId);
 
         Vendor updateVendor = vendor.updateVendor(request.name(), request.address());
 
@@ -76,15 +76,15 @@ public class VendorService {
     @Transactional
     public VendorDeleteResponseDto deleteVendor(UUID vendorId) {
 
-        Vendor vendor = getVendorBasedOnAuthority(vendorId, getCurrentUserAuthority());
+        Vendor vendor = getVendorBasedOnAuthority(vendorId);
 
         vendor.delete();
 
         return new VendorDeleteResponseDto("업체 삭제 성공");
     }
 
-    Vendor getVendorBasedOnAuthority(UUID vendorId, String authority) {
-        return switch (authority) {
+    Vendor getVendorBasedOnAuthority(UUID vendorId) {
+        return switch (getCurrentUserAuthority()) {
             case "ROLE_VENDOR" ->
                     getVendorByIdAndUserId(vendorId, Long.valueOf(getCurrentUserId()));
             case "ROLE_MANAGER", "ROLE_MASTER" -> getVendorById(vendorId);
@@ -99,9 +99,13 @@ public class VendorService {
     }
 
     private Vendor getVendorByIdAndUserId(UUID vendorId, Long userId) {
-        return vendorRepository.findByIdAndUserIdAndIsDeletedFalse(
-                vendorId, userId).orElseThrow(() ->
-                new CustomException(VendorErrorCode.NOT_COMPANY_OWNER));
+        Vendor vendor = vendorRepository.findByUserIdAndIsDeletedFalse(userId).orElseThrow(() ->
+                new CustomException(VendorErrorCode.COMPANY_NOT_FOUND));
+
+        if (!vendor.getId().equals(vendorId)) {
+            throw new CustomException(VendorErrorCode.NOT_COMPANY_OWNER);
+        }
+        return vendor;
     }
 
     private void validateAddressUniqueness(String address) {

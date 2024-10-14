@@ -1,4 +1,4 @@
-package com.flash.vendor.infrastructure.client;
+package com.flash.vendor.infrastructure.client.feign;
 
 import com.flash.base.exception.ErrorCode;
 import org.springframework.http.HttpStatus;

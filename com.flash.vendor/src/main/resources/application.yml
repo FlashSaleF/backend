@@ -18,6 +18,14 @@ spring:
         show_sql: true
         use_sql_comments: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
 
 eureka:
   client:

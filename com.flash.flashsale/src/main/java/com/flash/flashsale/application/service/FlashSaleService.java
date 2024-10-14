@@ -8,6 +8,8 @@ import com.flash.flashsale.domain.exception.FlashSaleErrorCode;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.repository.FlashSaleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,12 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class FlashSaleService {
+    private FlashSaleProductService flashSaleProductService;
+
+    @Autowired
+    public void flashSaleProductService(@Lazy FlashSaleProductService flashSaleProductService) {
+        this.flashSaleProductService = flashSaleProductService;
+    }
 
     private final FlashSaleMapper flashSaleMapper;
     private final FlashSaleRepository flashSaleRepository;
@@ -39,6 +47,7 @@ public class FlashSaleService {
         validAdmin();
         validDuplicateDate(flashSaleRequestDto);
         validAvailableDate(flashSaleRequestDto);
+        flashSaleProductService.validUpdateFlashSale(flashSaleId);
 
         FlashSale flashSale = existFlashSale(flashSaleId);
 
@@ -81,6 +90,8 @@ public class FlashSaleService {
         validAdmin();
 
         FlashSale flashSale = existFlashSale(flashSaleId);
+
+        flashSaleProductService.deleteFlashSale(flashSaleId);
         flashSale.delete();
 
         return "삭제되었습니다.";

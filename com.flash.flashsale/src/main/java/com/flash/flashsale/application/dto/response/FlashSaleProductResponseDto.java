@@ -13,6 +13,7 @@ public record FlashSaleProductResponseDto(
         FlashSaleProductStatus status,
         LocalDateTime startTime,
         LocalDateTime endTime,
-        FlashSaleResponseDto flashSale
+        FlashSaleResponseDto flashSale,
+        ProductResponseDto product
 ) {
 }
