@@ -170,13 +170,20 @@ public class FlashSaleProductService {
     }
 
     @Transactional
-    public String delete(UUID flashSaleId) {
+    public String delete(UUID flashSaleProductId) {
         validAuthority();
 
-        FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleId);
+        FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleProductId);
         flashSaleProduct.delete();
 
         return "삭제되었습니다.";
+    }
+
+    @Transactional
+    public void deleteFlashSale(UUID flashSaleId) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
+
+        flashSaleProductList.forEach(FlashSaleProduct::delete);
     }
 
     @Transactional

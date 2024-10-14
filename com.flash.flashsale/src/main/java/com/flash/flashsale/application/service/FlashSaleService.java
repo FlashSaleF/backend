@@ -20,6 +20,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FlashSaleService {
 
+    private final FlashSaleProductService flashSaleProductService;
+
     private final FlashSaleMapper flashSaleMapper;
     private final FlashSaleRepository flashSaleRepository;
 
@@ -81,6 +83,8 @@ public class FlashSaleService {
         validAdmin();
 
         FlashSale flashSale = existFlashSale(flashSaleId);
+
+        flashSaleProductService.deleteFlashSale(flashSaleId);
         flashSale.delete();
 
         return "삭제되었습니다.";
