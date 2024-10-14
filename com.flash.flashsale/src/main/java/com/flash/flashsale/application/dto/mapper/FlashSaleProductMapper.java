@@ -1,11 +1,14 @@
 package com.flash.flashsale.application.dto.mapper;
 
+import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @Component
 public class FlashSaleProductMapper {
@@ -33,6 +36,13 @@ public class FlashSaleProductMapper {
                 flashSaleProduct.getStartTime(),
                 flashSaleProduct.getEndTime(),
                 flashSaleResponseDto
+        );
+    }
+
+    public ProductStockRequestDto convertToProductStockResponseDto(UUID productId, Integer stock) {
+        return new ProductStockRequestDto(
+            productId,
+            stock
         );
     }
 }

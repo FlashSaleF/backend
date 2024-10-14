@@ -1,5 +1,6 @@
 package com.flash.flashsale.application.service;
 
+import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
 
 import java.util.List;
@@ -14,4 +15,6 @@ public interface FeignClientService {
     void startSale(List<UUID> productId);
 
     void endSale(List<UUID> productIdList);
+
+    void increaseProductStock(List<ProductStockRequestDto> productStocks);
 }

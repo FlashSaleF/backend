@@ -5,6 +5,7 @@ import com.flash.flashsale.application.dto.mapper.FlashSaleMapper;
 import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
+import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
@@ -151,6 +152,7 @@ public class FlashSaleProductService {
         );
 
         flashSaleProduct.refuse();
+        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
         return "승인 거절 되었습니다.";
     }
@@ -167,6 +169,7 @@ public class FlashSaleProductService {
         feignClientService.endSale(List.of(flashSaleProduct.getProductId()));
 
         flashSaleProduct.endSale();
+        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
         return "세일이 종료되었습니다.";
     }
@@ -177,6 +180,8 @@ public class FlashSaleProductService {
 
         FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleProductId);
         flashSaleProduct.delete();
+
+        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
         return "삭제되었습니다.";
     }
@@ -198,7 +203,11 @@ public class FlashSaleProductService {
 
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
         List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+        List<ProductStockRequestDto> productStocks = flashSaleProductList.stream().map(flashSaleProduct -> flashSaleProductMapper.convertToProductStockResponseDto(flashSaleProduct.getProductId(), flashSaleProduct.getStock())).toList();
+
         feignClientService.endSale(productIdList);
+        feignClientService.increaseProductStock(productStocks);
+
 
         flashSaleProductList.forEach(FlashSaleProduct::endSale);
     }
@@ -435,6 +444,12 @@ public class FlashSaleProductService {
         if (flashSaleProduct.getStock() == 0) {
             endSale(flashSaleProductId);
         }
+    }
+
+    @Transactional
+    public void increaseProductStock(UUID productId, Integer stock) {
+        ProductStockRequestDto productStocks = flashSaleProductMapper.convertToProductStockResponseDto(productId, stock);
+        feignClientService.increaseProductStock(List.of(productStocks));
     }
 
     private ProductResponseDto getProductInfo(UUID productId) {

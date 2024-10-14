@@ -2,6 +2,8 @@ package com.flash.flashsale.infrastructure.client;
 
 import com.flash.flashsale.application.dto.request.ProductListRequestDto;
 import com.flash.flashsale.application.dto.request.ProductStockDecreaseRequestDto;
+import com.flash.flashsale.application.dto.request.ProductStockListRequestDto;
+import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
 import com.flash.flashsale.application.service.FeignClientService;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,11 @@ public class FeignClientServiceImpl implements FeignClientService {
     @Override
     public void endSale(List<UUID> productIds) {
         vendorFeignClient.endSale(new ProductListRequestDto(productIds));
+    }
+
+    @Override
+    public void increaseProductStock(List<ProductStockRequestDto> productStocks) {
+        vendorFeignClient.increaseProductStock(new ProductStockListRequestDto(productStocks));
     }
 
     public List<ProductResponseDto> getProductInfoList(List<UUID> productIds) {
