@@ -22,7 +22,6 @@ public interface VendorFeignClient {
 
     @PatchMapping("/api/internal/products/{productId}/stock/decrease")
     ProductStockDecreaseResponseDto decreaseProductStock(
-        @RequestHeader(value = "X-HTTP-Method-Override", defaultValue = "PATCH") String xHttpMethodOveride,
         @PathVariable UUID productId,
         @RequestBody ProductStockDecreaseRequestDto request
     );

@@ -32,7 +32,7 @@ public class FeignClientServiceImpl implements FeignClientService {
 
     @Override
     public void decreaseProductStock(UUID productId, Integer stock) {
-        vendorFeignClient.decreaseProductStock("PATCH", productId, new ProductStockDecreaseRequestDto(stock));
+        vendorFeignClient.decreaseProductStock(productId, new ProductStockDecreaseRequestDto(stock));
     }
 
     public List<ProductResponseDto> getProductInfoList(List<UUID> productIds) {
