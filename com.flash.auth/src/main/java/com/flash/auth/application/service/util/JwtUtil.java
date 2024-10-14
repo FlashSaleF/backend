@@ -34,7 +34,7 @@ public class JwtUtil {
     // Refresh Token 만료기간
     public static final long REFRESH_TOKEN_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
     // Access Token 만료기간
-    private static final long ACCESS_TOKEN_TIME = 10 * 60 * 1000L; // 10분
+    private static final long ACCESS_TOKEN_TIME = 7 * 24 * 6 * 10 * 60 * 1000L; // 10분
     private SecretKey secretKey;
     private SecretKey refreshSecretKey;
 
