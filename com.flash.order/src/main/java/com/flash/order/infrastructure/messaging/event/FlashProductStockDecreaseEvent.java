@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record FlashProductStockDecreaseEvent(
         UUID orderId,
-        UUID FlashSaleProductId,
+        UUID flashSaleProductId,
         ProductStockDecreaseRequestDto request // 감소시킬 수량
 ) {
 }

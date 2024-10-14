@@ -9,15 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.UUID;
 
 public interface FeignClientService {
-    ProductResponseDto getProduct(@PathVariable UUID productId);
-
-//    ProductStockDecreaseResponseDto decreaseProductStock(
-//            @PathVariable UUID productId,
-//            @RequestBody ProductStockDecreaseRequestDto request
-//    );
+    ProductResponseDto getProduct(UUID productId);
 
     void decreaseProductStock(
-            @PathVariable UUID productId,
-            @RequestBody ProductStockDecreaseRequestDto request
+            UUID productId, ProductStockDecreaseRequestDto request
     );
+
+    void decreaseFlashSaleProductStock(UUID flashSaleProductId);
 }

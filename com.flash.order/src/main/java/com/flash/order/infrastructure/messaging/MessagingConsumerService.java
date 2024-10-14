@@ -42,6 +42,7 @@ public class MessagingConsumerService {
         } catch (Exception e) {
             // 실패 시 로깅 또는 예외 처리
             log.error("Product stock decrease failed for productId: {}", event.productId(), e);
+            //주문 취소 처리 -> 상태 cancelled로 변경
         }
 
     }
@@ -50,7 +51,16 @@ public class MessagingConsumerService {
     public void listenFlashProductStockDecreaseEvent(String message) {
         // 메시지 수신
         FlashProductStockDecreaseEvent event = EventSerializer.deserialize(message, FlashProductStockDecreaseEvent.class);
-        //TODO: feignclient로 flashSaleProduct의 재고 감소 처리
+
+        //재고 감소 처리
+        try {
+            feignClientService.decreaseFlashSaleProductStock(event.flashSaleProductId());
+            // 성공 시 주문 완료 처리
+            orderService.handleOrderCompleted(event.orderId());
+        } catch (Exception e) {
+            // 실패 시 로깅 또는 예외 처리
+            log.error("Flash Sale Product stock decrease failed for flashSaleProductId: {}", event.flashSaleProductId(), e);
+        }
 
     }
 

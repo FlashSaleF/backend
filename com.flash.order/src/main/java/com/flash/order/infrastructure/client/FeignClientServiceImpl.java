@@ -16,18 +16,24 @@ import java.util.UUID;
 public class FeignClientServiceImpl implements FeignClientService {
 
     private final ProductFeignClient productFeignClient;
+    private final FlashSaleProductFeignClient flashSaleProductFeignClient;
 
     @Override
-    public ProductResponseDto getProduct(@PathVariable UUID productId){
+    public ProductResponseDto getProduct(UUID productId){
         return productFeignClient.getProduct(productId);
     }
 
     @Override
     public void decreaseProductStock(
-            @PathVariable UUID productId,
-            @RequestBody ProductStockDecreaseRequestDto request
+            UUID productId,
+            ProductStockDecreaseRequestDto request
     ){
         productFeignClient.decreaseProductStock(productId, request);
+    }
+
+    @Override
+    public void decreaseFlashSaleProductStock(UUID flashSaleProductId){
+        flashSaleProductFeignClient.decreaseStock(flashSaleProductId);
     }
 
 }
