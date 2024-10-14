@@ -164,6 +164,7 @@ public class FlashSaleProductService {
         );
 
         validAvailableFlashSale(flashSaleProduct);
+        feignClientService.endSale(List.of(flashSaleProduct.getProductId()));
 
         flashSaleProduct.endSale();
 
@@ -195,7 +196,11 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::endSale);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
+        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+        feignClientService.endSale(productIdList);
+
+        flashSaleProductList.forEach(FlashSaleProduct::endSale);
     }
 
     @Transactional
@@ -217,7 +222,11 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.APPROVE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::oneSale);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
+        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+        feignClientService.startSale(productIdList);
+
+        flashSaleProductList.forEach(FlashSaleProduct::onSale);
     }
 
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {

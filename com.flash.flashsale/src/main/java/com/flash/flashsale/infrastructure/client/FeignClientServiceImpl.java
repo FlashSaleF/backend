@@ -35,6 +35,16 @@ public class FeignClientServiceImpl implements FeignClientService {
         vendorFeignClient.decreaseProductStock(productId, new ProductStockDecreaseRequestDto(stock));
     }
 
+    @Override
+    public void startSale(List<UUID> productIds) {
+        vendorFeignClient.startSale(new ProductListRequestDto(productIds));
+    }
+
+    @Override
+    public void endSale(List<UUID> productIds) {
+        vendorFeignClient.endSale(new ProductListRequestDto(productIds));
+    }
+
     public List<ProductResponseDto> getProductInfoList(List<UUID> productIds) {
 
         return vendorFeignClient.getProductInfoList(new ProductListRequestDto(productIds)).productList();
