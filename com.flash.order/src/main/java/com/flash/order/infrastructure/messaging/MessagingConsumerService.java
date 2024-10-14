@@ -33,7 +33,16 @@ public class MessagingConsumerService {
     public void listenProductStockDecreaseEvent(String message) {
         // 메시지 수신
         ProductStockDecreaseEvent event = EventSerializer.deserialize(message, ProductStockDecreaseEvent.class);
-        feignClientService.decreaseProductStock(event.productId(), event.request());
+
+        //재고 감소 처리
+        try {
+            feignClientService.decreaseProductStock(event.productId(), event.request());
+            // 성공 시 주문 완료 처리
+            orderService.handleOrderCompleted(event.orderId());
+        } catch (Exception e) {
+            // 실패 시 로깅 또는 예외 처리
+            log.error("Product stock decrease failed for productId: {}", event.productId(), e);
+        }
 
     }
 
@@ -41,7 +50,7 @@ public class MessagingConsumerService {
     public void listenFlashProductStockDecreaseEvent(String message) {
         // 메시지 수신
         FlashProductStockDecreaseEvent event = EventSerializer.deserialize(message, FlashProductStockDecreaseEvent.class);
-        //feignclient로 flashSaleProduct의 재고 감소 처리
+        //TODO: feignclient로 flashSaleProduct의 재고 감소 처리
 
     }
 
