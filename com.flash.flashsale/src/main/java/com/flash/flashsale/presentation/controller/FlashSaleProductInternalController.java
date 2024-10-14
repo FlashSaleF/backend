@@ -25,13 +25,13 @@ public class FlashSaleProductInternalController {
         return flashSaleProductService.getListByProductIds(productIds);
     }
 
-    @PatchMapping("/{productId}/increaseStock")
-    public void increaseStock(@PathVariable("productId") UUID productId) {
-        flashSaleProductService.increaseStock(productId);
+    @PatchMapping("/{flashSaleProductId}/increaseStock")
+    public void increaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        flashSaleProductService.increaseStock(flashSaleProductId);
     }
 
-    @PatchMapping("/{productId}/decreaseStock")
-    public void decreaseStock(@PathVariable("productId") UUID productId) {
-        flashSaleProductService.decreaseStock(productId);
+    @PatchMapping("/{flashSaleProductId}/decreaseStock")
+    public void decreaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        flashSaleProductService.decreaseStock(flashSaleProductId);
     }
 }
