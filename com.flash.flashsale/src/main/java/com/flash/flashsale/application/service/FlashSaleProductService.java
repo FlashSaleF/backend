@@ -138,6 +138,10 @@ public class FlashSaleProductService {
             () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
         );
 
+        if (flashSaleProduct.getStartTime().isBefore(LocalDateTime.now().plusMinutes(30))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_APPROVE);
+        }
+
         flashSaleProduct.approve();
 
         return "승인 되었습니다.";
