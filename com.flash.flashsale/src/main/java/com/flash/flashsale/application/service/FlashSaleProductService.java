@@ -455,4 +455,14 @@ public class FlashSaleProductService {
     private ProductResponseDto getProductInfo(UUID productId) {
         return feignClientService.getProductInfo(productId);
     }
+
+    @Transactional
+    public void deleteByProductId(UUID productId) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdAndIsDeletedFalse(productId);
+
+        Integer totalStock = flashSaleProductList.stream().mapToInt(FlashSaleProduct::getStock).sum();
+        increaseProductStock(productId, totalStock);
+
+        flashSaleProductList.forEach(FlashSaleProduct::delete);
+    }
 }

@@ -34,4 +34,9 @@ public class FlashSaleProductInternalController {
     public void decreaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
         flashSaleProductService.decreaseStock(flashSaleProductId);
     }
+
+    @DeleteMapping("/{productId}/delete")
+    public void delete(@PathVariable("productId") UUID productId) {
+        flashSaleProductService.deleteByProductId(productId);
+    }
 }
