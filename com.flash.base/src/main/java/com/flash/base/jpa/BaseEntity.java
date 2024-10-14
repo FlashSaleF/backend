@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @MappedSuperclass
@@ -39,7 +40,7 @@ public class BaseEntity implements Serializable {
     private boolean isDeleted = false;
 
     public void delete() {
-        this.deletedAt = LocalDateTime.now();
+        this.deletedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         this.deletedBy = SecurityContextHolder.getContext().getAuthentication().getName();
         this.isDeleted = true;
     }
@@ -51,11 +52,11 @@ public class BaseEntity implements Serializable {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 }
