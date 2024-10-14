@@ -1,6 +1,7 @@
 package com.flash.flashsale.presentation.controller;
 
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
+import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.service.FlashSaleProductService;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
@@ -55,7 +56,7 @@ public class FlashSaleProductController {
     @PatchMapping("/{flashSaleProductId}")
     public ResponseEntity<FlashSaleProductResponseDto> update(
         @PathVariable("flashSaleProductId") UUID flashSaleProductId,
-        @Valid @RequestBody FlashSaleProductRequestDto flashSaleProductRequestDto
+        @Valid @RequestBody FlashSaleProductUpdateRequestDto flashSaleProductRequestDto
     ) {
         return ResponseEntity.ok(flashSaleProductService.update(flashSaleProductId, flashSaleProductRequestDto));
     }
