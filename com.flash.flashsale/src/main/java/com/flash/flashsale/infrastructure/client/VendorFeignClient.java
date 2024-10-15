@@ -1,9 +1,6 @@
 package com.flash.flashsale.infrastructure.client;
 
-import com.flash.flashsale.application.dto.request.ProductListRequestDto;
-import com.flash.flashsale.application.dto.request.ProductStockDecreaseRequestDto;
-import com.flash.flashsale.application.dto.request.ProductStockIncreaseRequestDto;
-import com.flash.flashsale.application.dto.request.ProductStockListRequestDto;
+import com.flash.flashsale.application.dto.request.*;
 import com.flash.flashsale.application.dto.response.ProductListResponseDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
 import com.flash.flashsale.application.dto.response.ProductStockDecreaseResponseDto;
@@ -40,9 +37,9 @@ public interface VendorFeignClient {
         @RequestBody ProductStockIncreaseRequestDto request
     );
 
-    @PatchMapping("/api/internal/products/start-sale")
-    void startSale(@RequestBody ProductListRequestDto request);
-
-    @PatchMapping("/api/internal/products/end-sale")
-    void endSale(@RequestBody ProductListRequestDto request);
+    @PatchMapping("/api/internal/products/{productId}")
+    ProductResponseDto updateProductStatus(
+        @PathVariable UUID productId,
+        @RequestBody ProductStatusUpdateDto request
+    );
 }

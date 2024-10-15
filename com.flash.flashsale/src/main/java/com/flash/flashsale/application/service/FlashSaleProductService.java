@@ -173,7 +173,7 @@ public class FlashSaleProductService {
         );
 
         validAvailableFlashSale(flashSaleProduct);
-        feignClientService.endSale(List.of(flashSaleProduct.getProductId()));
+        feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
 
         flashSaleProduct.endSale();
         //        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());   임시로 V2버전 사용
@@ -189,6 +189,10 @@ public class FlashSaleProductService {
         FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleProductId);
         flashSaleProduct.delete();
 
+        if (flashSaleProduct.getStatus().equals(FlashSaleProductStatus.ONSALE)) {
+            feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+        }
+
         //        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());   임시로 V2버전 사용
         if (!flashSaleProduct.getStatus().equals(FlashSaleProductStatus.REFUSE)) {
             increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
@@ -201,7 +205,18 @@ public class FlashSaleProductService {
     public void deleteFlashSale(UUID flashSaleId) {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
 
-        flashSaleProductList.forEach(FlashSaleProduct::delete);
+        flashSaleProductList.forEach(flashSaleProduct -> {
+                if (flashSaleProduct.getStatus().equals(FlashSaleProductStatus.ONSALE)) {
+                    feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+                }
+
+                if (!flashSaleProduct.getStatus().equals(FlashSaleProductStatus.REFUSE)) {
+                    increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+                }
+
+                flashSaleProduct.delete();
+            }
+        );
     }
 
     @Transactional
@@ -222,6 +237,8 @@ public class FlashSaleProductService {
 //        flashSaleProductList.forEach(FlashSaleProduct::endSale);  V2버전으로 임시 변경
         flashSaleProductList.forEach(flashSaleProduct -> {
                 feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+            feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+
                 flashSaleProduct.endSale();
             }
         );
@@ -253,10 +270,14 @@ public class FlashSaleProductService {
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
-        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
-        feignClientService.startSale(productIdList);
+//        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
 
-        flashSaleProductList.forEach(FlashSaleProduct::onSale);
+        flashSaleProductList.forEach(flashSaleProduct -> {
+                feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "ON_SALE");
+
+                flashSaleProduct.onSale();
+            }
+        );
     }
 
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {

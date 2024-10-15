@@ -15,11 +15,9 @@ public interface FeignClientService {
 
     void decreaseProductStock(UUID productId, Integer stock);
 
-    void startSale(List<UUID> productId);
-
-    void endSale(List<UUID> productIdList);
-
     void increaseProductStock(List<ProductStockRequestDto> productStocks);
 
     ProductStockIncreaseResponseDto increaseOneProductStock(UUID productId, Integer stock);
+
+    ProductResponseDto updateProductStatus(UUID productId, String status);
 }

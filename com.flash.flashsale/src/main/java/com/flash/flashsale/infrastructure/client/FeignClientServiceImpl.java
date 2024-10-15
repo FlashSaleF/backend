@@ -36,16 +36,6 @@ public class FeignClientServiceImpl implements FeignClientService {
     }
 
     @Override
-    public void startSale(List<UUID> productIds) {
-        vendorFeignClient.startSale(new ProductListRequestDto(productIds));
-    }
-
-    @Override
-    public void endSale(List<UUID> productIds) {
-        vendorFeignClient.endSale(new ProductListRequestDto(productIds));
-    }
-
-    @Override
     public void increaseProductStock(List<ProductStockRequestDto> productStocks) {
         vendorFeignClient.increaseProductStock(new ProductStockListRequestDto(productStocks));
     }
@@ -53,6 +43,11 @@ public class FeignClientServiceImpl implements FeignClientService {
     @Override
     public ProductStockIncreaseResponseDto increaseOneProductStock(UUID productId, Integer stock) {
         return vendorFeignClient.increaseOneProductStock(productId, new ProductStockIncreaseRequestDto(stock));
+    }
+
+    @Override
+    public ProductResponseDto updateProductStatus(UUID productId, String status) {
+        return vendorFeignClient.updateProductStatus(productId, new ProductStatusUpdateDto(status));
     }
 
     public List<ProductResponseDto> getProductInfoList(List<UUID> productIds) {
