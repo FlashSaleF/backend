@@ -30,7 +30,7 @@ public class FlashSaleProductInternalController {
         flashSaleProductService.increaseStock(flashSaleProductId);
     }
 
-    @PatchMapping("/{flashSaleProductId}/decreaseStock")
+    @PutMapping("/{flashSaleProductId}/decreaseStock")
     public void decreaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
         flashSaleProductService.decreaseStock(flashSaleProductId);
     }

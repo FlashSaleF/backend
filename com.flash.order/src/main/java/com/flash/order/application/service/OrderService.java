@@ -1,6 +1,7 @@
 package com.flash.order.application.service;
 
 import com.flash.base.exception.CustomException;
+import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
 import com.flash.order.application.dtos.response.OrderResponseDto;
 import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.application.dtos.response.ProductResponseDto;
@@ -9,21 +10,28 @@ import com.flash.order.domain.model.*;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
+import com.flash.order.infrastructure.messaging.MessagingProducerService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -31,6 +39,8 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
+    private final MessagingProducerService messagingProducerService;
+    private final RedissonClient redissonClient;
 
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
@@ -39,7 +49,6 @@ public class OrderService {
         List<OrderProduct> orderProducts = orderRequestDto.orderProducts().stream()
                 .map(orderProductDto -> {
 
-                    //TODO Product 존재 여부 확인 (FeignClient 사용)
                     ProductResponseDto productResponseDto;
                     try {
                         productResponseDto = feignClientService.getProduct(orderProductDto.productId());
@@ -47,11 +56,17 @@ public class OrderService {
                         throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
                     }
 
+                    UUID flashSaleProductId = null;
+                    if(productResponseDto.flashSaleProductResponseDto().isPresent()) {
+                        flashSaleProductId = productResponseDto.flashSaleProductResponseDto().get().flashSaleProductId();
+                    }
+
                     // OrderProduct 객체 생성
                     return OrderProduct.builder()
-                            .productId(orderProductDto.productId()) // Product 객체를 엔티티로 변환
+                            .productId(flashSaleProductId == null ? orderProductDto.productId() : null) // Product 객체를 엔티티로 변환
+                            .flashSaleProductId(flashSaleProductId)
                             .quantity(orderProductDto.quantity())
-                            .price(productResponseDto.price())
+                            .price(flashSaleProductId == null ? productResponseDto.price() : productResponseDto.flashSaleProductResponseDto().get().salePrice())
                             .build();
                 })
                 .collect(Collectors.toList());
@@ -91,7 +106,104 @@ public class OrderService {
         // 주문 저장
         Order savedOrder = orderRepository.save(order);
 
+        //주문 생성 시 이벤트 발행
+        messagingProducerService.sendPaymentRequest(savedOrder);
+
         return orderMapper.convertToResponseDto(savedOrder);
+    }
+
+    @Transactional
+    public void handlePaymentCompleted(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        order.getPayment().changeStatus(PaymentStatus.completed);
+
+        // 재고 감소 처리 플래그
+        boolean stockDecreasedSuccessfully = true;
+
+        // 모든 상품에 대한 재고 검증
+        for (OrderProduct orderProduct : order.getOrderProducts()) {
+            String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
+            RLock lock = redissonClient.getLock(lockKey);
+
+            try {
+                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS);
+
+                if (available) {
+                    ProductResponseDto productResponseDto = feignClientService.getProduct(orderProduct.getProductId());
+
+                    if (productResponseDto.stock() < orderProduct.getQuantity()) {
+                        // 재고 부족 시 결제 및 주문 상태 취소
+                        cancelOrderAndPayment(order);
+                        throw new CustomException(OrderErrorCode.PRODUCT_OUT_OF_STOCK);
+                    }
+                } else {
+                    log.error("재고 검증 중 락을 얻지 못했습니다. productId: {}", orderProduct.getProductId());
+                    cancelOrderAndPayment(order);
+                    throw new CustomException(OrderErrorCode.PRODUCT_STOCK_LOCK_FAILED);
+                }
+            } catch (Exception e) {
+                log.error("재고 검증 중 오류 발생: {}", e.getMessage());
+                cancelOrderAndPayment(order);
+                throw new CustomException(OrderErrorCode.PRODUCT_STOCK_VERIFICATION_FAILED);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            }
+        }
+
+        // 재고 감소가 성공한 경우에만 계속 처리
+        for (OrderProduct orderProduct : order.getOrderProducts()) {
+            String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
+            RLock lock = redissonClient.getLock(lockKey);
+
+            try {
+                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS);
+
+                if (available) {
+                    ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+                    if (orderProduct.getFlashSaleProductId() == null) {
+                        messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto);
+                    } else {
+                        messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto);
+                    }
+                }
+            } catch (Exception e) {
+                stockDecreasedSuccessfully = false;
+                log.error("재고 감소 처리 중 오류 발생: {}", e.getMessage());
+                throw new CustomException(OrderErrorCode.PRODUCT_STOCK_DECREASE_FAILED);
+            } finally {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            }
+        }
+
+    }
+
+    @Transactional
+    public void handleOrderCompleted(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        order.setStatus(OrderStatus.completed);
+    }
+
+    @Transactional
+    public void handleOrderCancelled(UUID orderId) {
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        order.setStatus(OrderStatus.cancelled);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void cancelOrderAndPayment(Order order) {
+        order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
+        order.setStatus(OrderStatus.cancelled); // 주문 상태를 취소로 변경
+        orderRepository.save(order); // 상태 변경 후 저장
     }
 
     @Transactional(readOnly = true)
