@@ -125,21 +125,21 @@ services:
     restart: on-failure
 
   #   Alarm 서버 정의
-  alarm:
-    build:
-      context: ./com.flash.alarm
-    env_file:
-      - ${ALARM_ENV}
-    ports:
-      - ${ALARM_PORT}:${ALARM_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
-    depends_on:
-      gateway:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - flash-sale-network
-    restart: on-failure
+  #  alarm:
+  #    build:
+  #      context: ./com.flash.alarm
+  #    env_file:
+  #      - ${ALARM_ENV}
+  #    ports:
+  #      - ${ALARM_PORT}:${ALARM_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+  #    depends_on:
+  #      gateway:
+  #        condition: service_healthy
+  #      redis:
+  #        condition: service_healthy
+  #    networks:
+  #      - flash-sale-network
+  #    restart: on-failure
 
   redis: # container name
     image: redis:latest

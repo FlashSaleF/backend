@@ -5,7 +5,7 @@ FROM openjdk:17-jdk
 WORKDIR /flash
 
 # 3. JAR 파일을 컨테이너로 복사
-COPY build/libs/gateway.jar /flash/gateway.jar
+COPY build/libs/gateway-0.0.1-SNAPSHOT.jar /flash/gateway.jar
 
 # 4. 애플리케이션 실행
 ENTRYPOINT ["java", "-jar", "/flash/gateway.jar"]
