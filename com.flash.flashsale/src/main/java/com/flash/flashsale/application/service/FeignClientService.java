@@ -2,6 +2,7 @@ package com.flash.flashsale.application.service;
 
 import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
+import com.flash.flashsale.application.dto.response.ProductStockIncreaseResponseDto;
 
 import java.util.List;
 import java.util.Map;
@@ -19,4 +20,6 @@ public interface FeignClientService {
     void endSale(List<UUID> productIdList);
 
     void increaseProductStock(List<ProductStockRequestDto> productStocks);
+
+    ProductStockIncreaseResponseDto increaseOneProductStock(UUID productId, Integer stock);
 }
