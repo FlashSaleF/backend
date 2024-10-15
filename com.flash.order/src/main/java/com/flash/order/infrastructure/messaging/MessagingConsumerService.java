@@ -2,13 +2,10 @@ package com.flash.order.infrastructure.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flash.base.exception.CustomException;
-import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
 import com.flash.order.application.service.FeignClientService;
 import com.flash.order.application.service.OrderService;
 import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.model.Order;
-import com.flash.order.domain.model.OrderStatus;
-import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.infrastructure.messaging.event.FlashProductStockDecreaseEvent;
 import com.flash.order.infrastructure.messaging.event.OrderPaymentEvent;

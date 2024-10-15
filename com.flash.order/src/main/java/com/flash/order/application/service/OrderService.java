@@ -1,14 +1,14 @@
 package com.flash.order.application.service;
 
 import com.flash.base.exception.CustomException;
+import com.flash.order.application.dtos.mapper.OrderMapper;
+import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
 import com.flash.order.application.dtos.response.OrderResponseDto;
-import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.application.dtos.response.ProductResponseDto;
 import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.model.*;
 import com.flash.order.domain.repository.OrderRepository;
-import com.flash.order.application.dtos.request.OrderRequestDto;
 import com.flash.order.domain.repository.PaymentRepository;
 import com.flash.order.infrastructure.messaging.MessagingProducerService;
 import feign.FeignException;
@@ -22,14 +22,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Slf4j
 @Service
@@ -57,7 +54,7 @@ public class OrderService {
                     }
 
                     UUID flashSaleProductId = null;
-                    if(productResponseDto.flashSaleProductResponseDto().isPresent()) {
+                    if (productResponseDto.flashSaleProductResponseDto().isPresent()) {
                         flashSaleProductId = productResponseDto.flashSaleProductResponseDto().get().flashSaleProductId();
                     }
 

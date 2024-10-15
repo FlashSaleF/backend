@@ -21,8 +21,8 @@ public class FlashSaleProductMapper {
                 flashSaleProduct.getStatus(),
                 flashSaleProduct.getStartTime(),
                 flashSaleProduct.getEndTime(),
-            flashSaleResponseDto,
-            productResponseDto
+                flashSaleResponseDto,
+                productResponseDto
         );
     }
 
@@ -41,8 +41,8 @@ public class FlashSaleProductMapper {
 
     public ProductStockRequestDto convertToProductStockResponseDto(UUID productId, Integer stock) {
         return new ProductStockRequestDto(
-            productId,
-            stock
+                productId,
+                stock
         );
     }
 }

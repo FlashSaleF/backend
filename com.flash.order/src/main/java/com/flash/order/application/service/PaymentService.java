@@ -9,7 +9,6 @@ import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.exception.PaymentErrorCode;
 import com.flash.order.domain.model.Order;
-//import com.flash.order.domain.model.Payment;
 import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.domain.repository.PaymentRepository;
@@ -78,9 +77,9 @@ public class PaymentService {
             order.getOrderProducts().forEach(orderProduct -> {
                 ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
 
-                if(orderProduct.getFlashSaleProductId() == null){  //일반 상품인 경우
+                if (orderProduct.getFlashSaleProductId() == null) {  //일반 상품인 경우
                     messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
-                } else{  //플래시 세일 상품인 경우
+                } else {  //플래시 세일 상품인 경우
                     messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
                 }
             });

@@ -17,7 +17,7 @@ public enum OrderErrorCode implements ErrorCode {
     private final HttpStatus status;
     private final String message;
 
-    OrderErrorCode(HttpStatus status, String message){
+    OrderErrorCode(HttpStatus status, String message) {
         this.status = status;
         this.message = message;
     }

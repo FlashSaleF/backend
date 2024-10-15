@@ -26,7 +26,7 @@ public class MessagingProducerService {
     public void sendDecreaseProductStock(UUID orderId, UUID productId, ProductStockDecreaseRequestDto request) {
         ProductStockDecreaseEvent event = new ProductStockDecreaseEvent(orderId, productId, request);
 
-        try{
+        try {
             String eventJson = objectMapper.writeValueAsString(event);
             kafkaTemplate.send(KafkaTopic.PRODUCT_STOCK_DECREASE.getTopic(), eventJson);
         } catch (JsonProcessingException e) {
@@ -37,7 +37,7 @@ public class MessagingProducerService {
     public void sendDecreaseFlashProductStock(UUID orderId, UUID flashSaleProductId, ProductStockDecreaseRequestDto request) {
         FlashProductStockDecreaseEvent event = new FlashProductStockDecreaseEvent(orderId, flashSaleProductId, request);
 
-        try{
+        try {
             String eventJson = objectMapper.writeValueAsString(event);
             kafkaTemplate.send(KafkaTopic.FLASH_PRODUCT_STOCK_DECREASE.getTopic(), eventJson);
         } catch (JsonProcessingException e) {

@@ -29,7 +29,7 @@ public class FeignClientServiceImpl implements FeignClientService {
     public Map<UUID, ProductResponseDto> getProductInfoListMap(List<UUID> productIds) {
 
         return getProductInfoList(productIds).stream()
-            .collect(Collectors.toMap(ProductResponseDto::id, Function.identity()));
+                .collect(Collectors.toMap(ProductResponseDto::id, Function.identity()));
     }
 
     @Override

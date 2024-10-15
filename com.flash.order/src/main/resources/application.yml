@@ -10,7 +10,7 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
   kafka:
-    bootstrap-servers: localhost:9092  # Kafka 서버 주소
+    bootstrap-servers: ${KAFKA_SERVER}:9092  # Kafka 서버 주소
     consumer:
       group-id: order-group  # 컨슈머 그룹 ID
       auto-offset-reset: earliest
@@ -46,3 +46,12 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: ${ORDER_API_DOCS_PATH}
+  enable-spring-security: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

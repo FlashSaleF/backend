@@ -30,3 +30,12 @@ jwt:
   refresh:
     secret:
       key: ${JWT_REFRESH_SECRET_KEY}
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: ${AUTH_API_DOCS_PATH}
+  enable-spring-security: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

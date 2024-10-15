@@ -6,6 +6,7 @@ repositories {
 dependencies {
 	implementation project(':base')
 
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
@@ -17,7 +18,7 @@ dependencies {
 	implementation 'org.springframework.kafka:spring-kafka'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 
-	implementation 'org.redisson:redisson-spring-boot-starter:3.16.4'
+	implementation 'org.redisson:redisson:3.35.0'
 
 	//openfeign patch 사용 위한 설정
 	implementation 'io.github.openfeign:feign-okhttp'

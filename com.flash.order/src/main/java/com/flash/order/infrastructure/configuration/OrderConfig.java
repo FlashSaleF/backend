@@ -33,6 +33,6 @@ public class OrderConfig {
         config.useSingleServer()
                 .setAddress("redis://" + redisHost + ":" + redisPort);
 
-        return Redisson.create();
+        return Redisson.create(config);
     }
 }

@@ -23,3 +23,12 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: ${USER_API_DOCS_PATH}
+  enable-spring-security: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

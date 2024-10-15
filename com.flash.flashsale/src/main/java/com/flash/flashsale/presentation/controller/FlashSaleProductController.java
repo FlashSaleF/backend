@@ -55,8 +55,8 @@ public class FlashSaleProductController {
 
     @PatchMapping("/{flashSaleProductId}")
     public ResponseEntity<FlashSaleProductResponseDto> update(
-        @PathVariable("flashSaleProductId") UUID flashSaleProductId,
-        @Valid @RequestBody FlashSaleProductUpdateRequestDto flashSaleProductRequestDto
+            @PathVariable("flashSaleProductId") UUID flashSaleProductId,
+            @Valid @RequestBody FlashSaleProductUpdateRequestDto flashSaleProductRequestDto
     ) {
         return ResponseEntity.ok(flashSaleProductService.update(flashSaleProductId, flashSaleProductRequestDto));
     }

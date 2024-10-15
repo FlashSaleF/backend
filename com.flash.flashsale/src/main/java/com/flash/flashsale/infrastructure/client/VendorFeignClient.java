@@ -23,13 +23,13 @@ public interface VendorFeignClient {
 
     @PatchMapping("/api/internal/products/{productId}/stock/decrease")
     ProductStockDecreaseResponseDto decreaseProductStock(
-        @PathVariable UUID productId,
-        @RequestBody ProductStockDecreaseRequestDto request
+            @PathVariable UUID productId,
+            @RequestBody ProductStockDecreaseRequestDto request
     );
 
     @PatchMapping("/api/internal/products/stock/increase")
     void increaseProductStock(
-        @RequestBody ProductStockListRequestDto request
+            @RequestBody ProductStockListRequestDto request
     );
 
     @PatchMapping("/api/internal/products/start-sale")
