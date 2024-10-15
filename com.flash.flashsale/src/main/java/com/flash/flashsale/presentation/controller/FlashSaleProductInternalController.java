@@ -24,4 +24,19 @@ public class FlashSaleProductInternalController {
     public List<InternalProductResponseDto> getList(@RequestBody List<UUID> productIds) {
         return flashSaleProductService.getListByProductIds(productIds);
     }
+
+    @PatchMapping("/{flashSaleProductId}/increaseStock")
+    public void increaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        flashSaleProductService.increaseStock(flashSaleProductId);
+    }
+
+    @PutMapping("/{flashSaleProductId}/decreaseStock")
+    public void decreaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId) {
+        flashSaleProductService.decreaseStock(flashSaleProductId);
+    }
+
+    @DeleteMapping("/{productId}/delete")
+    public void delete(@PathVariable("productId") UUID productId) {
+        flashSaleProductService.deleteByProductId(productId);
+    }
 }

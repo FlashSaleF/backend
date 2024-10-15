@@ -4,16 +4,19 @@ import com.flash.base.exception.CustomException;
 import com.flash.flashsale.application.dto.mapper.FlashSaleMapper;
 import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
+import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
+import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
 import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
+import com.flash.flashsale.application.dto.response.ProductResponseDto;
+import com.flash.flashsale.domain.exception.FlashSaleErrorCode;
 import com.flash.flashsale.domain.exception.FlashSaleProductErrorCode;
 import com.flash.flashsale.domain.model.FlashSale;
 import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,58 +25,68 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class FlashSaleProductService {
 
     private final FlashSaleService flashSaleService;
+    private final FeignClientService feignClientService;
 
     private final FlashSaleProductMapper flashSaleProductMapper;
     private final FlashSaleMapper flashSaleMapper;
+
     private final FlashSaleProductRepository flashSaleProductRepository;
 
     @Transactional
     public FlashSaleProductResponseDto create(FlashSaleProductRequestDto flashSaleProductRequestDto) {
         validVendor();
         validDuplicate(flashSaleProductRequestDto);
-        validAvailableDateTime(flashSaleProductRequestDto);
+        validAvailableDateTime(flashSaleProductRequestDto.startTime(), flashSaleProductRequestDto.endTime());
 
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
 
-        validAvailableSailTime(flashSale, flashSaleProductRequestDto);
+        validAvailableSailTime(flashSale, flashSaleProductRequestDto.startTime(), flashSaleProductRequestDto.endTime());
 
         FlashSaleProduct flashSaleProduct = flashSaleProductRepository.save(FlashSaleProduct.create(flashSale, flashSaleProductRequestDto));
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        feignClientService.decreaseProductStock(flashSaleProductRequestDto.productId(), flashSaleProductRequestDto.stock());
+
+        ProductResponseDto productResponseDto = getProductInfo(flashSaleProduct.getProductId());
+        validSalePrice(productResponseDto, flashSaleProductRequestDto.salePrice());
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
     }
 
     @Transactional
-    public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductRequestDto flashSaleProductRequestDto) {
+    public FlashSaleProductResponseDto update(UUID flashSaleProductId, FlashSaleProductUpdateRequestDto flashSaleProductUpdateRequestDto) {
         validAuthority();
-        validAvailableDateTime(flashSaleProductRequestDto);
-
-        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProductRequestDto.flashSaleId());
-
-        validAvailableSailTime(flashSale, flashSaleProductRequestDto);
+        validAvailableDateTime(flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
+                () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
         );
+
+        FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
+        validAvailableSailTime(flashSale, flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
 
         validAvailableFlashSale(flashSaleProduct);
 
-        flashSaleProduct.update(flashSaleProductRequestDto);
+        flashSaleProduct.update(flashSaleProductUpdateRequestDto);
 
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        ProductResponseDto productResponseDto = getProductInfo(flashSaleProduct.getProductId());
+        validSalePrice(productResponseDto, flashSaleProductUpdateRequestDto.salePrice());
+
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
     }
 
     @Transactional(readOnly = true)
@@ -83,48 +96,38 @@ public class FlashSaleProductService {
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
         FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
 
-        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+        return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, getProductInfo(flashSaleProduct.getProductId()));
     }
 
     @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getList(UUID flashSaleId, List<FlashSaleProductStatus> statusList) {
         List<FlashSaleProduct> flashSaleProductList = getAvailableFlashSaleProductList(flashSaleId, statusList);
-
-        log.info("test");
-
-        return flashSaleProductList.stream().map(flashSaleProduct ->
-        {
-            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
-            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
-
-            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
-        }).toList();
+        return getFlashSaleProductDtoList(flashSaleProductList);
     }
 
     @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getListByTime(LocalDateTime startTime, LocalDateTime endTime) {
         List<FlashSaleProduct> flashSaleProductList = getAvailableFlashSaleProductListByTime(startTime, endTime);
+        return getFlashSaleProductDtoList(flashSaleProductList);
+    }
+
+    private List<FlashSaleProductResponseDto> getFlashSaleProductDtoList(List<FlashSaleProduct> flashSaleProductList) {
+        Map<UUID, ProductResponseDto> productListMap = getProductListMap(flashSaleProductList);
 
         return flashSaleProductList.stream().map(flashSaleProduct ->
         {
             FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
             FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
+            ProductResponseDto productResponseDto = productListMap.get(flashSaleProduct.getProductId());
 
-            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
+            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
         }).toList();
     }
 
     @Transactional(readOnly = true)
     public List<FlashSaleProductResponseDto> getOnSaleList() {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(List.of(FlashSaleProductStatus.ONSALE));
-
-        return flashSaleProductList.stream().map(flashSaleProduct ->
-        {
-            FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
-            FlashSaleResponseDto flashSaleResponseDto = flashSaleMapper.convertToResponseDto(flashSale);
-
-            return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto);
-        }).toList();
+        return getFlashSaleProductDtoList(flashSaleProductList);
     }
 
     @Transactional
@@ -132,8 +135,12 @@ public class FlashSaleProductService {
         validAdmin();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
+                () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
         );
+
+        if (flashSaleProduct.getStartTime().isBefore(LocalDateTime.now().plusMinutes(30))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_APPROVE);
+        }
 
         flashSaleProduct.approve();
 
@@ -145,10 +152,11 @@ public class FlashSaleProductService {
         validAdmin();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
+                () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
         );
 
         flashSaleProduct.refuse();
+        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
         return "승인 거절 되었습니다.";
     }
@@ -158,24 +166,35 @@ public class FlashSaleProductService {
         validAuthority();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.ONSALE)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.IS_ON_SALE_DELETE)
+                () -> new CustomException(FlashSaleProductErrorCode.IS_ON_SALE_DELETE)
         );
 
         validAvailableFlashSale(flashSaleProduct);
+        feignClientService.endSale(List.of(flashSaleProduct.getProductId()));
 
         flashSaleProduct.endSale();
+        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
         return "세일이 종료되었습니다.";
     }
 
     @Transactional
-    public String delete(UUID flashSaleId) {
+    public String delete(UUID flashSaleProductId) {
         validAuthority();
 
-        FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleId);
+        FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleProductId);
         flashSaleProduct.delete();
 
+        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+
         return "삭제되었습니다.";
+    }
+
+    @Transactional
+    public void deleteFlashSale(UUID flashSaleId) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
+
+        flashSaleProductList.forEach(FlashSaleProduct::delete);
     }
 
     @Transactional
@@ -186,7 +205,26 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::endSale);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
+        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+        List<ProductStockRequestDto> productStocks = flashSaleProductList.stream().map(flashSaleProduct -> flashSaleProductMapper.convertToProductStockResponseDto(flashSaleProduct.getProductId(), flashSaleProduct.getStock())).toList();
+
+        feignClientService.endSale(productIdList);
+        feignClientService.increaseProductStock(productStocks);
+
+
+        flashSaleProductList.forEach(FlashSaleProduct::endSale);
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 30 9-20 * * *")
+    public void autoRefuse() {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime fiveMinutesAgo = currentDateTime.plusMinutes(25);
+        LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(35);
+        //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
+
+        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::refuse);
     }
 
     @Transactional
@@ -197,12 +235,16 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.APPROVE, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::oneSale);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
+        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+        feignClientService.startSale(productIdList);
+
+        flashSaleProductList.forEach(FlashSaleProduct::onSale);
     }
 
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
         return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.NOT_FOUND)
+                () -> new CustomException(FlashSaleProductErrorCode.NOT_FOUND)
         );
     }
 
@@ -274,6 +316,18 @@ public class FlashSaleProductService {
         return flashSaleProductRepository.findByIdAndStatusInAndIsDeletedFalse(flashSaleProductId, statusList);
     }
 
+    private Map<UUID, ProductResponseDto> getProductListMap(List<FlashSaleProduct> flashSaleProductList) {
+        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+
+        return feignClientService.getProductInfoListMap(productIdList);
+    }
+
+    protected void validUpdateFlashSale(UUID flashSaleId) {
+        if (flashSaleProductRepository.existsByFlashSaleIdAndIsDeletedFalse(flashSaleId)) {
+            throw new CustomException(FlashSaleErrorCode.NOT_AVAILABLE_UPDATE);
+        }
+    }
+
     private void validAvailableFlashSale(FlashSaleProduct flashSaleProduct) {
         if (getAuthority().equals("ROLE_VENDOR")) {
             if (flashSaleProduct.getCreatedBy().equals(getCurrentUserId())) {
@@ -288,14 +342,26 @@ public class FlashSaleProductService {
         }
     }
 
-    private void validAvailableDateTime(FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if (flashSaleProductRequestDto.endTime().isBefore(flashSaleProductRequestDto.startTime())) {
+    private void validAvailableDateTime(LocalDateTime startTime, LocalDateTime endTime) {
+        if (endTime.isBefore(startTime)) {
             throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_DATE);
+        }
+
+        if (startTime.toLocalTime().isBefore(LocalTime.of(10, 0)) || startTime.toLocalTime().isAfter(LocalTime.of(21, 0))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_START_TIME);
+        }
+
+        if (endTime.toLocalTime().isBefore(LocalTime.of(11, 0)) || endTime.toLocalTime().isAfter(LocalTime.of(22, 0))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_END_TIME);
+        }
+
+        if (startTime.isBefore(LocalDateTime.now().plusHours(1))) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_TIME);
         }
     }
 
-    private void validAvailableSailTime(FlashSale flashSale, FlashSaleProductRequestDto flashSaleProductRequestDto) {
-        if (flashSaleProductRequestDto.startTime().toLocalDate().isBefore(flashSale.getStartDate()) || flashSaleProductRequestDto.endTime().toLocalDate().isAfter(flashSale.getEndDate())) {
+    private void validAvailableSailTime(FlashSale flashSale, LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime.toLocalDate().isBefore(flashSale.getStartDate()) || endTime.toLocalDate().isAfter(flashSale.getEndDate())) {
             throw new CustomException(FlashSaleProductErrorCode.IS_NOT_ON_SALE_TIME);
         }
     }
@@ -321,12 +387,12 @@ public class FlashSaleProductService {
 
     private String getAuthority() {
         return SecurityContextHolder.getContext().getAuthentication()
-            .getAuthorities()
-            .stream()
-            .findFirst()
-            .orElseThrow(() ->
-                new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
-            .getAuthority();
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
+                .getAuthority();
     }
 
     public String getCurrentUserId() {
@@ -337,7 +403,7 @@ public class FlashSaleProductService {
 
     private void validAuthority() {
         String authority = SecurityContextHolder.getContext().getAuthentication()
-            .getAuthorities().toString();
+                .getAuthorities().toString();
 
         if (authority.equals("ROLE_CUSTOMER")) {
             throw new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST);
@@ -358,5 +424,49 @@ public class FlashSaleProductService {
         if (!authority.equals("ROLE_VENDOR")) {
             throw new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST);
         }
+    }
+
+    private void validSalePrice(ProductResponseDto productResponseDto, Integer salePrice) {
+        if (productResponseDto.price() <= salePrice) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_PRICE);
+        }
+    }
+
+    @Transactional
+    public void increaseStock(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
+
+        flashSaleProduct.increaseStock();
+    }
+
+    @Transactional
+    public void decreaseStock(UUID flashSaleProductId) {
+        FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
+
+        flashSaleProduct.decreaseStock();
+
+        if (flashSaleProduct.getStock() == 0) {
+            endSale(flashSaleProductId);
+        }
+    }
+
+    @Transactional
+    public void increaseProductStock(UUID productId, Integer stock) {
+        ProductStockRequestDto productStocks = flashSaleProductMapper.convertToProductStockResponseDto(productId, stock);
+        feignClientService.increaseProductStock(List.of(productStocks));
+    }
+
+    private ProductResponseDto getProductInfo(UUID productId) {
+        return feignClientService.getProductInfo(productId);
+    }
+
+    @Transactional
+    public void deleteByProductId(UUID productId) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdAndIsDeletedFalse(productId);
+
+        Integer totalStock = flashSaleProductList.stream().mapToInt(FlashSaleProduct::getStock).sum();
+        increaseProductStock(productId, totalStock);
+
+        flashSaleProductList.forEach(FlashSaleProduct::delete);
     }
 }

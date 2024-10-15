@@ -27,7 +27,7 @@ public class UserInternalController {
     @GetMapping("/{userId}")
     public UserResponseDto getUserInfo(@PathVariable String userId) {
         log.info("Getting user: {}", userId);
-        return userService.getUserInfoForVendor(userId);
+        return userService.getUserInfoForAuth(userId);
     }
 
     @PostMapping("/verify")
