@@ -19,6 +19,9 @@ dependencies {
 
 	implementation 'org.redisson:redisson-spring-boot-starter:3.16.4'
 
+	//openfeign patch 사용 위한 설정
+	implementation 'io.github.openfeign:feign-okhttp'
+
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
