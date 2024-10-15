@@ -5,25 +5,158 @@ networks:
     driver: bridge
 
 services:
-  postgres:
-    image: postgres:latest
-    container_name: flash-postgres
-    environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: users
+  # Eureka 서버 정의
+  eureka:
+    build:
+      context: ./com.flash.eureka
+    env_file:
+      - ${EUREKA_ENV}
     ports:
-      - "5432:5432"
+      - ${EUREKA_PORT}:${EUREKA_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
     networks:
       - flash-sale-network
-    volumes:
-      - ./init-db:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${DOMAIN}:${EUREKA_PORT}/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  redis:
-    image: redis:latest
-    container_name: flash-redis
-    restart: always
+  # Gateway 서버 정의
+  gateway:
+    build:
+      context: ./com.flash.gateway
+    env_file:
+      - ${GATEWAY_ENV}
     ports:
-      - "6379:6379"
+      - ${GATEWAY_PORT}:${GATEWAY_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      eureka:
+        condition: service_healthy
     networks:
       - flash-sale-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${DOMAIN}:${GATEWAY_PORT}/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  # Auth 서버 정의
+  auth:
+    build:
+      context: ./com.flash.auth
+    env_file:
+      - ${AUTH_ENV}
+    ports:
+      - ${AUTH_PORT}:${AUTH_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
+
+  # User 서버 정의
+  user:
+    build:
+      context: ./com.flash.user
+    env_file:
+      - ${USER_ENV}
+    ports:
+      - ${USER_PORT}:${USER_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
+
+  # Flash-Sale 서버 정의
+  flash-sale:
+    build:
+      context: ./com.flash.flashsale
+    env_file:
+      - ${FLASH_SALE_ENV}
+    ports:
+      - ${FLASH_SALE_PORT}:${FLASH_SALE_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
+
+  #   Order 서버 정의
+  order:
+    build:
+      context: ./com.flash.order
+    env_file:
+      - ${ORDER_ENV}
+    ports:
+      - ${ORDER_PORT}:${ORDER_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
+
+  # Vendor 서버 정의
+  vendor:
+    build:
+      context: ./com.flash.vendor
+    env_file:
+      - ${VENDOR_ENV}
+    ports:
+      - ${VENDOR_PORT}:${VENDOR_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
+
+  #   Alarm 서버 정의
+  alarm:
+    build:
+      context: ./com.flash.alarm
+    env_file:
+      - ${ALARM_ENV}
+    ports:
+      - ${ALARM_PORT}:${ALARM_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
+
+  redis: # container name
+    image: redis:latest
+    ports: # 바인딩할 포트:내부 포트
+      - ${REDIS_OUTER_PORT}:${REDIS_INNER_PORT}
+    volumes: # 마운트할 볼륨 설정
+      - redis_data:/var/lib/redis/user/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf # 파일 경로 수정
+    networks:
+      - flash-sale-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]  # redis-cli ping 명령어로 상태 확인
+      interval: 30s  # 헬스 체크 간격
+      timeout: 10s   # 응답 대기 시간
+      retries: 5     # 실패 후 재시도 횟수
+      start_period: 10s  # 컨테이너 시작 후 첫 헬스 체크까지 대기 시간
+    restart: always
+
+volumes:
+  redis_data:

@@ -5,7 +5,7 @@ eureka:
     fetch-registry: 'false'
     register-with-eureka: 'false'
   instance:
-    hostname: localhost
+    hostname: eureka
 spring:
   application:
     name: eureka

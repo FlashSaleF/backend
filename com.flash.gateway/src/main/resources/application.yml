@@ -14,7 +14,6 @@ spring:
     redis:
       host: ${REDIS_DOMAIN}
       port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
 
 eureka:
   client:
