@@ -10,7 +10,7 @@ import java.util.UUID;
 @FeignClient(name = "flash-sale")
 public interface FlashSaleProductFeignClient {
 
-    @PutMapping("/api/internal/flash-sale-products/{flashSaleProductId}/decreaseStock")
+    @PatchMapping("/api/internal/flash-sale-products/{flashSaleProductId}/decreaseStock")
     void decreaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId);
 
 }

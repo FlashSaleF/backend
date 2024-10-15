@@ -35,7 +35,7 @@ public class ProductInternalController {
                 productApplicationService.getProductsByIds(request.productIds()));
     }
 
-    @PutMapping("/{productId}/stock/decrease")
+    @PatchMapping("/{productId}/stock/decrease")
     public ResponseEntity<ProductStockDecreaseResponseDto> decreaseProductStock(
             @PathVariable UUID productId,
             @RequestBody ProductStockDecreaseRequestDto request

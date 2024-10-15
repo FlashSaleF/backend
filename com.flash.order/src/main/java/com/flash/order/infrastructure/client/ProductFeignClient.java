@@ -14,7 +14,7 @@ public interface ProductFeignClient {
     @GetMapping("/api/internal/products/{productId}")
     ProductResponseDto getProduct(@PathVariable UUID productId);
 
-    @PutMapping("/api/internal/products/{productId}/stock/decrease")
+    @PatchMapping("/api/internal/products/{productId}/stock/decrease")
     ProductStockDecreaseResponseDto decreaseProductStock(
             @PathVariable UUID productId,
             @RequestBody ProductStockDecreaseRequestDto request
