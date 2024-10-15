@@ -1,5 +1,6 @@
 package com.flash.user.application.service;
 
+import com.flash.base.exception.CustomException;
 import com.flash.user.application.dto.request.JoinRequestDto;
 import com.flash.user.application.dto.request.LoginRequestDto;
 import com.flash.user.application.dto.request.UpdateRequestDto;
@@ -8,17 +9,17 @@ import com.flash.user.application.dto.response.LoginResponseDto;
 import com.flash.user.application.dto.response.UserInfoResponseDto;
 import com.flash.user.application.dto.response.UserResponseDto;
 import com.flash.user.application.service.util.UserMapper;
+import com.flash.user.domain.exception.UserErrorCode;
 import com.flash.user.domain.model.User;
 import com.flash.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
 
 @Slf4j(topic = "User Service")
 @Service
@@ -33,12 +34,12 @@ public class UserService {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(joinRequestDto.email())) {
             log.error("email already exists");
-            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+            throw new CustomException(UserErrorCode.DUPLICATED_EMAIL);
         }
         // 전화번호 중복 체크
         if (userRepository.existsByPhone(joinRequestDto.phone())) {
             log.error("phone already exists");
-            throw new IllegalArgumentException("이미 존재하는 전화번호입니다.");
+            throw new CustomException(UserErrorCode.DUPLICATED_PHONE);
         }
 
         User saved = userRepository.save(UserMapper.entityFrom(joinRequestDto.withPassword(passwordEncoder.encode(joinRequestDto.password()))));
@@ -52,7 +53,7 @@ public class UserService {
         return userRepository.findById(Long.valueOf(userId)).orElseThrow(
                 () -> {
                     log.error("getUser method: user not found by id");
-                    throw new IllegalArgumentException("user not found by id");
+                    throw new CustomException(UserErrorCode.USER_NOT_FOUND);
                 }
         );
     }
@@ -64,15 +65,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public LoginResponseDto verify(LoginRequestDto loginRequestDto) {
         User user = userRepository.findByEmail(loginRequestDto.email()).orElseThrow(() -> {
-            // TODO: 커스텀 예외 만들어서 던지기
             log.error("user not found by email");
-            throw new IllegalArgumentException("not found");
+            throw new CustomException(UserErrorCode.USER_NOT_FOUND);
 
         });
         if (!passwordEncoder.matches(loginRequestDto.password(), user.getPassword())) {
-            // TODO: 커스텀 예외 만들어서 던지기
             log.error("password does not match");
-            throw new IllegalArgumentException("password does not match");
+            throw new CustomException(UserErrorCode.INVALID_PASSWORD);
         }
         return UserMapper.toAuthFrom(user);
     }
@@ -107,9 +106,8 @@ public class UserService {
 
         Page<User> all = userRepository.findAll(pageable);
         if (all.isEmpty()) {
-            log.error("user list is empty");
-            // TODO: 커스텀 예외 변경
-            throw new IllegalArgumentException("user list is empty");
+            log.warn("user list is empty");
+            return new PageImpl<>(Collections.emptyList(), pageable, 0);
         }
 
         return all.map(UserMapper::toUserInfoFrom);

@@ -1,13 +1,17 @@
 package com.flash.user.application.service.util;
 
+import com.flash.base.exception.CustomException;
+import com.flash.user.domain.exception.UserErrorCode;
 import com.flash.user.domain.model.RoleEnum;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
+@Slf4j(topic = "User Auth Service")
 @Component
 @RequiredArgsConstructor
 public class UserAuthService {
@@ -28,10 +32,9 @@ public class UserAuthService {
                 return;  // MASTER 권한이면 return
             }
         }
-
-        // TODO: 커스텀 예외
         // userId가 일치하지 않고, 권한도 MASTER가 아닌 경우 예외처리
-        throw new RuntimeException("권한이 없는 사용자");
+        log.error("access denied");
+        throw new CustomException(UserErrorCode.ACCESS_DENIED);
     }
 
 }
