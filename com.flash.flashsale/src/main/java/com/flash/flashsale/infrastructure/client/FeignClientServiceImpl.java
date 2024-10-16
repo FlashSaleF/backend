@@ -1,10 +1,8 @@
 package com.flash.flashsale.infrastructure.client;
 
-import com.flash.flashsale.application.dto.request.ProductListRequestDto;
-import com.flash.flashsale.application.dto.request.ProductStockDecreaseRequestDto;
-import com.flash.flashsale.application.dto.request.ProductStockListRequestDto;
-import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
+import com.flash.flashsale.application.dto.request.*;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
+import com.flash.flashsale.application.dto.response.ProductStockIncreaseResponseDto;
 import com.flash.flashsale.application.service.FeignClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -38,18 +36,18 @@ public class FeignClientServiceImpl implements FeignClientService {
     }
 
     @Override
-    public void startSale(List<UUID> productIds) {
-        vendorFeignClient.startSale(new ProductListRequestDto(productIds));
-    }
-
-    @Override
-    public void endSale(List<UUID> productIds) {
-        vendorFeignClient.endSale(new ProductListRequestDto(productIds));
-    }
-
-    @Override
     public void increaseProductStock(List<ProductStockRequestDto> productStocks) {
         vendorFeignClient.increaseProductStock(new ProductStockListRequestDto(productStocks));
+    }
+
+    @Override
+    public ProductStockIncreaseResponseDto increaseOneProductStock(UUID productId, Integer stock) {
+        return vendorFeignClient.increaseOneProductStock(productId, new ProductStockIncreaseRequestDto(stock));
+    }
+
+    @Override
+    public ProductResponseDto updateProductStatus(UUID productId, String status) {
+        return vendorFeignClient.updateProductStatus(productId, new ProductStatusUpdateDto(status));
     }
 
     public List<ProductResponseDto> getProductInfoList(List<UUID> productIds) {

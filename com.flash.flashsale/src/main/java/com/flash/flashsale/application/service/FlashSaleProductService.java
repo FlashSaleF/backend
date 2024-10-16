@@ -17,6 +17,7 @@ import com.flash.flashsale.domain.model.FlashSaleProduct;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,6 +34,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FlashSaleProductService {
 
     private final FlashSaleService flashSaleService;
@@ -71,7 +73,7 @@ public class FlashSaleProductService {
         validAvailableDateTime(flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
-                () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
+            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
         );
 
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
@@ -135,7 +137,7 @@ public class FlashSaleProductService {
         validAdmin();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
-                () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
+            () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
         );
 
         if (flashSaleProduct.getStartTime().isBefore(LocalDateTime.now().plusMinutes(30))) {
@@ -151,13 +153,14 @@ public class FlashSaleProductService {
     public String refuse(UUID flashSaleProductId) {
         validAdmin();
 
-        FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
-                () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
+        FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
+            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
         );
 
         flashSaleProduct.refuse();
-        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
+//        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());   임시로 V2버전 사용
+        increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
         return "승인 거절 되었습니다.";
     }
 
@@ -166,14 +169,15 @@ public class FlashSaleProductService {
         validAuthority();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.ONSALE)).orElseThrow(
-                () -> new CustomException(FlashSaleProductErrorCode.IS_ON_SALE_DELETE)
+            () -> new CustomException(FlashSaleProductErrorCode.IS_ON_SALE_DELETE)
         );
 
         validAvailableFlashSale(flashSaleProduct);
-        feignClientService.endSale(List.of(flashSaleProduct.getProductId()));
+        feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
 
         flashSaleProduct.endSale();
-        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+        //        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());   임시로 V2버전 사용
+        increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
 
         return "세일이 종료되었습니다.";
     }
@@ -185,7 +189,14 @@ public class FlashSaleProductService {
         FlashSaleProduct flashSaleProduct = availableFlashSaleProduct(flashSaleProductId);
         flashSaleProduct.delete();
 
-        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+        if (flashSaleProduct.getStatus().equals(FlashSaleProductStatus.ONSALE)) {
+            feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+        }
+
+        //        increaseProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());   임시로 V2버전 사용
+        if (!flashSaleProduct.getStatus().equals(FlashSaleProductStatus.REFUSE)) {
+            increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+        }
 
         return "삭제되었습니다.";
     }
@@ -194,7 +205,18 @@ public class FlashSaleProductService {
     public void deleteFlashSale(UUID flashSaleId) {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
 
-        flashSaleProductList.forEach(FlashSaleProduct::delete);
+        flashSaleProductList.forEach(flashSaleProduct -> {
+                if (flashSaleProduct.getStatus().equals(FlashSaleProductStatus.ONSALE)) {
+                    feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+                }
+
+                if (!flashSaleProduct.getStatus().equals(FlashSaleProductStatus.REFUSE)) {
+                    increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+                }
+
+                flashSaleProduct.delete();
+            }
+        );
     }
 
     @Transactional
@@ -206,14 +228,20 @@ public class FlashSaleProductService {
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
-        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
-        List<ProductStockRequestDto> productStocks = flashSaleProductList.stream().map(flashSaleProduct -> flashSaleProductMapper.convertToProductStockResponseDto(flashSaleProduct.getProductId(), flashSaleProduct.getStock())).toList();
+//        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
+//        List<ProductStockRequestDto> productStocks = flashSaleProductList.stream().map(flashSaleProduct -> flashSaleProductMapper.convertToProductStockResponseDto(flashSaleProduct.getProductId(), flashSaleProduct.getStock())).toList();
 
-        feignClientService.endSale(productIdList);
-        feignClientService.increaseProductStock(productStocks);
+//        feignClientService.endSale(productIdList);
+//        feignClientService.increaseProductStock(productStocks);
 
+//        flashSaleProductList.forEach(FlashSaleProduct::endSale);  V2버전으로 임시 변경
+        flashSaleProductList.forEach(flashSaleProduct -> {
+                feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+            feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
 
-        flashSaleProductList.forEach(FlashSaleProduct::endSale);
+                flashSaleProduct.endSale();
+            }
+        );
     }
 
     @Transactional
@@ -224,7 +252,13 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(35);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater).forEach(FlashSaleProduct::refuse);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater);
+
+        flashSaleProductList.forEach(flashSaleProduct -> {
+                feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+                flashSaleProduct.refuse();
+            }
+        );
     }
 
     @Transactional
@@ -236,15 +270,19 @@ public class FlashSaleProductService {
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
-        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
-        feignClientService.startSale(productIdList);
+//        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
 
-        flashSaleProductList.forEach(FlashSaleProduct::onSale);
+        flashSaleProductList.forEach(flashSaleProduct -> {
+                feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "ON_SALE");
+
+                flashSaleProduct.onSale();
+            }
+        );
     }
 
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
         return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
-                () -> new CustomException(FlashSaleProductErrorCode.NOT_FOUND)
+            () -> new CustomException(FlashSaleProductErrorCode.NOT_FOUND)
         );
     }
 
@@ -387,12 +425,12 @@ public class FlashSaleProductService {
 
     private String getAuthority() {
         return SecurityContextHolder.getContext().getAuthentication()
-                .getAuthorities()
-                .stream()
-                .findFirst()
-                .orElseThrow(() ->
-                        new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
-                .getAuthority();
+            .getAuthorities()
+            .stream()
+            .findFirst()
+            .orElseThrow(() ->
+                new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
+            .getAuthority();
     }
 
     public String getCurrentUserId() {
@@ -403,7 +441,7 @@ public class FlashSaleProductService {
 
     private void validAuthority() {
         String authority = SecurityContextHolder.getContext().getAuthentication()
-                .getAuthorities().toString();
+            .getAuthorities().toString();
 
         if (authority.equals("ROLE_CUSTOMER")) {
             throw new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST);
@@ -443,6 +481,10 @@ public class FlashSaleProductService {
     public void decreaseStock(UUID flashSaleProductId) {
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
 
+        if (flashSaleProduct.getStock() == 0) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_ORDER);
+        }
+
         flashSaleProduct.decreaseStock();
 
         if (flashSaleProduct.getStock() == 0) {
@@ -456,6 +498,11 @@ public class FlashSaleProductService {
         feignClientService.increaseProductStock(List.of(productStocks));
     }
 
+    @Transactional
+    public void increaseProductStockV2(UUID productId, Integer stock) {
+        feignClientService.increaseOneProductStock(productId, stock);
+    }
+
     private ProductResponseDto getProductInfo(UUID productId) {
         return feignClientService.getProductInfo(productId);
     }
@@ -465,7 +512,8 @@ public class FlashSaleProductService {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdAndIsDeletedFalse(productId);
 
         Integer totalStock = flashSaleProductList.stream().mapToInt(FlashSaleProduct::getStock).sum();
-        increaseProductStock(productId, totalStock);
+//        increaseProductStock(productId, totalStock);    임시로 V2버전 사용
+        increaseProductStockV2(productId, totalStock);
 
         flashSaleProductList.forEach(FlashSaleProduct::delete);
     }

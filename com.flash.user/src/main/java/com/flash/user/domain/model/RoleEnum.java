@@ -1,5 +1,7 @@
 package com.flash.user.domain.model;
 
+import com.flash.base.exception.CustomException;
+import com.flash.user.domain.exception.UserErrorCode;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -11,8 +13,6 @@ public enum RoleEnum {
     CUSTOMER(Authority.CUSTOMER);
 
     private final String authority;
-
-    // TODO: 여기서 예외를 던지는 것이 적절한가? Optional?
 
     /**
      * roleCode에 따른 RoleEnum을 반환
@@ -26,7 +26,7 @@ public enum RoleEnum {
                 return role;
             }
         }
-        throw new IllegalArgumentException("Invalid role code: " + roleCode);
+        throw new CustomException(UserErrorCode.INVALID_ROLE);
     }
 
     public String getAuthority() {
