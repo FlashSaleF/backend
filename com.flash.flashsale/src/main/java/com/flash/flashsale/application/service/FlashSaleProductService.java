@@ -481,6 +481,10 @@ public class FlashSaleProductService {
     public void decreaseStock(UUID flashSaleProductId) {
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
 
+        if (flashSaleProduct.getStock() == 0) {
+            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_ORDER);
+        }
+
         flashSaleProduct.decreaseStock();
 
         if (flashSaleProduct.getStock() == 0) {
