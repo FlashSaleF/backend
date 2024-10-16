@@ -20,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -196,7 +195,7 @@ public class OrderService {
         order.setStatus(OrderStatus.cancelled);
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void cancelOrderAndPayment(Order order) {
         order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
         order.setStatus(OrderStatus.cancelled); // 주문 상태를 취소로 변경
@@ -205,8 +204,18 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderResponseDto getOrderById(UUID orderId) {
+
+        Long currentUserId = Long.valueOf(getCurrentUserId());
+        String authority = getCurrentUserAuthority();
+
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        // 권한이 ROLE_MASTER가 아닌 경우에만 주문자가 맞는지 확인
+        if (!authority.equals("ROLE_MASTER") && !order.getUserId().equals(currentUserId)) {
+            throw new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST);
+        }
+
         return orderMapper.convertToResponseDto(order);
     }
 
