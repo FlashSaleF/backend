@@ -1,10 +1,8 @@
 package com.flash.vendor.application.service;
 
-import com.flash.base.exception.CustomException;
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.*;
 import com.flash.vendor.application.dto.response.*;
-import com.flash.vendor.domain.exception.ProductErrorCode;
 import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
@@ -13,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -191,19 +188,5 @@ public class ProductApplicationService {
         return saleProductIds.isEmpty()
                 ? Collections.emptyMap()
                 : feignClientService.getFlashSaleProductListMap(saleProductIds);
-    }
-
-    private String getCurrentUserAuthority() {
-        return SecurityContextHolder.getContext().getAuthentication()
-                .getAuthorities()
-                .stream()
-                .findFirst()
-                .orElseThrow(() ->
-                        new CustomException(ProductErrorCode.INVALID_PERMISSION_REQUEST))
-                .getAuthority();
-    }
-
-    private String getCurrentUserId() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

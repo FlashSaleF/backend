@@ -73,7 +73,7 @@ public class FlashSaleProductService {
         validAvailableDateTime(flashSaleProductUpdateRequestDto.startTime(), flashSaleProductUpdateRequestDto.endTime());
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING, FlashSaleProductStatus.APPROVE)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
+                () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_UPDATE)
         );
 
         FlashSale flashSale = flashSaleService.existFlashSale(flashSaleProduct.getFlashSale().getId());
@@ -137,7 +137,7 @@ public class FlashSaleProductService {
         validAdmin();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
+                () -> new CustomException(FlashSaleProductErrorCode.IS_NOT_PENDING)
         );
 
         if (flashSaleProduct.getStartTime().isBefore(LocalDateTime.now().plusMinutes(30))) {
@@ -154,7 +154,7 @@ public class FlashSaleProductService {
         validAdmin();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.PENDING)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
+                () -> new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_REFUSE)
         );
 
         flashSaleProduct.refuse();
@@ -169,7 +169,7 @@ public class FlashSaleProductService {
         validAuthority();
 
         FlashSaleProduct flashSaleProduct = getFlashSaleProductByStatus(flashSaleProductId, List.of(FlashSaleProductStatus.ONSALE)).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.IS_ON_SALE_DELETE)
+                () -> new CustomException(FlashSaleProductErrorCode.IS_ON_SALE_DELETE)
         );
 
         validAvailableFlashSale(flashSaleProduct);
@@ -206,16 +206,16 @@ public class FlashSaleProductService {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByFlashSaleIdAndIsDeletedFalse(flashSaleId);
 
         flashSaleProductList.forEach(flashSaleProduct -> {
-                if (flashSaleProduct.getStatus().equals(FlashSaleProductStatus.ONSALE)) {
-                    feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
-                }
+                    if (flashSaleProduct.getStatus().equals(FlashSaleProductStatus.ONSALE)) {
+                        feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+                    }
 
-                if (!flashSaleProduct.getStatus().equals(FlashSaleProductStatus.REFUSE)) {
-                    increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
-                }
+                    if (!flashSaleProduct.getStatus().equals(FlashSaleProductStatus.REFUSE)) {
+                        increaseProductStockV2(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+                    }
 
-                flashSaleProduct.delete();
-            }
+                    flashSaleProduct.delete();
+                }
         );
     }
 
@@ -236,11 +236,11 @@ public class FlashSaleProductService {
 
 //        flashSaleProductList.forEach(FlashSaleProduct::endSale);  V2버전으로 임시 변경
         flashSaleProductList.forEach(flashSaleProduct -> {
-                feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
-            feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+                    feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+                    feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
 
-                flashSaleProduct.endSale();
-            }
+                    flashSaleProduct.endSale();
+                }
         );
     }
 
@@ -255,9 +255,9 @@ public class FlashSaleProductService {
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater);
 
         flashSaleProductList.forEach(flashSaleProduct -> {
-                feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
-                flashSaleProduct.refuse();
-            }
+                    feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
+                    flashSaleProduct.refuse();
+                }
         );
     }
 
@@ -273,16 +273,16 @@ public class FlashSaleProductService {
 //        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
 
         flashSaleProductList.forEach(flashSaleProduct -> {
-                feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "ON_SALE");
+                    feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "ON_SALE");
 
-                flashSaleProduct.onSale();
-            }
+                    flashSaleProduct.onSale();
+                }
         );
     }
 
     private FlashSaleProduct existFlashSaleProduct(UUID flashSaleProductId) {
         return flashSaleProductRepository.findByIdAndIsDeletedFalse(flashSaleProductId).orElseThrow(
-            () -> new CustomException(FlashSaleProductErrorCode.NOT_FOUND)
+                () -> new CustomException(FlashSaleProductErrorCode.NOT_FOUND)
         );
     }
 
@@ -425,12 +425,12 @@ public class FlashSaleProductService {
 
     private String getAuthority() {
         return SecurityContextHolder.getContext().getAuthentication()
-            .getAuthorities()
-            .stream()
-            .findFirst()
-            .orElseThrow(() ->
-                new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
-            .getAuthority();
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST))
+                .getAuthority();
     }
 
     public String getCurrentUserId() {
@@ -441,7 +441,7 @@ public class FlashSaleProductService {
 
     private void validAuthority() {
         String authority = SecurityContextHolder.getContext().getAuthentication()
-            .getAuthorities().toString();
+                .getAuthorities().toString();
 
         if (authority.equals("ROLE_CUSTOMER")) {
             throw new CustomException(FlashSaleProductErrorCode.INVALID_PERMISSION_REQUEST);

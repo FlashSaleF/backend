@@ -1,6 +1,5 @@
 package com.flash.order.application.service;
 
-import com.flash.base.exception.BaseErrorCode;
 import com.flash.base.exception.CustomException;
 import com.flash.order.application.dtos.mapper.OrderMapper;
 import com.flash.order.application.dtos.request.OrderRequestDto;
@@ -21,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
