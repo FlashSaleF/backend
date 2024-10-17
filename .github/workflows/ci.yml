@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew clean build -x test
 
       - name: Compress projects
-        run: zip -r ./flash-sale.zip .
+        run: zip -r ./backend.zip .
 
       - name: Transfer project to EC2
         uses: appleboy/scp-action@master
@@ -37,8 +37,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "flash-sale.tar.gz"
-          target: "/home/ubuntu/"
+          source: "backend.zip"
+          target: "/home/ubuntu/flash-sale/"
 
       - name: Deploy to EC2 using Docker Compose
         uses: appleboy/ssh-action@master
@@ -47,9 +47,9 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu
-            tar -xzvf flash-sale.tar.gz
-            cd flash-sale/backend
+            cd /home/ubuntu/flash-sale
+            unzip backend.zip
+            cd backend
             
             # Stop and remove existing containers
             docker-compose -p flash-sale down -v || true
