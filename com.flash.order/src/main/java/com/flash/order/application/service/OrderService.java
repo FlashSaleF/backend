@@ -38,7 +38,7 @@ public class OrderService {
     private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
     private final MessagingProducerService messagingProducerService;
-    private final RedissonClient redissonClient;
+    private final RedisLockService redisLockService;
 
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
@@ -110,7 +110,7 @@ public class OrderService {
         return orderMapper.convertToResponseDto(savedOrder);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = { CustomException.class })
     public void handlePaymentCompleted(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
@@ -123,62 +123,48 @@ public class OrderService {
         // 모든 상품에 대한 재고 검증
         for (OrderProduct orderProduct : order.getOrderProducts()) {
             String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
-            RLock lock = redissonClient.getLock(lockKey);
 
             try {
-                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS);
-
-                if (available) {
+                // RedisLockService를 사용해 락을 획득하고 재고 검증 로직 실행
+                redisLockService.lockAndExecute(lockKey, () -> {
                     ProductResponseDto productResponseDto = feignClientService.getProduct(orderProduct.getProductId());
 
                     if (productResponseDto.stock() < orderProduct.getQuantity()) {
                         // 재고 부족 시 결제 및 주문 상태 취소
-                        cancelOrderAndPayment(order);
+                        cancellOrderAndPayment(order);
                         throw new CustomException(OrderErrorCode.PRODUCT_OUT_OF_STOCK);
                     }
-                } else {
-                    log.error("재고 검증 중 락을 얻지 못했습니다. productId: {}", orderProduct.getProductId());
-                    cancelOrderAndPayment(order);
-                    throw new CustomException(OrderErrorCode.PRODUCT_STOCK_LOCK_FAILED);
-                }
-            } catch (Exception e) {
+                    return null; // task에서 반환 타입이 필요 없을 때 null 리턴
+                });
+            } catch (CustomException e) {
                 log.error("재고 검증 중 오류 발생: {}", e.getMessage());
-                cancelOrderAndPayment(order);
-                throw new CustomException(OrderErrorCode.PRODUCT_STOCK_VERIFICATION_FAILED);
-            } finally {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
+                cancellOrderAndPayment(order);
+                throw e;
             }
         }
 
         // 재고 감소가 성공한 경우에만 계속 처리
         for (OrderProduct orderProduct : order.getOrderProducts()) {
             String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
-            RLock lock = redissonClient.getLock(lockKey);
 
             try {
-                boolean available = lock.tryLock(500, 3000, TimeUnit.MILLISECONDS);
-
-                if (available) {
+                // RedisLockService를 사용해 락을 획득하고 재고 감소 로직 실행
+                redisLockService.lockAndExecute(lockKey, () -> {
                     ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+
                     if (orderProduct.getFlashSaleProductId() == null) {
                         messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto);
                     } else {
                         messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto);
                     }
-                }
-            } catch (Exception e) {
+                    return null; // task에서 반환 타입이 필요 없을 때 null 리턴
+                });
+            } catch (CustomException e) {
                 stockDecreasedSuccessfully = false;
                 log.error("재고 감소 처리 중 오류 발생: {}", e.getMessage());
-                throw new CustomException(OrderErrorCode.PRODUCT_STOCK_DECREASE_FAILED);
-            } finally {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
+                throw e;
             }
         }
-
     }
 
     @Transactional
@@ -198,7 +184,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancelOrderAndPayment(Order order) {
+    public void cancellOrderAndPayment(Order order) {
         order.getPayment().changeStatus(PaymentStatus.cancelled); // 결제 상태를 취소로 변경
         order.setStatus(OrderStatus.cancelled); // 주문 상태를 취소로 변경
         orderRepository.save(order); // 상태 변경 후 저장
