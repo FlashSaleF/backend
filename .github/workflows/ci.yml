@@ -29,7 +29,7 @@ jobs:
         run: ./gradlew clean build -x test
 
       - name: Compress projects
-        run: tar --exclude="*/.git" --exclude="*/.gradle" --exclude="./gradle" -czvf flash-sale.tar.gz .
+        run: tar --exclude="*/.git" --exclude="*/.gradle" --exclude="./gradle" --exclude="./build/tmp" --exclude="./build/generated" --exclude="build/tmp" -czvf flash-sale.tar.gz .
 
       - name: Transfer project to EC2
         uses: appleboy/scp-action@master
