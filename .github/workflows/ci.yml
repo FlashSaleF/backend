@@ -38,7 +38,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "backend.zip"
-          target: "/home/ubuntu/flash-sale/"
+          target: "/home/ubuntu/flash-sale/backend/"
 
       - name: Deploy to EC2 using Docker Compose
         uses: appleboy/ssh-action@master
@@ -47,12 +47,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/flash-sale
+            cd /home/ubuntu/flash-sale/backend
             unzip backend.zip
-            cd backend
             
             # Stop and remove existing containers
-            docker-compose -p flash-sale down -v || true
+            docker-compose -p flash down -v || true
             
             # Build and run the new containers
-            docker-compose -p flash-sale up -d --build
+            docker-compose -p flash up -d --build
