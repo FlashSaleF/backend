@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Compress files
-        run: tar -czvf flash-sale.tar.gz .
+        run: tar --exclude=".git" -czvf flash-sale.tar.gz .
 
       - name: Transfer project to EC2
         uses: appleboy/scp-action@master
