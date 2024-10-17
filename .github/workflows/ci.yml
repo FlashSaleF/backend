@@ -16,7 +16,7 @@ jobs:
       - name: action checkout
         uses: actions/checkout@v3
 
-      - name: Compress files
+      - name: Compress projects
         run: tar --exclude="./.git" -czvf flash-sale.tar.gz .
 
       - name: Transfer project to EC2
