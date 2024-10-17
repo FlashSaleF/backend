@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+
+  pull_request:
+    branches: [ dev ]
+    types: [ opened ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: action checkout
+        uses: actions/checkout@v3
+
+      - name: Compress files
+        run: tar -czvf flash-sale.tar.gz .
+
+      - name: Transfer project to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "flash-sale.tar.gz"
+          target: "/home/ubuntu/"
+
+      - name: Deploy to EC2 using Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu
+            tar -xzvf flash-sale.tar.gz
+            cd flash-sale/backend
+            
+            # Stop and remove existing containers
+            docker-compose -p flash-sale down -v || true
+            
+            # Build and run the new containers
+            docker-compose -p flash-sale up -d --build
