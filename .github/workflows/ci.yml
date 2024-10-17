@@ -16,6 +16,9 @@ jobs:
       - name: action checkout
         uses: actions/checkout@v3
 
+      - name: Run build
+        run: ./gradlew clean build -x test
+
       - name: Compress projects
         run: tar --exclude="*/.git" -czvf flash-sale.tar.gz .
 
