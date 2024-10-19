@@ -3,10 +3,9 @@ package com.flash.order.infrastructure.messaging;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
+import com.flash.order.application.dtos.request.ProductStockIncreaseRequestDto;
 import com.flash.order.domain.model.Order;
-import com.flash.order.infrastructure.messaging.event.FlashProductStockDecreaseEvent;
-import com.flash.order.infrastructure.messaging.event.OrderPaymentEvent;
-import com.flash.order.infrastructure.messaging.event.ProductStockDecreaseEvent;
+import com.flash.order.infrastructure.messaging.event.*;
 import com.flash.order.infrastructure.messaging.topic.KafkaTopic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +41,28 @@ public class MessagingProducerService {
             kafkaTemplate.send(KafkaTopic.FLASH_PRODUCT_STOCK_DECREASE.getTopic(), eventJson);
         } catch (JsonProcessingException e) {
             log.error("플래시 세일 상품 재고 감소 요청 메시지를 직렬화 중 오류 발생", e);
+        }
+    }
+
+    public void sendIncreaseProductStock(UUID orderId, UUID productId, ProductStockIncreaseRequestDto request) {
+        ProductStockIncreaseEvent event = new ProductStockIncreaseEvent(orderId, productId, request);
+
+        try {
+            String eventJson = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(KafkaTopic.PRODUCT_STOCK_INCREASE.getTopic(), eventJson);
+        } catch (JsonProcessingException e) {
+            log.error("상품 재고 증가 요청 메시지를 직렬화 중 오류 발생", e);
+        }
+    }
+
+    public void sendIncreaseFlashProductStock(UUID orderId, UUID flashSaleProductId, ProductStockIncreaseRequestDto request) {
+        FlashProductStockIncreaseEvent event = new FlashProductStockIncreaseEvent(orderId, flashSaleProductId, request);
+
+        try {
+            String eventJson = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(KafkaTopic.FLASH_PRODUCT_STOCK_INCREASE.getTopic(), eventJson);
+        } catch (JsonProcessingException e) {
+            log.error("플래시 세일 상품 재고 증가 요청 메시지를 직렬화 중 오류 발생", e);
         }
     }
 
