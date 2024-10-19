@@ -13,7 +13,8 @@ public enum OrderErrorCode implements ErrorCode {
     PRODUCT_STOCK_VERIFICATION_FAILED(HttpStatus.BAD_REQUEST, "상품 재고 확인에 실패했습니다."),
     PRODUCT_STOCK_DECREASE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "상품 재고 감소에 실패했습니다."),
     PRODUCT_OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "상품 재고가 부족합니다."),
-    INVALID_PERMISSION_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 권한 요청입니다.");
+    INVALID_PERMISSION_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 권한 요청입니다."),
+    ORDER_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "이미 취소된 주문입니다.");
     private final HttpStatus status;
     private final String message;
 
