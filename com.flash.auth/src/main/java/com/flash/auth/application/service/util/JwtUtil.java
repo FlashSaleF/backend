@@ -1,5 +1,7 @@
 package com.flash.auth.application.service.util;
 
+import com.flash.auth.domain.exception.AuthErrorCode;
+import com.flash.base.exception.CustomException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -97,14 +99,17 @@ public class JwtUtil {
             return true;
         } catch (ExpiredJwtException e) {
             log.error("Expired JWT token, 만료된 Access 토큰입니다.");
+            throw new CustomException(AuthErrorCode.EXPIRED_JWT);
         } catch (UnsupportedJwtException e) {
             log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+            throw new CustomException(AuthErrorCode.UNSUPPORTED_JWT);
         } catch (MalformedJwtException | SecurityException e) {
             log.error("Invalid JWT token, 유효하지 않은 JWT token 입니다.");
+            throw new CustomException(AuthErrorCode.INVALID_JWT);
         } catch (IllegalArgumentException e) {
             log.error("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+            throw new CustomException(AuthErrorCode.EMPTY_JWT);
         }
-        return false;
     }
 
     // Access 토큰에서 사용자 id 가져오기
