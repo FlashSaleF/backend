@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: vendor
+  datasource:
+    url: ${DB_DATABASE}/alarms
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DRIVER_CLASS}
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    discovery:
+      enabled: false
