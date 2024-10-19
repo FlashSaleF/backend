@@ -1,8 +1,10 @@
 package com.flash.order.infrastructure.client;
 
 import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
+import com.flash.order.application.dtos.request.ProductStockIncreaseRequestDto;
 import com.flash.order.application.dtos.response.ProductResponseDto;
 import com.flash.order.application.dtos.response.ProductStockDecreaseResponseDto;
+import com.flash.order.application.dtos.response.ProductStockIncreaseResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,5 +20,11 @@ public interface ProductFeignClient {
     ProductStockDecreaseResponseDto decreaseProductStock(
             @PathVariable UUID productId,
             @RequestBody ProductStockDecreaseRequestDto request
+    );
+
+    @PatchMapping("/api/internal/products/{productId}/stock/increase")
+    ProductStockIncreaseResponseDto increaseProductStock(
+            @PathVariable UUID productId,
+            @RequestBody ProductStockIncreaseRequestDto request
     );
 }
