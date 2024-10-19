@@ -54,6 +54,11 @@ public class OrderService {
                         throw new CustomException(OrderErrorCode.ORDER_PRODUCT_NOT_FOUND);
                     }
 
+                    // 상품 존재 시 재고 검증 로직 추가
+                    if (productResponseDto.stock() < orderProductDto.quantity()) {
+                        throw new CustomException(OrderErrorCode.PRODUCT_OUT_OF_STOCK);
+                    }
+
                     UUID flashSaleProductId = null;
                     if (productResponseDto.flashSaleProductResponseDto().isPresent()) {
                         flashSaleProductId = productResponseDto.flashSaleProductResponseDto().get().flashSaleProductId();
@@ -110,7 +115,8 @@ public class OrderService {
         return orderMapper.convertToResponseDto(savedOrder);
     }
 
-    @Transactional(noRollbackFor = { CustomException.class })
+    //결제 처리 및 재고 감소 이벤트 발행
+    @Transactional
     public void handlePaymentCompleted(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
@@ -119,29 +125,6 @@ public class OrderService {
 
         // 재고 감소 처리 플래그
         boolean stockDecreasedSuccessfully = true;
-
-        // 모든 상품에 대한 재고 검증
-        for (OrderProduct orderProduct : order.getOrderProducts()) {
-            String lockKey = "product_stock_lock:" + (orderProduct.getFlashSaleProductId() != null ? orderProduct.getFlashSaleProductId() : orderProduct.getProductId());
-
-            try {
-                // RedisLockService를 사용해 락을 획득하고 재고 검증 로직 실행
-                redisLockService.lockAndExecute(lockKey, () -> {
-                    ProductResponseDto productResponseDto = feignClientService.getProduct(orderProduct.getProductId());
-
-                    if (productResponseDto.stock() < orderProduct.getQuantity()) {
-                        // 재고 부족 시 결제 및 주문 상태 취소
-                        cancellOrderAndPayment(order);
-                        throw new CustomException(OrderErrorCode.PRODUCT_OUT_OF_STOCK);
-                    }
-                    return null; // task에서 반환 타입이 필요 없을 때 null 리턴
-                });
-            } catch (CustomException e) {
-                log.error("재고 검증 중 오류 발생: {}", e.getMessage());
-                cancellOrderAndPayment(order);
-                throw e;
-            }
-        }
 
         // 재고 감소가 성공한 경우에만 계속 처리
         for (OrderProduct orderProduct : order.getOrderProducts()) {
