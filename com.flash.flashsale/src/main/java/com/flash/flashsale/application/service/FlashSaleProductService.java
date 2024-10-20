@@ -1,6 +1,7 @@
 package com.flash.flashsale.application.service;
 
 import com.flash.base.exception.CustomException;
+import com.flash.base.jpa.BaseEntity;
 import com.flash.flashsale.application.dto.mapper.FlashSaleMapper;
 import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
@@ -222,6 +223,13 @@ public class FlashSaleProductService {
                 flashSaleProduct.delete();
             }
         );
+    }
+
+    @Transactional
+    public void deleteByProduct(UUID productId) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdAndIsDeletedFalse(productId);
+
+        flashSaleProductList.forEach(BaseEntity::delete);
     }
 
     @Transactional
