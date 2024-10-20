@@ -32,6 +32,10 @@ public class RouteConfig {
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://FLASH-SALE")
                 )
+                .route("alarm", r -> r.path("/api/alarms", "/api/alarms/**", "/api/internal/alarms")
+                        .filters(f -> f.filter(authFilter))
+                        .uri("lb://ALARM")
+                )
                 .build();
     }
 }

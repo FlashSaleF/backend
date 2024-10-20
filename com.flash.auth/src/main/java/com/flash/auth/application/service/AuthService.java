@@ -7,6 +7,8 @@ import com.flash.auth.application.dto.response.JoinResponseDto;
 import com.flash.auth.application.dto.response.LoginResponseDto;
 import com.flash.auth.application.service.util.AuthMapper;
 import com.flash.auth.application.service.util.JwtUtil;
+import com.flash.auth.domain.exception.AuthErrorCode;
+import com.flash.base.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -26,11 +28,6 @@ public class AuthService {
 
     public LoginResponseDto attemptAuthentication(LoginRequestDto loginRequestDto) {
         LoginResponseDto loginResponseDto = feignClientService.verifyUserCredentials(loginRequestDto); // valid한 user가 아닐 때의 예외는 user서비스에서 처리
-        if (loginResponseDto.id() == null || loginResponseDto.id().isEmpty() || loginResponseDto.role() == null || loginResponseDto.role().isEmpty()) {
-            // TODO: 값이 비어있을 때 예외 처리
-            log.error("UserFeignClient error");
-        }
-
         return successfulAuthentication(loginResponseDto);
     }
 
@@ -50,10 +47,11 @@ public class AuthService {
      */
     public AuthResponseDto verify(HttpHeaders headers) {
         String accessToken = jwtUtil.getAccessTokenFromHeader(headers);
-        if (accessToken != null && !jwtUtil.isValidateToken(accessToken)) {
-            // TODO: 커스텀 예외 던지기
-            // 근데 발생하는 예외에 대해서 각각 ErrorCode를 정의하려면, throw를 JwtUtil에서 해야할 것 같은데..?
-            throw new RuntimeException("Invalid access token");
+        if (accessToken == null) {
+            log.error("헤더에 토큰이 존재하지 않습니다.");
+            throw new CustomException(AuthErrorCode.JWT_NOT_FOUND);
+        } else {
+            jwtUtil.isValidateToken(accessToken);
         }
         String userIdFromAccessToken = jwtUtil.getUserIdFromAccessToken(accessToken);
         String userRoleFromAccessToken = jwtUtil.getUserRoleFromAccessToken(accessToken);
