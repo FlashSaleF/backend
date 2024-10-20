@@ -89,6 +89,8 @@ public class FlashSaleProductService {
         ProductResponseDto productResponseDto = getProductInfo(flashSaleProduct.getProductId());
         validSalePrice(productResponseDto, flashSaleProductUpdateRequestDto.salePrice());
 
+        feignClientService.scheduleAlarm(flashSaleProductId, flashSaleProduct.getProductId(), flashSaleProduct.getStartTime());
+
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
     }
 
@@ -146,6 +148,8 @@ public class FlashSaleProductService {
         }
 
         flashSaleProduct.approve();
+
+        feignClientService.scheduleAlarm(flashSaleProductId, flashSaleProduct.getProductId(), flashSaleProduct.getStartTime());
 
         return "승인 되었습니다.";
     }
