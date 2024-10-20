@@ -482,7 +482,7 @@ public class FlashSaleProductService {
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
 
         if (flashSaleProduct.getStock() == 0) {
-            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_ORDER);
+            throw new CustomException(FlashSaleProductErrorCode.INSUFFICIENT_STOCK);
         }
 
         flashSaleProduct.decreaseStock();
