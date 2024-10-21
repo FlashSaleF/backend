@@ -1,4 +1,4 @@
-package com.flash.gateway.config;
+package com.flash.auth.infrastructure.configuration;
 
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -20,7 +20,7 @@ public class CacheConfig {
     public RedisCacheManager cacheManager(
             RedisConnectionFactory redisConnectionFactory // RedisTemplate과 같이 Redis와의 연결정보가 구성돼야 함
     ) {
-        // Access Token의 화이트리스트 캐시의 TTL을 9분으로 설정
+        // Access Token의 화이트리스트 캐시의 TTL을 9분로 설정
         RedisCacheConfiguration accessTokenWhiteList = RedisCacheConfiguration
                 .defaultCacheConfig()
                 .disableCachingNullValues()
@@ -30,7 +30,7 @@ public class CacheConfig {
                         RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json())
                 );
 
-        // Access Token의 블랙리스트 캐시의 TTL을 10분으로 설정
+        // Access Token의 블랙리스트 캐시의 TTL을 10분로 설정
         RedisCacheConfiguration accessTokenBlackList = RedisCacheConfiguration
                 .defaultCacheConfig()
                 .disableCachingNullValues()
