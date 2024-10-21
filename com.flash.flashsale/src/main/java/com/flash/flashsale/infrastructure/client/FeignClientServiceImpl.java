@@ -7,6 +7,7 @@ import com.flash.flashsale.application.service.FeignClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 @Component
 public class FeignClientServiceImpl implements FeignClientService {
     private final VendorFeignClient vendorFeignClient;
+    private final AlarmFeignClient alarmFeignClient;
 
     @Override
     public ProductResponseDto getProductInfo(UUID productId) {
@@ -48,6 +50,11 @@ public class FeignClientServiceImpl implements FeignClientService {
     @Override
     public ProductResponseDto updateProductStatus(UUID productId, String status) {
         return vendorFeignClient.updateProductStatus(productId, new ProductStatusUpdateDto(status));
+    }
+
+    @Override
+    public Long scheduleAlarm(UUID flashSaleProductId, UUID productId, LocalDateTime startTime) {
+        return alarmFeignClient.scheduleAlarm(new SchedulerRequestDto(flashSaleProductId, productId, startTime));
     }
 
     public List<ProductResponseDto> getProductInfoList(List<UUID> productIds) {

@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 @EnableFeignClients
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.flash.base.exception", "com.flash.base.jpa", "com.flash.auth"})
+@ComponentScan(basePackages = {"com.flash.base.exception", "com.flash.base.jpa", "com.flash.base.dto", "com.flash.auth"})
 public class AuthApplication {
 
     public static void main(String[] args) {

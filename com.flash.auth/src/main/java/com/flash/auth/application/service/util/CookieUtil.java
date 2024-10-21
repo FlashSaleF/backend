@@ -2,6 +2,7 @@ package com.flash.auth.application.service.util;
 
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import java.io.UnsupportedEncodingException;
@@ -32,5 +33,21 @@ public class CookieUtil {
             log.error("Refresh Token encoding 오류: {}", e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    public Cookie extractRefreshTokenCookie(HttpHeaders headers) {
+        String cookieHeader = headers.getFirst(HttpHeaders.COOKIE);
+        if (cookieHeader != null) {
+            String[] cookies = cookieHeader.split("; ");
+            for (String cookie : cookies) {
+                if (cookie.startsWith(COOKIE_NAME + "=")) {
+                    // 쿠키 값 추출
+                    String value = cookie.substring((COOKIE_NAME + "=").length());
+                    Cookie refreshTokenCookie = new Cookie(COOKIE_NAME, value);
+                    return refreshTokenCookie; // Cookie 객체 반환
+                }
+            }
+        }
+        return null; // 쿠키가 없거나 해당 쿠키가 없을 경우 null 반환
     }
 }
