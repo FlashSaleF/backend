@@ -158,7 +158,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancellOrderAndPayment(UUID orderId) {
+    public void cancelOrderAndPayment(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
@@ -312,7 +312,7 @@ public class OrderService {
         }
 
         // 주문 취소 처리 (상태 변경)
-        cancellOrderAndPayment(orderId); // 주문 상태를 '취소'로 변경
+        cancelOrderAndPayment(orderId); // 주문 상태를 '취소'로 변경
         existingOrder.delete();
         orderRepository.save(existingOrder); // 취소된 주문 정보 저장
     }
