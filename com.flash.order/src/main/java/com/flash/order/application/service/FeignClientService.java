@@ -1,6 +1,7 @@
 package com.flash.order.application.service;
 
 import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
+import com.flash.order.application.dtos.request.ProductStockIncreaseRequestDto;
 import com.flash.order.application.dtos.response.ProductResponseDto;
 
 import java.util.UUID;
@@ -13,4 +14,8 @@ public interface FeignClientService {
     );
 
     void decreaseFlashSaleProductStock(UUID flashSaleProductId);
+
+    void increaseProductStock(UUID productId, ProductStockIncreaseRequestDto request);
+
+    void increaseFlashSaleProductStock(UUID flashSaleProductId);
 }

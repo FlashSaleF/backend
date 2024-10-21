@@ -7,9 +7,7 @@ import com.flash.order.application.service.OrderService;
 import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.model.Order;
 import com.flash.order.domain.repository.OrderRepository;
-import com.flash.order.infrastructure.messaging.event.FlashProductStockDecreaseEvent;
-import com.flash.order.infrastructure.messaging.event.OrderPaymentEvent;
-import com.flash.order.infrastructure.messaging.event.ProductStockDecreaseEvent;
+import com.flash.order.infrastructure.messaging.event.*;
 import com.flash.order.infrastructure.messaging.serialization.EventSerializer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +38,7 @@ public class MessagingConsumerService {
             // 실패 시 로깅 또는 예외 처리
             log.error("Product stock decrease failed for productId: {}", event.productId(), e);
             //주문 취소 처리 -> 상태 cancelled로 변경
-            orderService.handleOrderCancelled(event.orderId());
+            orderService.cancelOrderAndPayment(event.orderId());
         }
 
     }
@@ -59,7 +57,37 @@ public class MessagingConsumerService {
             // 실패 시 로깅 또는 예외 처리
             log.error("Flash Sale Product stock decrease failed for flashSaleProductId: {}", event.flashSaleProductId(), e);
             //주문 취소 처리 -> 상태 cancelled로 변경
-            orderService.handleOrderCancelled(event.orderId());
+            orderService.cancelOrderAndPayment(event.orderId());
+        }
+
+    }
+
+    @KafkaListener(topics = "product-stock-increase", groupId = "order-group")
+    public void listenProductStockIncreaseEvent(String message) {
+        // 메시지 수신
+        ProductStockIncreaseEvent event = EventSerializer.deserialize(message, ProductStockIncreaseEvent.class);
+
+        //재고 증가 처리
+        try {
+            feignClientService.increaseProductStock(event.productId(), event.request());
+        } catch (Exception e) {
+            // 실패 시 로깅 또는 예외 처리
+            log.error("Product stock increase failed for productId: {}", event.productId(), e);
+        }
+
+    }
+
+    @KafkaListener(topics = "flash-product-stock-increase", groupId = "order-group")
+    public void listenFlashProductStockIncreaseEvent(String message) {
+        // 메시지 수신
+        FlashProductStockIncreaseEvent event = EventSerializer.deserialize(message, FlashProductStockIncreaseEvent.class);
+
+        //재고 증가 처리
+        try {
+            feignClientService.increaseFlashSaleProductStock(event.flashSaleProductId());
+        } catch (Exception e) {
+            // 실패 시 로깅 또는 예외 처리
+            log.error("Flash Sale Product stock increase failed for flashSaleProductId: {}", event.flashSaleProductId(), e);
         }
 
     }

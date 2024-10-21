@@ -12,4 +12,6 @@ public interface FlashSaleProductFeignClient {
     @PatchMapping("/api/internal/flash-sale-products/{flashSaleProductId}/decreaseStock")
     void decreaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId);
 
+    @PatchMapping("/api/internal/flash-sale-products/{flashSaleProductId}/increaseStock")
+    void increaseStock(@PathVariable("flashSaleProductId") UUID flashSaleProductId);
 }
