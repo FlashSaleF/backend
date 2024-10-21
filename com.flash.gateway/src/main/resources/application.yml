@@ -44,3 +44,20 @@ springdoc:
     urls[5]:
       name: 알림 API
       url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${ALARM_API_DOCS_PATH}
+
+management:
+  server:
+    port: ${GATEWAY_PORT}
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true

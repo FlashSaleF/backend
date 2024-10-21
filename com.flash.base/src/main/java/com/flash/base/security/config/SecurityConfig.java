@@ -36,8 +36,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/orders/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/vendors/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/alarms/v3/api-docs/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers("/actuator/prometheus").permitAll()
                         .anyRequest().authenticated() // 그 외 모든 요청 인증처리
                 );
+
 
         // 필터 추가
         http.addFilterBefore(authorizationFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -45,9 +48,9 @@ public class SecurityConfig {
         // 기본 설정인 Session 방식은 사용하지 않고 JWT 방식을 사용하기 위한 설정
         // 세션을 stateless상태로 관리!
         http
-                .sessionManagement((sessionManagement) ->
-                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+            .sessionManagement((sessionManagement) ->
+                sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            );
 
         return http.build();
     }

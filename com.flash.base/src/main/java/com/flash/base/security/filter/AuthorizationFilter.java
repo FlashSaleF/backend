@@ -18,6 +18,13 @@ import java.util.Collections;
 public class AuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+
+        if (requestURI.equals("/actuator/prometheus")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String userId = request.getHeader("X-User-ID");
         String role = request.getHeader("X-User-Role");
         if (userId != null && role != null) {
