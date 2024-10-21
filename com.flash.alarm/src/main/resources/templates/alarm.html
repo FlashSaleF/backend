@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>플래시 세일 알림</title>
+</head>
+<body>
+<div>
+    <div>
+        플래시 세일 알림
+    </div>
+    <div>
+        <p>안녕하세요!</p>
+        <p>고객님이 알림 설정하신 상품 <b th:text="${productName}">상품명</b>이</p>
+        <p><b>1시간 뒤에</b> 판매됩니다.</p>
+        <p>서둘러 준비해 주세요!</p>
+    </div>
+    <div>
+        이 메일은 자동 발신 메일입니다. 문의사항이 있으시면 고객센터로 연락주세요.
+    </div>
+</div>
+</body>
+</html>

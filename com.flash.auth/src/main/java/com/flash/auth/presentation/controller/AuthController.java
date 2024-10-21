@@ -7,6 +7,7 @@ import com.flash.auth.application.dto.response.JoinResponseDto;
 import com.flash.auth.application.dto.response.LoginResponseDto;
 import com.flash.auth.application.service.AuthService;
 import com.flash.auth.application.service.util.CookieUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,15 @@ public class AuthController {
     }
 
     @PostMapping("/verify")
-    public AuthResponseDto verify(@RequestHeader HttpHeaders headers) {
+    public AuthResponseDto verify(
+            @RequestHeader HttpHeaders headers) {
         log.info("유효한 캐시가 존재할 때 여기로 요청이 오지 않아야 함");
         return authService.verify(headers);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request, response);
+        return ResponseEntity.ok("로그아웃 되었습니다.");
     }
 }

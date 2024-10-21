@@ -14,6 +14,10 @@ spring:
     redis:
       host: ${REDIS_DOMAIN}
       port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+  jpa:
+    enabled: false
+
 
 eureka:
   client:
@@ -38,3 +42,20 @@ springdoc:
     urls[4]:
       name: 업체 상품 API
       url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${VENDOR_API_DOCS_PATH}
+
+management:
+  server:
+    port: ${GATEWAY_PORT}
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true

@@ -1,9 +1,9 @@
 package com.flash.gateway.filter;
 
+import com.flash.base.dto.UserInfo;
 import com.flash.gateway.service.CacheService;
 import com.flash.gateway.util.AuthUtil;
 import com.flash.gateway.util.dto.AuthResponseDto;
-import com.flash.gateway.util.dto.UserInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -29,7 +29,7 @@ public class TokenValidationFilter implements GatewayFilter {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         String path = exchange.getRequest().getURI().getPath();
-        if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/swagger-resources")) {
+        if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/swagger-resources") || path.contains("/actuator/prometheus")) {
             return chain.filter(exchange);  // 필터 통과
         }
 
@@ -45,25 +45,33 @@ public class TokenValidationFilter implements GatewayFilter {
         String jwtPayload = AuthUtil.decodeJwtPayload(accessToken);
         UserInfo userInfoFromPayload = AuthUtil.extractUserInfoFromPayload(jwtPayload);
 
-        UserInfo cachedUserInfo = cacheService.getUserById(userInfoFromPayload.id());
+        UserInfo blackAccessToken = cacheService.isBlackAccessToken(accessToken);
+        if (blackAccessToken != null) {
+            // Todo: 커스텀 예외
+            log.warn("유효하지 않은 토큰");
+            return Mono.error(new RuntimeException("유효하지 않은 토큰입니다."));
+        }
+
+        UserInfo cachedUserInfo = cacheService.getAccessToken(userInfoFromPayload.id());
+
         if (cachedUserInfo != null && isCacheValid(cachedUserInfo, bearerAccessToken, userInfoFromPayload)) {
             log.info("Cache Hit: UserId {}", cachedUserInfo.id());
             ServerHttpRequest request = AuthUtil.addHeader(exchange, cachedUserInfo);
             return chain.filter(exchange.mutate().request(request).build());
         } else {
             log.info("Cache Miss: UserId {}", userInfoFromPayload.id());
-            return sendAuthRequestAndCache(exchange, chain, bearerAccessToken, headers);
+            return sendAuthRequest(exchange, chain, bearerAccessToken, headers);
         }
     }
 
     private boolean isCacheValid(UserInfo cachedUserInfo, String bearerAccessToken, UserInfo userInfoFromPayload) {
-        return cachedUserInfo.accessToken().equals(bearerAccessToken) &&
+        return cachedUserInfo.token().equals(bearerAccessToken) &&
                 cachedUserInfo.role().equals(userInfoFromPayload.role()) &&
                 cachedUserInfo.id().equals(userInfoFromPayload.id());
     }
 
-    private Mono<Void> sendAuthRequestAndCache(ServerWebExchange exchange, GatewayFilterChain chain,
-                                               String bearerAccessToken, HttpHeaders headers) {
+    private Mono<Void> sendAuthRequest(ServerWebExchange exchange, GatewayFilterChain chain,
+                                       String bearerAccessToken, HttpHeaders headers) {
         return webClientBuilder.build()
                 .post()
                 .uri("lb://AUTH/api/auth/verify")
@@ -71,6 +79,7 @@ public class TokenValidationFilter implements GatewayFilter {
                     httpHeaders.set(HttpHeaders.AUTHORIZATION, headers.getFirst(HttpHeaders.AUTHORIZATION));
                     httpHeaders.set(HttpHeaders.CONTENT_TYPE, headers.getFirst(HttpHeaders.CONTENT_TYPE));
                     httpHeaders.set(HttpHeaders.ACCEPT, headers.getFirst(HttpHeaders.ACCEPT));
+                    httpHeaders.set(HttpHeaders.COOKIE, headers.getFirst(HttpHeaders.COOKIE));
                 })
                 .retrieve()
                 .bodyToMono(AuthResponseDto.class)
@@ -79,10 +88,9 @@ public class TokenValidationFilter implements GatewayFilter {
                     UserInfo user = UserInfo.builder()
                             .id(authResponseDto.id())
                             .role(authResponseDto.role())
-                            .accessToken(bearerAccessToken)
+                            .token(bearerAccessToken)
                             .build();
 
-                    cacheService.saveUserInfo(authResponseDto.id(), user);
                     ServerHttpRequest request = AuthUtil.addHeader(exchange, user);
                     return chain.filter(exchange.mutate().request(request).build());
                 })

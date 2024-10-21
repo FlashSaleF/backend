@@ -124,22 +124,20 @@ services:
       - flash-sale-network
     restart: on-failure
 
-  #   Alarm 서버 정의
-  #  alarm:
-  #    build:
-  #      context: ./com.flash.alarm
-  #    env_file:
-  #      - ${ALARM_ENV}
-  #    ports:
-  #      - ${ALARM_PORT}:${ALARM_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
-  #    depends_on:
-  #      gateway:
-  #        condition: service_healthy
-  #      redis:
-  #        condition: service_healthy
-  #    networks:
-  #      - flash-sale-network
-  #    restart: on-failure
+  #Alarm 서버 정의
+  alarm:
+    build:
+      context: ./com.flash.alarm
+    env_file:
+      - ${ALARM_ENV}
+    ports:
+      - ${ALARM_PORT}:${ALARM_PORT}  # 애플리케이션 포트 매핑 설정 (수정 가능)
+    depends_on:
+      gateway:
+        condition: service_healthy
+    networks:
+      - flash-sale-network
+    restart: on-failure
 
   redis: # container name
     image: redis:latest
@@ -179,6 +177,24 @@ services:
       - flash-sale-network
     depends_on:
       - zookeeper
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - flash-sale-network
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - flash-sale-network
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
 
 volumes:
   redis_data:

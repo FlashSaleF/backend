@@ -1,10 +1,14 @@
 package com.flash.auth.application.service.util;
 
+import com.flash.auth.domain.exception.AuthErrorCode;
+import com.flash.base.exception.CustomException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SecurityException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -34,7 +38,7 @@ public class JwtUtil {
     // Refresh Token 만료기간
     public static final long REFRESH_TOKEN_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
     // Access Token 만료기간
-    private static final long ACCESS_TOKEN_TIME = 7 * 24 * 6 * 10 * 60 * 1000L; // 10분
+    private static final long ACCESS_TOKEN_TIME = 10 * 60 * 1000L; // 10분
     private SecretKey secretKey;
     private SecretKey refreshSecretKey;
 
@@ -86,25 +90,79 @@ public class JwtUtil {
     }
 
     /**
+     * Cookie에서 Refresh Token 추출
+     */
+    public String getRefreshTokenFromCookie(Cookie cookie) {
+        String refresh = null;
+        if (cookie.getName().equals(CookieUtil.COOKIE_NAME)) {
+            refresh = cookie.getValue();
+        }
+        return refresh;
+    }
+
+    // Header에서 Access Token 가져오기
+    public String getAccessTokenFromHeader(HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+            return bearerToken.substring(7).trim(); // 순수한 토큰 가져오기 위해 substring(BEARER 자름)
+        }
+        return null;
+    }
+
+    // Cookie에서 Refresh Token 가져오기
+    public String getRefreshTokenFromCookie(HttpServletRequest request) {
+        String refresh = null;
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals(CookieUtil.COOKIE_NAME)) {
+                refresh = cookie.getValue();
+            }
+        }
+        return refresh;
+    }
+
+    /**
      * 토큰 검증하는 메서드
      *
      * @param token
      * @return
      */
-    public boolean isValidateToken(String token) {
+    public boolean isValidateAccessToken(String accessToken) {
         try {
-            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+            Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(accessToken);
             return true;
         } catch (ExpiredJwtException e) {
-            log.error("Expired JWT token, 만료된 Access 토큰입니다.");
+            log.warn("Expired JWT token, 만료된 Access 토큰입니다.");
+            return false;
         } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+            log.error("Access: Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+            throw new CustomException(AuthErrorCode.UNSUPPORTED_JWT);
         } catch (MalformedJwtException | SecurityException e) {
-            log.error("Invalid JWT token, 유효하지 않은 JWT token 입니다.");
+            log.error("Access: Invalid JWT token, 유효하지 않은 JWT token 입니다.");
+            throw new CustomException(AuthErrorCode.INVALID_JWT);
         } catch (IllegalArgumentException e) {
-            log.error("JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+            log.error("Access: JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+            throw new CustomException(AuthErrorCode.EMPTY_JWT);
         }
-        return false;
+    }
+
+    public boolean isValidateRefreshToken(String refreshToken) {
+        try {
+            Jwts.parser().verifyWith(refreshSecretKey).build().parseSignedClaims(refreshToken);
+            return true;
+        } catch (ExpiredJwtException e) {
+            log.warn("Expired JWT token, 만료된 Refresh 토큰입니다.");
+            return false;
+        } catch (UnsupportedJwtException e) {
+            log.error("Refresh: Unsupported JWT token, 지원되지 않는 JWT 토큰 입니다.");
+            throw new CustomException(AuthErrorCode.UNSUPPORTED_JWT);
+        } catch (MalformedJwtException | SecurityException e) {
+            log.error("Refresh: Invalid JWT token, 유효하지 않은 JWT token 입니다.");
+            throw new CustomException(AuthErrorCode.INVALID_JWT);
+        } catch (IllegalArgumentException e) {
+            log.error("Refresh: JWT claims is empty, 잘못된 JWT 토큰 입니다.");
+            throw new CustomException(AuthErrorCode.EMPTY_JWT);
+        }
     }
 
     // Access 토큰에서 사용자 id 가져오기
@@ -115,6 +173,15 @@ public class JwtUtil {
     // Access 토큰에서 사용자 role 가져오기
     public String getUserRoleFromAccessToken(String token) {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get(AUTHORIZATION_KEY, String.class);
+    }
+
+    // Refresh 토큰에서 사용자 정보 가져오기
+    public String getUserIdFromRefreshToken(String token) {
+        return Jwts.parser().verifyWith(refreshSecretKey).build().parseSignedClaims(token).getPayload().get(AUTHENTICATION_KEY, String.class);
+    }
+
+    public String getUserRoleFromRefreshToken(String token) {
+        return Jwts.parser().verifyWith(refreshSecretKey).build().parseSignedClaims(token).getPayload().get(AUTHORIZATION_KEY, String.class);
     }
 
 }

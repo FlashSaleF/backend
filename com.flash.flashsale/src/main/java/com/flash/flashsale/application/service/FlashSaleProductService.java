@@ -1,6 +1,7 @@
 package com.flash.flashsale.application.service;
 
 import com.flash.base.exception.CustomException;
+import com.flash.base.jpa.BaseEntity;
 import com.flash.flashsale.application.dto.mapper.FlashSaleMapper;
 import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
@@ -39,6 +40,7 @@ public class FlashSaleProductService {
 
     private final FlashSaleService flashSaleService;
     private final FeignClientService feignClientService;
+    private final RedisLockService redisLockService;
 
     private final FlashSaleProductMapper flashSaleProductMapper;
     private final FlashSaleMapper flashSaleMapper;
@@ -87,6 +89,8 @@ public class FlashSaleProductService {
 
         ProductResponseDto productResponseDto = getProductInfo(flashSaleProduct.getProductId());
         validSalePrice(productResponseDto, flashSaleProductUpdateRequestDto.salePrice());
+
+        feignClientService.scheduleAlarm(flashSaleProductId, flashSaleProduct.getProductId(), flashSaleProduct.getStartTime());
 
         return flashSaleProductMapper.convertToResponseDto(flashSaleProduct, flashSaleResponseDto, productResponseDto);
     }
@@ -145,6 +149,8 @@ public class FlashSaleProductService {
         }
 
         flashSaleProduct.approve();
+
+        feignClientService.scheduleAlarm(flashSaleProductId, flashSaleProduct.getProductId(), flashSaleProduct.getStartTime());
 
         return "승인 되었습니다.";
     }
@@ -220,6 +226,13 @@ public class FlashSaleProductService {
     }
 
     @Transactional
+    public void deleteByProduct(UUID productId) {
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByProductIdAndIsDeletedFalse(productId);
+
+        flashSaleProductList.forEach(BaseEntity::delete);
+    }
+
+    @Transactional
     @Scheduled(cron = "0 0 10-21 * * *")
     public void autoEndSale() {
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -237,7 +250,7 @@ public class FlashSaleProductService {
 //        flashSaleProductList.forEach(FlashSaleProduct::endSale);  V2버전으로 임시 변경
         flashSaleProductList.forEach(flashSaleProduct -> {
                 feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
-            feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
+                feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "AVAILABLE");
 
                 flashSaleProduct.endSale();
             }
@@ -482,10 +495,12 @@ public class FlashSaleProductService {
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
 
         if (flashSaleProduct.getStock() == 0) {
-            throw new CustomException(FlashSaleProductErrorCode.NOT_AVAILABLE_ORDER);
+            throw new CustomException(FlashSaleProductErrorCode.INSUFFICIENT_STOCK);
         }
 
-        flashSaleProduct.decreaseStock();
+        redisLockService
+            .lockAndExecute("product_stock_lock:" + flashSaleProductId, flashSaleProduct::decreaseStock
+            );
 
         if (flashSaleProduct.getStock() == 0) {
             endSale(flashSaleProductId);

@@ -16,7 +16,7 @@ public enum FlashSaleProductErrorCode implements ErrorCode {
     NOT_AVAILABLE_UPDATE(HttpStatus.BAD_REQUEST, "승인 중이거나 승인 대기중인 플래시 세일 상품만 수정 할 수 있습니다."),
     NOT_AVAILABLE_REFUSE(HttpStatus.BAD_REQUEST, "승인 중이거나 승인 대기중인 플래시 세일 상품만 거절 할 수 있습니다."),
     NOT_AVAILABLE_PRICE(HttpStatus.BAD_REQUEST, "세일가격은 상품가격보다 낮을 수 없습니다."),
-    NOT_AVAILABLE_ORDER(HttpStatus.BAD_REQUEST, "재고가 없습니다."),
+    INSUFFICIENT_STOCK(HttpStatus.INSUFFICIENT_STORAGE, "재고가 부족합니다."),
     IS_NOT_PENDING(HttpStatus.BAD_REQUEST, "승인 대기중인 플래시 세일 상품만 승인 할 수 있습니다."),
     IS_ON_SALE_DELETE(HttpStatus.BAD_REQUEST, "세일중인 플래시 세일 상품만 종료 할 수 있습니다."),
     IS_NOT_ON_SALE(HttpStatus.BAD_REQUEST, "세일중이지 않은 플래시 세일 상품입니다."),

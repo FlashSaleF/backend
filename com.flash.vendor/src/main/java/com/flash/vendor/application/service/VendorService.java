@@ -30,6 +30,9 @@ public class VendorService {
     @Transactional
     public VendorResponseDto createVendor(VendorRequestDto request) {
 
+        if ("ROLE_CUSTOMER".equals(getCurrentUserAuthority())) {
+            throw new CustomException(VendorErrorCode.INVALID_PERMISSION_REQUEST);
+        }
         validateAddressUniqueness(request.address());
 
         UserResponseDto userInfo = feignClientService.getUserInfo(getCurrentUserId());

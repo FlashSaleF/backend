@@ -12,8 +12,10 @@ public class CustomErrorDecoder implements ErrorDecoder {
             case 403 -> new CustomException(ClientErrorCode.FORBIDDEN);
             case 404 -> new CustomException(ClientErrorCode.RESOURCE_NOT_FOUND);
             case 409 -> new CustomException(ClientErrorCode.DUPLICATED_REQUEST);
-            case 500 -> new CustomException(ClientErrorCode.INTERNAL_SERVER_ERROR);
-            case 503 -> new CustomException(ClientErrorCode.SERVICE_UNAVAILABLE);
+            case 500 ->
+                    new CustomException(ClientErrorCode.INTERNAL_SERVER_ERROR);
+            case 503 ->
+                    new CustomException(ClientErrorCode.SERVICE_UNAVAILABLE);
 
             default -> new CustomException(ClientErrorCode.UNEXPECTED_ERROR);
         };
