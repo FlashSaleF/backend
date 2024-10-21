@@ -27,7 +27,7 @@ public class MessagingProducerService {
 
         try {
             String eventJson = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(KafkaTopic.PRODUCT_STOCK_DECREASE.getTopic(), eventJson);
+            kafkaTemplate.send(KafkaTopic.PRODUCT_STOCK_DECREASE.getTopic(), productId.toString(), eventJson);  //productId를 파티셔닝 키로 설정 -> 동일 상품에 대해선 순차적으로 처리시키도록
         } catch (JsonProcessingException e) {
             log.error("상품 재고 감소 요청 메시지를 직렬화 중 오류 발생", e);
         }
@@ -38,7 +38,7 @@ public class MessagingProducerService {
 
         try {
             String eventJson = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(KafkaTopic.FLASH_PRODUCT_STOCK_DECREASE.getTopic(), eventJson);
+            kafkaTemplate.send(KafkaTopic.FLASH_PRODUCT_STOCK_DECREASE.getTopic(), flashSaleProductId.toString(), eventJson);
         } catch (JsonProcessingException e) {
             log.error("플래시 세일 상품 재고 감소 요청 메시지를 직렬화 중 오류 발생", e);
         }
