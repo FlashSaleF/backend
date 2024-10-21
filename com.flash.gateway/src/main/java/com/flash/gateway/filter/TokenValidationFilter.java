@@ -29,7 +29,7 @@ public class TokenValidationFilter implements GatewayFilter {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         String path = exchange.getRequest().getURI().getPath();
-        if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/swagger-resources")) {
+        if (path.contains("/swagger-ui/") || path.contains("/v3/api-docs") || path.contains("/swagger-resources") || path.contains("/actuator/prometheus")) {
             return chain.filter(exchange);  // 필터 통과
         }
 
