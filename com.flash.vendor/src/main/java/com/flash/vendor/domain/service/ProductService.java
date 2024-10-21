@@ -64,7 +64,8 @@ public class ProductService {
             Product product, String name, Integer price, Integer stock, String description
     ) {
 
-        return product.updateProduct(name, price, stock, description);
+        return product.updateProduct(
+                name, price, stock, getStatusBasedOnStock(stock), description);
     }
 
     @Transactional

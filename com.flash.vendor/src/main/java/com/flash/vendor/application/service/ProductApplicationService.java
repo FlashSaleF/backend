@@ -1,5 +1,6 @@
 package com.flash.vendor.application.service;
 
+import com.flash.vendor.application.dto.ProductSnapshot;
 import com.flash.vendor.application.dto.mapper.ProductMapper;
 import com.flash.vendor.application.dto.request.*;
 import com.flash.vendor.application.dto.response.*;
@@ -7,10 +8,11 @@ import com.flash.vendor.domain.model.Product;
 import com.flash.vendor.domain.model.ProductStatus;
 import com.flash.vendor.domain.model.Vendor;
 import com.flash.vendor.domain.service.ProductService;
+import com.flash.vendor.infrastructure.messaging.MessagingProducerService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductApplicationService {
@@ -26,6 +29,7 @@ public class ProductApplicationService {
     private final VendorService vendorService;
     private final FeignClientService feignClientService;
     private final RedisLockService redisLockService;
+    private final MessagingProducerService messagingProducerService;
 
     public ProductResponseDto createProduct(ProductRequestDto request) {
 
@@ -93,6 +97,7 @@ public class ProductApplicationService {
     ) {
 
         Product product = validateUserPermission(productId);
+        ProductSnapshot originalProduct = ProductMapper.toProductSnapshot(product);
 
         Product updatedProduct = redisLockService
                 .lockAndExecute("product_stock_lock:" + productId, () ->
@@ -104,6 +109,8 @@ public class ProductApplicationService {
                                 request.description()
                         )
                 );
+
+        messagingProducerService.sendProductUpdateEvent(originalProduct, updatedProduct);
 
         return ProductMapper.toResponseDto(updatedProduct);
     }
@@ -119,6 +126,9 @@ public class ProductApplicationService {
                         productService.updateProductStatus(product, request.status())
                 );
 
+        messagingProducerService.sendProductUpdateEventByStatusField(
+                updatedProduct.getId(), updatedProduct.getStatus());
+
         return ProductMapper.toResponseDto(updatedProduct);
     }
 
@@ -133,6 +143,9 @@ public class ProductApplicationService {
                         productService.updateProductStatus(product, request.status())
                 );
 
+        messagingProducerService.sendProductUpdateEventByStatusField(
+                updatedProduct.getId(), updatedProduct.getStatus());
+
         return ProductMapper.toResponseDto(updatedProduct);
     }
 
@@ -141,6 +154,9 @@ public class ProductApplicationService {
         Product product = validateUserPermission(productId);
 
         productService.deleteProduct(product);
+
+        messagingProducerService.sendProductUpdateEventByIsDeletedField(
+                product.getId());
 
         return new ProductDeleteResponseDto("상품 삭제 성공");
     }
@@ -154,8 +170,15 @@ public class ProductApplicationService {
                         productService.decreaseStock(productId, request.quantity())
                 );
 
+        if (updatedProduct.getStock() == 0) {
+            productService.updateProductStatus(
+                    updatedProduct, ProductStatus.OUT_OF_STOCK);
+            messagingProducerService.sendProductUpdateEventByStatusField(
+                    updatedProduct.getId(), ProductStatus.OUT_OF_STOCK);
+        }
+
         return new ProductStockDecreaseResponseDto(
-                updatedProduct.getId(), HttpStatus.OK.value());
+                updatedProduct.getId(), 200);
     }
 
     public ProductStockIncreaseResponseDto increaseProductStock(
@@ -168,7 +191,7 @@ public class ProductApplicationService {
                 );
 
         return new ProductStockIncreaseResponseDto(
-                updatedProduct.getId(), HttpStatus.OK.value());
+                updatedProduct.getId(), 200);
     }
 
     private Product validateUserPermission(UUID productId) {

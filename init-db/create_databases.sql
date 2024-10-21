@@ -6,3 +6,5 @@ CREATE
 DATABASE vendors;
 CREATE
 DATABASE alarms;
+CREATE
+DATABASE auth;

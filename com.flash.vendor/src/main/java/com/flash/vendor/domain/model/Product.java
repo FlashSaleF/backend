@@ -48,10 +48,11 @@ public class Product extends BaseEntity {
                 .build();
     }
 
-    public Product updateProduct(String name, int price, int stock, String description) {
+    public Product updateProduct(String name, int price, int stock, ProductStatus status, String description) {
         this.name = name;
         this.price = price;
         this.stock = stock;
+        this.status = status;
         this.description = description;
         return this;
     }
