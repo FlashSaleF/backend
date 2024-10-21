@@ -16,9 +16,10 @@ public record SchedulerRequestDto(
 ) {
     /**
      * 메일이 1시간 전에 발송되므로,
-     * "현재 시간"이 "flashSaleTime - 2시간"보다 후이면 예외 발생
+     * "현재 시간"이 "flashSaleTime"보다 2시간 이상 이전이면 예외 발생
      *
-     * @return
+     * 즉, 플래시 세일 시작 2시간 전까지만 등록 승인 및 메일 설정을 할 수 있음.
+     *
      */
     @AssertTrue(message = "플래시 세일 시간이 임박하거나 이미 시작되어 메일을 보낼 수 없음.")
     public boolean isValidSchedulingTime() {

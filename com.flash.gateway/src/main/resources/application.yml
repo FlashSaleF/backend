@@ -14,7 +14,6 @@ spring:
     redis:
       host: ${REDIS_DOMAIN}
       port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
   jpa:
     enabled: false
 
@@ -42,3 +41,6 @@ springdoc:
     urls[4]:
       name: 업체 상품 API
       url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${VENDOR_API_DOCS_PATH}
+    urls[5]:
+      name: 알림 API
+      url: ${GATEWAY_DOMAIN}:${GATEWAY_PORT}${ALARM_API_DOCS_PATH}
