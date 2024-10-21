@@ -1,5 +1,6 @@
 package com.flash.vendor.application.dto.mapper;
 
+import com.flash.vendor.application.dto.ProductSnapshot;
 import com.flash.vendor.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.vendor.application.dto.response.ProductListResponseDto;
 import com.flash.vendor.application.dto.response.ProductPageResponseDto;
@@ -53,6 +54,18 @@ public class ProductMapper {
 
         return new ProductPageResponseDto(new PageImpl<>(
                 productResponseDtos, products.getPageable(), products.getTotalElements()));
+    }
+
+    public static ProductSnapshot toProductSnapshot(Product product) {
+        return new ProductSnapshot(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                product.getStock(),
+                product.getStatus(),
+                product.getDescription(),
+                product.isDeleted()
+        );
     }
 
     public static ProductListResponseDto toProductListResponseDto(
