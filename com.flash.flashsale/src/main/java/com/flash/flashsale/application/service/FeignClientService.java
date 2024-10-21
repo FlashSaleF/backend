@@ -4,6 +4,7 @@ import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
 import com.flash.flashsale.application.dto.response.ProductResponseDto;
 import com.flash.flashsale.application.dto.response.ProductStockIncreaseResponseDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -20,4 +21,6 @@ public interface FeignClientService {
     ProductStockIncreaseResponseDto increaseOneProductStock(UUID productId, Integer stock);
 
     ProductResponseDto updateProductStatus(UUID productId, String status);
+
+    Long scheduleAlarm(UUID flashSaleProductId, UUID productId, LocalDateTime startTime);
 }
