@@ -38,7 +38,7 @@ public class MessagingConsumerService {
             // 실패 시 로깅 또는 예외 처리
             log.error("Product stock decrease failed for productId: {}", event.productId(), e);
             //주문 취소 처리 -> 상태 cancelled로 변경
-            orderService.handleOrderCancelled(event.orderId());
+            orderService.cancelOrderAndPayment(event.orderId());
         }
 
     }
@@ -57,7 +57,7 @@ public class MessagingConsumerService {
             // 실패 시 로깅 또는 예외 처리
             log.error("Flash Sale Product stock decrease failed for flashSaleProductId: {}", event.flashSaleProductId(), e);
             //주문 취소 처리 -> 상태 cancelled로 변경
-            orderService.handleOrderCancelled(event.orderId());
+            orderService.cancelOrderAndPayment(event.orderId());
         }
 
     }
