@@ -4,6 +4,7 @@ import com.flash.base.exception.CustomException;
 import com.flash.order.application.dtos.mapper.PaymentMapper;
 import com.flash.order.application.dtos.request.PaymentCallbackDto;
 import com.flash.order.application.dtos.request.ProductStockDecreaseRequestDto;
+import com.flash.order.application.dtos.response.PaymentDetailsResponseDto;
 import com.flash.order.application.dtos.response.PaymentResponseDto;
 import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.flash.order.domain.exception.OrderErrorCode;
@@ -19,11 +20,16 @@ import com.siot.IamportRestClient.request.CancelData;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -108,8 +114,23 @@ public class PaymentService {
         iamportClient.cancelPaymentByImpUid(cancelData);
     }
 
+    @Transactional(readOnly = true)
+    public PaymentResponseDto getPayment(UUID paymentId) {
+        com.flash.order.domain.model.Payment payment = paymentRepository.findByIdAndIsDeletedFalse(paymentId)
+                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_HISTORY_NOT_FOUND));
+
+        return paymentMapper.convertToResponseDto(payment);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<PaymentResponseDto> getAllPayments(Pageable pageable) {
+        Page<com.flash.order.domain.model.Payment> payments = paymentRepository.findAllByIsDeletedFalse(pageable);
+
+        return payments.map(paymentMapper::convertToResponseDto);
+    }
+
     // 실제 결제 조회 메소드
-    public PaymentResponseDto getPaymentDetails(String paymentUid) {
+    public PaymentDetailsResponseDto getPaymentDetails(String paymentUid) {
         try {
             IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(paymentUid);
 
@@ -118,7 +139,7 @@ public class PaymentService {
             }
 
             // 조회한 Payment 엔티티를 PaymentResponseDto로 변환
-            return paymentMapper.convertToResponseDto(iamportResponse.getResponse());
+            return paymentMapper.convertToDetailsResponseDto(iamportResponse.getResponse());
 
         } catch (IamportResponseException | IOException e) {
             throw new CustomException(PaymentErrorCode.PAYMENT_RETRIEVAL_ERROR);

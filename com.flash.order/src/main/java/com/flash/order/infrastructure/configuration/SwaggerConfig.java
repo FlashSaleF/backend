@@ -31,5 +31,4 @@ public class SwaggerConfig {
                 .security(Collections.singletonList(securityRequirement))
                 .addServersItem(new Server().url("/"));
     }
-
 }
