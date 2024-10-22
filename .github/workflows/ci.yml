@@ -53,8 +53,5 @@ jobs:
             # Stop and remove existing containers
             docker-compose -p flash stop -v || true
             
-            # Build the new images
-            docker-compose build
-            
             # Run the new containers
             docker-compose -p flash up -d --build
