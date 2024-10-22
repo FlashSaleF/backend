@@ -109,7 +109,7 @@ public class AuthService {
         // 화이트리스트에서 삭제 및 블랙리스트 처리
         cacheUtil.deleteAccessToken(jwtUtil.getUserIdFromRefreshToken(refreshToken));
         cacheUtil.setAccessTokenToBlackList(accessToken, AuthMapper.toUserInfo(jwtUtil.getUserIdFromRefreshToken(refreshToken), jwtUtil.getUserRoleFromRefreshToken(refreshToken), accessToken));
-        cacheUtil.deleteRefreshToken(refreshToken);
+        cacheUtil.deleteRefreshToken(jwtUtil.getUserIdFromRefreshToken(refreshToken));
 
         // Todo: 헤더 및 쿠키에서 삭제?
     }
