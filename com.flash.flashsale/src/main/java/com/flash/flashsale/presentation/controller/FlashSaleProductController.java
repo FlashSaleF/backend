@@ -2,6 +2,7 @@ package com.flash.flashsale.presentation.controller;
 
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
+import com.flash.flashsale.application.dto.response.FlashSaleProductListResponseDto;
 import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
 import com.flash.flashsale.application.service.FlashSaleProductService;
 import com.flash.flashsale.domain.model.FlashSaleProductStatus;
@@ -49,7 +50,7 @@ public class FlashSaleProductController {
     }
 
     @GetMapping("/on-sale")
-    public ResponseEntity<List<FlashSaleProductResponseDto>> getOnSaleList() {
+    public ResponseEntity<FlashSaleProductListResponseDto> getOnSaleList() {
         return ResponseEntity.ok(flashSaleProductService.getOnSaleList());
     }
 
