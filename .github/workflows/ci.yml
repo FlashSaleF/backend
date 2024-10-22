@@ -51,7 +51,7 @@ jobs:
             unzip backend.zip
             
             # Stop and remove existing containers
-            docker-compose -p flash down -v || true
+            docker-compose -p flash stop -v || true
             
-            # Build and run the new containers
+            # Run the new containers
             docker-compose -p flash up -d --build
