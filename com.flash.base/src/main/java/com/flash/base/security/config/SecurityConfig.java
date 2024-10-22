@@ -29,7 +29,7 @@ public class SecurityConfig {
         // 경로별 인가 작업
         http
                 .authorizeHttpRequests((authorizeHttpRequests) -> authorizeHttpRequests
-                        .requestMatchers("/api/internal/users/save", "/api/internal/users/verify").permitAll()
+                        .requestMatchers("/api/internal/**").permitAll()
                         .requestMatchers("/api/auth/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/users/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/flash-sales/v3/api-docs/**").permitAll()
