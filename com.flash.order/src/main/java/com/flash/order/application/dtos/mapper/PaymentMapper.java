@@ -1,5 +1,6 @@
 package com.flash.order.application.dtos.mapper;
 
+import com.flash.order.application.dtos.response.PaymentDetailsResponseDto;
 import com.flash.order.application.dtos.response.PaymentResponseDto;
 import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.siot.IamportRestClient.response.Payment;
@@ -7,9 +8,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class PaymentMapper {
-    public PaymentResponseDto convertToResponseDto(Payment payment) {
+    public PaymentDetailsResponseDto convertToDetailsResponseDto(Payment payment) {
 
-        return new PaymentResponseDto(
+        return new PaymentDetailsResponseDto(
                 payment.getImpUid(),      // 결제 고유 ID
                 payment.getStatus(),   // 결제 상태
                 payment.getAmount().intValue(),           // 결제 금액
@@ -31,6 +32,16 @@ public class PaymentMapper {
                 payment.getStatus(),
                 payment.getAmount().intValue(),
                 payment.getCancelledAt() // 환불 시점을 현재 시간으로 설정
+        );
+    }
+
+    public PaymentResponseDto convertToResponseDto(com.flash.order.domain.model.Payment payment) {
+        return new PaymentResponseDto(
+                payment.getId(),
+                payment.getUserId(),
+                payment.getStatus().name(),
+                payment.getPrice(),
+                payment.getOrder().getId()
         );
     }
 
