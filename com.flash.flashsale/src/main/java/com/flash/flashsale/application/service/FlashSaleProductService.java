@@ -7,10 +7,7 @@ import com.flash.flashsale.application.dto.mapper.FlashSaleProductMapper;
 import com.flash.flashsale.application.dto.request.FlashSaleProductRequestDto;
 import com.flash.flashsale.application.dto.request.FlashSaleProductUpdateRequestDto;
 import com.flash.flashsale.application.dto.request.ProductStockRequestDto;
-import com.flash.flashsale.application.dto.response.FlashSaleProductResponseDto;
-import com.flash.flashsale.application.dto.response.FlashSaleResponseDto;
-import com.flash.flashsale.application.dto.response.InternalProductResponseDto;
-import com.flash.flashsale.application.dto.response.ProductResponseDto;
+import com.flash.flashsale.application.dto.response.*;
 import com.flash.flashsale.domain.exception.FlashSaleErrorCode;
 import com.flash.flashsale.domain.exception.FlashSaleProductErrorCode;
 import com.flash.flashsale.domain.model.FlashSale;
@@ -19,6 +16,7 @@ import com.flash.flashsale.domain.model.FlashSaleProductStatus;
 import com.flash.flashsale.domain.repository.FlashSaleProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,6 +45,8 @@ public class FlashSaleProductService {
     private final FlashSaleMapper flashSaleMapper;
 
     private final FlashSaleProductRepository flashSaleProductRepository;
+
+    private final RedisTemplate<String, FlashSaleProductListResponseDto> redisTemplate;
 
     @Transactional
     public FlashSaleProductResponseDto create(FlashSaleProductRequestDto flashSaleProductRequestDto) {
@@ -131,9 +132,24 @@ public class FlashSaleProductService {
     }
 
     @Transactional(readOnly = true)
-    public List<FlashSaleProductResponseDto> getOnSaleList() {
+    public FlashSaleProductListResponseDto getOnSaleList() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHH");
+        LocalDateTime now = LocalDateTime.now();
+        String cacheKey = now.format(formatter);
+
+        FlashSaleProductListResponseDto cachedProducts = redisTemplate.opsForValue().get(cacheKey);
+
+        if (cachedProducts != null) {
+            return cachedProducts;
+        }
+
         List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusInAndIsDeletedFalse(List.of(FlashSaleProductStatus.ONSALE));
-        return getFlashSaleProductDtoList(flashSaleProductList);
+
+        FlashSaleProductListResponseDto responseDto = new FlashSaleProductListResponseDto(getFlashSaleProductDtoList(flashSaleProductList));
+
+        redisTemplate.opsForValue().set(cacheKey, responseDto);
+
+        return responseDto;
     }
 
     @Transactional
@@ -505,6 +521,7 @@ public class FlashSaleProductService {
         if (flashSaleProduct.getStock() == 0) {
             endSale(flashSaleProductId);
         }
+        deleteCache();
     }
 
     @Transactional
@@ -516,6 +533,7 @@ public class FlashSaleProductService {
     @Transactional
     public void increaseProductStockV2(UUID productId, Integer stock) {
         feignClientService.increaseOneProductStock(productId, stock);
+        deleteCache();
     }
 
     private ProductResponseDto getProductInfo(UUID productId) {
@@ -531,5 +549,13 @@ public class FlashSaleProductService {
         increaseProductStockV2(productId, totalStock);
 
         flashSaleProductList.forEach(FlashSaleProduct::delete);
+    }
+
+    private void deleteCache() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHH");
+        LocalDateTime now = LocalDateTime.now();
+        String cacheKey = now.format(formatter);
+
+        redisTemplate.delete(cacheKey);
     }
 }
