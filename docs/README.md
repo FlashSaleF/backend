@@ -4,7 +4,7 @@
 
 플래시 세일 이커머스 프로젝트는 짧은 시간 동안 한정된 수량의 상품을 할인된 가격에 판매하는 이벤트를 제공하는 서비스입니다.
 
-<img src="">
+<img src="https://github.com/FlashSaleF/backend/blob/dev/docs/images/flash%20sale.png?raw=true">
 
 ---
 
@@ -83,24 +83,24 @@
 
 ### 서비스 아키텍처
 
-![service_architecture](https://prod-files-secure.s3.us-west-2.amazonaws.com/83c75a39-3aba-4ba4-a792-7aefe4b07895/ab44fa60-b79d-4901-971a-a749b4b77988/%E1%84%82%E1%85%A2%E1%84%87%E1%85%AE.jpg)
+<img src="https://github.com/FlashSaleF/backend/blob/dev/docs/images/service%20architecture.jpg?raw=true">
 
----
+
 
 ### 인프라 설계도
 
-![infrastructure](https://prod-files-secure.s3.us-west-2.amazonaws.com/83c75a39-3aba-4ba4-a792-7aefe4b07895/48702e44-d7e6-4372-b2e3-06ba764df670/%E1%84%8B%E1%85%AC%E1%84%87%E1%85%AE.jpg)
+<img src="https://github.com/FlashSaleF/backend/blob/dev/docs/images/infrastructure.jpg?raw=true">
 
 ---
 
 ## 🚗 주요 기능
 
-- [⭐ 비동기 처리와 이벤트 기반 대용량 주문 처리](https://www.notion.so/1264f92830ab80f7b6bed71f7b2144d5?pvs=21)
-- [⭐ Redis 분산락을 통한 동시성 재고 관리](https://www.notion.so/Redis-8a938314f83e415283de28212e3398bd?pvs=21)
-- [플래시 세일 알림 메일 발송](https://www.notion.so/21a77b1dc9204887aa5f56c16ddf74e1?pvs=21)
-- [모니터링](https://www.notion.so/9f18c0e8d7da4ab8bb15ee425fc9c38d?pvs=21)
-- [Redis 캐싱](https://www.notion.so/Redis-35aa6aa6892749edb8636446bfa5930a?pvs=21)
-- [플래시 세일 관리](https://www.notion.so/8f25b1a96bf0411c9ba05aeea75f899d?pvs=21)
+- [⭐ 비동기 처리와 이벤트 기반 대용량 주문 처리](https://spot-decade-fee.notion.site/1264f92830ab80f7b6bed71f7b2144d5)
+- [⭐ Redis 분산락을 통한 동시성 재고 관리](https://creative-crane-389.notion.site/Redis-128707d279cc8170b1cadcc0adc61e2b)
+- [플래시 세일 알림 메일 발송](https://creative-crane-389.notion.site/128707d279cc811ca561eb5558c37c05)
+- [모니터링](https://creative-crane-389.notion.site/128707d279cc811a8522c67590ab6446)
+- [Redis 캐싱](https://creative-crane-389.notion.site/Redis-128707d279cc819b9fc5c99804da8c94)
+- [플래시 세일 관리](https://creative-crane-389.notion.site/128707d279cc81e390dada3f0fb5a754)
 
 ---
 
@@ -123,23 +123,23 @@
 
 ## 🤔 기술적 의사결정
 
-- [Gateway에서 캐싱된 Access토큰 블랙리스트 및 화이트리스트 조회](https://www.notion.so/Gateway-Access-16e25f2be00e401e9546664b6e41c7b0?pvs=21)
-- [대규모 트래픽에서 효율적인 락 관리](https://www.notion.so/8f3f4eb0255b4b1e847a4fa118ddf6d5?pvs=21)
-- [메일 발송을 위한 동적 스케줄러 구성](https://www.notion.so/906414559da34ec7b72749149da1e7d8?pvs=21)
-- [아키텍처](https://www.notion.so/d657fe3cb7af4c45ae4ade949988f321?pvs=21)
-- [Kafka를 이용한 주문 생성](https://www.notion.so/Kafka-416f0507141b41518a43e783dfb4c0df?pvs=21)
+- [Gateway에서 캐싱된 Access토큰 블랙리스트 및 화이트리스트 조회](https://creative-crane-389.notion.site/Gateway-Access-128707d279cc81d68b20de471c9157a8)
+- [대규모 트래픽에서 효율적인 락 관리](https://creative-crane-389.notion.site/128707d279cc810db0e8d64fbd4a1c37)
+- [메일 발송을 위한 동적 스케줄러 구성](https://creative-crane-389.notion.site/128707d279cc8103aab7cb65e3bc18d1)
+- [아키텍처](https://creative-crane-389.notion.site/128707d279cc8157bce4ff6546000a5b)
+- [Kafka를 이용한 주문 생성](https://creative-crane-389.notion.site/Kafka-128707d279cc810483a1ddb490ac8a67)
 
 ---
 
 ## ⚽ 트러블슈팅
 
-[Jmeter 부하테스트 ](https://www.notion.so/Jmeter-1264f92830ab809dafadf52b1b7885d2?pvs=21)
+[Jmeter 부하테스트 ](https://spot-decade-fee.notion.site/Jmeter-1264f92830ab809dafadf52b1b7885d2)
 
-[UUID 검증](https://www.notion.so/UUID-542467318a1f425cbd33231282ce36d7?pvs=21)
+[UUID 검증](https://creative-crane-389.notion.site/UUID-128707d279cc81b4ba94e59d5ff698f5)
 
-[Feignclient 에러 핸들링](https://www.notion.so/Feignclient-087cea3b28c34340b5bb4e583e1286b7?pvs=21)
+[Feignclient 에러 핸들링](https://creative-crane-389.notion.site/Feignclient-128707d279cc81f5b15dfa4a2029c781)
 
-[재고에 대한 분산 락 처리의 변경](https://www.notion.so/114cc2a791d948a1b845d887db2851c5?pvs=21)
+[재고에 대한 분산 락 처리의 변경](https://creative-crane-389.notion.site/128707d279cc8129b8f4f7e7611785a3)
 
 ---
 
@@ -149,5 +149,5 @@
 |-----|-----|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
 | 이수정 | 리더  | ▶ 서비스 로직 구현 <br> - Vendor / Product 서비스의 CRUD 구현 <br> - Redis 분산 락을 이용한 재고 동시성 문제 해결 <br> - Kafka 토픽을 통한 상품 데이터 변경 이벤트 발행 <br> - FeignClient 예외 처리 <br> ▶ 배포 및 자동화 <br> - GitHub Actions를 활용한 CI/CD 구축 <br> - 서비스의 Docker 컨테이너화 <br> ▶ API 관리 및 문서화 <br> - Swagger 적용                                                                                                                                                                                                    | [https://github.com/Krystal-13](https://github.com/Krystal-13) |
 | 김남혁 | 부리더 | ▶ User 서비스 <br> - CRUD <br> ▶ Auth 서비스 <br> - 토큰 발급 및 관리(Access-블랙/화이트, Refresh-화이트) <br> - 로그인, 로그아웃, 토큰 자동 재발급 <br> - 토큰 유효성 검사 <br> ▶ Alarm 서비스 <br> - 세일 상품 등록 시 메일 발송 스케줄러 구성 <br> - 사용자 알람 설정 시 메일 발송, 조회 <br> - 분산환경에서 중복 발송 방지를 위해 분산 락 적용 <br> ▶ Gateway <br> - Auth에서 저장한 토큰 캐싱 데이터 조회 <br> - 인증 절차 이후 각 서비스로 라우팅 <br> ▶ Eureka <br> - Eureka 서버 구성 및 각 서비스 Client 등록 <br> ▶ Base 모듈(Security + DB) <br> - Security 관련 설정 <br> - 엔드포인트 도달 전 SecurityContext 생성 | [https://github.com/knh9612](https://github.com/knh9612)       |
-| 김정수 | 맴버  | ▶ flashsale 서비스 <br> - 스케쥴러를 통한 세일 시작, 종료 <br> - 진행 중인 세일 상품 캐싱 처리                                                                                                                                                                                                                                                                                                                                                                                                       | [https://github.com/dnjawm19](https://github.com/dnjawm19)     |
+| 김정수 | 맴버  | ▶ flashsale 서비스 <br> - 스케쥴러를 통한 세일 시작, 종료 <br> - 진행 중인 세일 상품 캐싱 처리    <br> ▶ 모니터링 서비스 <br> - 프로메테우스, 그라파나 연동                                                                                                                                                                                                                                                                                                                                                             | [https://github.com/dnjawm19](https://github.com/dnjawm19)     |
 | 이성원 | 멤버  | ▶ Order 서비스 <br> - 주문, 결제 기능 구현 <br> - Kafka 이벤트 기반의 비동기 처리 <br> - 결제 PG사 연동 <br> ▶ Base 모듈(Exception) <br> - 전역 예외 처리 설정 <br> ▶ 부하 테스트 <br> - Jmeter 이용한 시스템 성능 및 부하 테스트                                                                                                                                                                                                                                                                                                | [https://github.com/lsw71311](https://github.com/lsw71311)     |

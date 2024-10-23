@@ -36,6 +36,7 @@ public class AuthService {
 
     public LoginResponseDto attemptAuthentication(LoginRequestDto loginRequestDto) {
         LoginResponseDto loginResponseDto = feignClientService.verifyUserCredentials(loginRequestDto); // valid한 user가 아닐 때의 예외는 user서비스에서 처리
+        isSignedIn(loginResponseDto.id());
         return successfulAuthentication(loginResponseDto);
     }
 
@@ -109,8 +110,15 @@ public class AuthService {
         // 화이트리스트에서 삭제 및 블랙리스트 처리
         cacheUtil.deleteAccessToken(jwtUtil.getUserIdFromRefreshToken(refreshToken));
         cacheUtil.setAccessTokenToBlackList(accessToken, AuthMapper.toUserInfo(jwtUtil.getUserIdFromRefreshToken(refreshToken), jwtUtil.getUserRoleFromRefreshToken(refreshToken), accessToken));
-        cacheUtil.deleteRefreshToken(refreshToken);
+        cacheUtil.deleteRefreshToken(jwtUtil.getUserIdFromRefreshToken(refreshToken));
 
         // Todo: 헤더 및 쿠키에서 삭제?
+    }
+
+
+    public void isSignedIn(String userId) {
+        if (cacheUtil.getValidAccessToken(userId) != null || cacheUtil.getValidRefreshToken(userId) != null) {
+            throw new CustomException(AuthErrorCode.ALREADY_SIGNED_IN_USER);
+        }
     }
 }

@@ -35,6 +35,13 @@ public class VendorService {
         }
         validateAddressUniqueness(request.address());
 
+        Optional<Vendor> optionalVendor =
+                vendorRepository.findByUserIdAndIsDeletedFalse(
+                        Long.valueOf(getCurrentUserId()));
+        if (optionalVendor.isPresent()) {
+            throw new CustomException(VendorErrorCode.VENDOR_DUPLICATION_ERROR);
+        }
+
         UserResponseDto userInfo = feignClientService.getUserInfo(getCurrentUserId());
 
         Vendor vendor = Vendor.createVendor(
