@@ -46,11 +46,17 @@ public class PaymentController {
         }
     }
 
-    //결제 조회
+//    @PostMapping("/handle")
+//    public ResponseEntity<Void> handlePayment(@RequestParam UUID orderId){
+//        paymentService.handlePayment(orderId);
+//        return ResponseEntity.ok().build();
+//    }
+
+    //결제 조회(id로 조회하여 Uid로 실제 결제 정보 조회)
     @GetMapping("/{paymentId}")
-    public ResponseEntity<PaymentResponseDto> getPayment(@PathVariable UUID paymentId) {
-        PaymentResponseDto payment = paymentService.getPayment(paymentId);
-        return ResponseEntity.ok(payment);
+    public ResponseEntity<PaymentDetailsResponseDto> getPaymentDetails(@PathVariable UUID paymentId) {
+        PaymentDetailsResponseDto paymentDetails = paymentService.getPaymentDetails(paymentId);
+        return ResponseEntity.ok(paymentDetails);
     }
 
     //결제 전체 조회
@@ -66,13 +72,6 @@ public class PaymentController {
     }
 
 
-//    //실제 결제 조회
-//    @GetMapping("/{paymentUid}")
-//    public ResponseEntity<PaymentDetailsResponseDto> getPaymentDetails(@PathVariable String paymentUid) {
-//        PaymentDetailsResponseDto paymentDetails = paymentService.getPaymentDetails(paymentUid);
-//        return ResponseEntity.ok(paymentDetails);
-//    }
-//
 //    //실제 결제 취소
 //    @PostMapping("/refund/{paymentUid}")
 //    public ResponseEntity<RefundResponseDto> refundPayment(@PathVariable String paymentUid) {

@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,16 +107,16 @@ public class PaymentService {
         }
     }
 
-    public void handlePayment(UUID orderId){
-        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
-                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
-
-//        // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
-//        order.getPayment().changePaymentBySuccess(PaymentStatus.completed, "imp_1234567890");
-//        Order savedOrder = orderRepository.save(order); // 주문 상태 저장
-
-        messagingProducerService.sendPaymentRequest(order);
-    }
+//    public void handlePayment(UUID orderId){
+//        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+//                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+//
+////        // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
+////        order.getPayment().changePaymentBySuccess(PaymentStatus.completed, "imp_1234567890");
+////        Order savedOrder = orderRepository.save(order); // 주문 상태 저장
+//
+//        messagingProducerService.sendPaymentRequest(order);
+//    }
 
     // 결제가 실패했을 경우 처리
     private void handleFailedPayment(Order order) {
@@ -135,23 +136,28 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public PaymentResponseDto getPayment(UUID paymentId) {
-        com.flash.order.domain.model.Payment payment = paymentRepository.findByIdAndIsDeletedFalse(paymentId)
-                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_HISTORY_NOT_FOUND));
-
-        return paymentMapper.convertToResponseDto(payment);
-    }
-
-    @Transactional(readOnly = true)
     public Page<PaymentResponseDto> getAllPayments(Pageable pageable) {
         Page<com.flash.order.domain.model.Payment> payments = paymentRepository.findAllByIsDeletedFalse(pageable);
 
         return payments.map(paymentMapper::convertToResponseDto);
     }
 
-    // 실제 결제 조회 메소드
-    public PaymentDetailsResponseDto getPaymentDetails(String paymentUid) {
+    //결제 조회
+    public PaymentDetailsResponseDto getPaymentDetails(UUID paymentId) {
         try {
+            Long currentUserId = Long.valueOf(getCurrentUserId());
+            String authority = getCurrentUserAuthority();
+
+            com.flash.order.domain.model.Payment payment = paymentRepository.findByIdAndIsDeletedFalse(paymentId)
+                    .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_HISTORY_NOT_FOUND));
+
+            // 권한이 ROLE_MASTER가 아닌 경우에만 주문자가 맞는지 확인
+            if (!authority.equals("ROLE_MASTER") && !payment.getUserId().equals(currentUserId)) {
+                throw new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST);
+            }
+
+            String paymentUid = payment.getPaymentUid();
+
             IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(paymentUid);
 
             if (iamportResponse.getResponse() == null) {
@@ -191,6 +197,20 @@ public class PaymentService {
         } catch (IamportResponseException | IOException e) {
             throw new CustomException(PaymentErrorCode.REFUND_PROCESSING_ERROR);
         }
+    }
+
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private String getCurrentUserAuthority() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST))
+                .getAuthority();
     }
 
 }
