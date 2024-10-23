@@ -281,7 +281,7 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(35);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndStartTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.PENDING, fiveMinutesAgo, fiveMinutesLater);
 
         flashSaleProductList.forEach(flashSaleProduct -> {
                 feignClientService.increaseOneProductStock(flashSaleProduct.getProductId(), flashSaleProduct.getStock());
@@ -298,12 +298,10 @@ public class FlashSaleProductService {
         LocalDateTime fiveMinutesLater = currentDateTime.plusMinutes(5);
         //실행시간에 따른 오차에 대응하기 위해 임의로 5분씩 설정하였습니다.
 
-        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndEndTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.ONSALE, fiveMinutesAgo, fiveMinutesLater);
+        List<FlashSaleProduct> flashSaleProductList = flashSaleProductRepository.findAllByStatusAndStartTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus.APPROVE, fiveMinutesAgo, fiveMinutesLater);
 //        List<UUID> productIdList = flashSaleProductList.stream().map(FlashSaleProduct::getProductId).distinct().toList();
-
         flashSaleProductList.forEach(flashSaleProduct -> {
                 feignClientService.updateProductStatus(flashSaleProduct.getProductId(), "ON_SALE");
-
                 flashSaleProduct.onSale();
             }
         );
@@ -372,7 +370,7 @@ public class FlashSaleProductService {
 
         FlashSaleProduct flashSaleProduct = existFlashSaleProduct(flashSaleProductId);
 
-        if (flashSaleProduct.getCreatedBy().equals(getCurrentUserId())) {
+        if (!flashSaleProduct.getCreatedBy().equals(getCurrentUserId())) {
             throw new CustomException(FlashSaleProductErrorCode.IS_NOT_MY_ITEM);
         }
 

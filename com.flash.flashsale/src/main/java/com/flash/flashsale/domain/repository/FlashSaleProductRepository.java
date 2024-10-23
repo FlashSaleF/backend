@@ -46,4 +46,6 @@ public interface FlashSaleProductRepository {
     boolean existsByFlashSaleIdAndIsDeletedFalse(UUID flashSaleId);
 
     List<FlashSaleProduct> findAllByProductIdAndIsDeletedFalse(UUID productId);
+
+    List<FlashSaleProduct> findAllByStatusAndStartTimeBetweenAndIsDeletedFalse(FlashSaleProductStatus flashSaleProductStatus, LocalDateTime fiveMinutesAgo, LocalDateTime fiveMinutesLater);
 }
