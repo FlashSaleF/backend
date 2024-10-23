@@ -9,7 +9,8 @@ public enum VendorErrorCode implements ErrorCode {
     COMPANY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 ID로 등록된 업체가 없습니다."),
     NOT_COMPANY_OWNER(HttpStatus.FORBIDDEN, "해당 업체 대표자가 아닙니다."),
     INVALID_PERMISSION_REQUEST(HttpStatus.BAD_REQUEST, "유효하지 않은 권한 요청입니다."),
-    USER_PERMISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 권한이 존재하지 않습니다.");
+    USER_PERMISSION_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자 권한이 존재하지 않습니다."),
+    VENDOR_DUPLICATION_ERROR(HttpStatus.BAD_REQUEST, "운영중인 하나의 업체만 등록 가능합니다.");
 
     private final HttpStatus status;
     private final String message;
