@@ -4,7 +4,7 @@
 
 플래시 세일 이커머스 프로젝트는 짧은 시간 동안 한정된 수량의 상품을 할인된 가격에 판매하는 이벤트를 제공하는 서비스입니다.
 
-<img src="">
+<img src="https://github.com/FlashSaleF/backend/blob/dev/docs/images/flash%20sale.png?raw=true">
 
 ---
 
@@ -83,24 +83,24 @@
 
 ### 서비스 아키텍처
 
-![service_architecture](https://prod-files-secure.s3.us-west-2.amazonaws.com/83c75a39-3aba-4ba4-a792-7aefe4b07895/ab44fa60-b79d-4901-971a-a749b4b77988/%E1%84%82%E1%85%A2%E1%84%87%E1%85%AE.jpg)
+<img src="https://github.com/FlashSaleF/backend/blob/dev/docs/images/service%20architecture.jpg?raw=true">
 
----
+
 
 ### 인프라 설계도
 
-![infrastructure](https://prod-files-secure.s3.us-west-2.amazonaws.com/83c75a39-3aba-4ba4-a792-7aefe4b07895/48702e44-d7e6-4372-b2e3-06ba764df670/%E1%84%8B%E1%85%AC%E1%84%87%E1%85%AE.jpg)
+<img src="https://github.com/FlashSaleF/backend/blob/dev/docs/images/infrastructure.jpg?raw=true">
 
 ---
 
 ## 🚗 주요 기능
 
-- [⭐ 비동기 처리와 이벤트 기반 대용량 주문 처리](https://www.notion.so/1264f92830ab80f7b6bed71f7b2144d5?pvs=21)
-- [⭐ Redis 분산락을 통한 동시성 재고 관리](https://www.notion.so/Redis-8a938314f83e415283de28212e3398bd?pvs=21)
-- [플래시 세일 알림 메일 발송](https://www.notion.so/21a77b1dc9204887aa5f56c16ddf74e1?pvs=21)
-- [모니터링](https://www.notion.so/9f18c0e8d7da4ab8bb15ee425fc9c38d?pvs=21)
-- [Redis 캐싱](https://www.notion.so/Redis-35aa6aa6892749edb8636446bfa5930a?pvs=21)
-- [플래시 세일 관리](https://www.notion.so/8f25b1a96bf0411c9ba05aeea75f899d?pvs=21)
+- [⭐ 비동기 처리와 이벤트 기반 대용량 주문 처리](https://spot-decade-fee.notion.site/1264f92830ab80f7b6bed71f7b2144d5)
+- [⭐ Redis 분산락을 통한 동시성 재고 관리](https://creative-crane-389.notion.site/Redis-128707d279cc8132ad26e1bfd9c78140)
+- [플래시 세일 알림 메일 발송](https://creative-crane-389.notion.site/128707d279cc810184b5d013b5ded7c4)
+- [모니터링](https://creative-crane-389.notion.site/128707d279cc81e4bfa4c1590e86e710)
+- [Redis 캐싱](https://creative-crane-389.notion.site/Redis-128707d279cc8185b2f4d97b71e86a9c)
+- [플래시 세일 관리](https://creative-crane-389.notion.site/128707d279cc81b4aeddd30fd4bb1ebc)
 
 ---
 
@@ -123,23 +123,23 @@
 
 ## 🤔 기술적 의사결정
 
-- [Gateway에서 캐싱된 Access토큰 블랙리스트 및 화이트리스트 조회](https://www.notion.so/Gateway-Access-16e25f2be00e401e9546664b6e41c7b0?pvs=21)
-- [대규모 트래픽에서 효율적인 락 관리](https://www.notion.so/8f3f4eb0255b4b1e847a4fa118ddf6d5?pvs=21)
-- [메일 발송을 위한 동적 스케줄러 구성](https://www.notion.so/906414559da34ec7b72749149da1e7d8?pvs=21)
-- [아키텍처](https://www.notion.so/d657fe3cb7af4c45ae4ade949988f321?pvs=21)
-- [Kafka를 이용한 주문 생성](https://www.notion.so/Kafka-416f0507141b41518a43e783dfb4c0df?pvs=21)
+- [Gateway에서 캐싱된 Access토큰 블랙리스트 및 화이트리스트 조회](https://creative-crane-389.notion.site/Gateway-Access-128707d279cc8197a074f9c1ad0f28c2)
+- [대규모 트래픽에서 효율적인 락 관리](https://creative-crane-389.notion.site/128707d279cc818983eec6578e3d7a6d)
+- [메일 발송을 위한 동적 스케줄러 구성](https://creative-crane-389.notion.site/128707d279cc81c5b17cf46059782498)
+- [아키텍처](https://creative-crane-389.notion.site/128707d279cc81a8a5b6cac32605c527)
+- [Kafka를 이용한 주문 생성](https://creative-crane-389.notion.site/Kafka-128707d279cc8141a020ca70790739a2)
 
 ---
 
 ## ⚽ 트러블슈팅
 
-[Jmeter 부하테스트 ](https://www.notion.so/Jmeter-1264f92830ab809dafadf52b1b7885d2?pvs=21)
+[Jmeter 부하테스트 ](https://spot-decade-fee.notion.site/Jmeter-1264f92830ab809dafadf52b1b7885d2)
 
-[UUID 검증](https://www.notion.so/UUID-542467318a1f425cbd33231282ce36d7?pvs=21)
+[UUID 검증](https://creative-crane-389.notion.site/UUID-128707d279cc81fc8d4cc8968d7c8096)
 
-[Feignclient 에러 핸들링](https://www.notion.so/Feignclient-087cea3b28c34340b5bb4e583e1286b7?pvs=21)
+[Feignclient 에러 핸들링](https://creative-crane-389.notion.site/Feignclient-128707d279cc814cb275dd112d4b2404)
 
-[재고에 대한 분산 락 처리의 변경](https://www.notion.so/114cc2a791d948a1b845d887db2851c5?pvs=21)
+[재고에 대한 분산 락 처리의 변경](https://creative-crane-389.notion.site/128707d279cc819bb343d4fdaf545e63)
 
 ---
 
