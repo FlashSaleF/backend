@@ -20,6 +20,7 @@ import com.siot.IamportRestClient.request.CancelData;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -42,15 +44,19 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final MessagingProducerService messagingProducerService;
 
+    @Transactional
     public IamportResponse<Payment> processPayment(PaymentCallbackDto request) {
         try {
             // 주문 내역 조회
-            Order order = orderRepository.findOrderByOrderUid(request.orderUid())
+//            Order order = orderRepository.findOrderByOrderUid(request.orderUid())
+//                    .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+            Order order = orderRepository.findByIdAndIsDeletedFalse(request.orderId())
                     .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
             // 결제 단건 조회 (아임포트)
             IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(request.paymentUid());
-
+//
             // 결제 완료 상태 확인
             if (!"paid".equals(iamportResponse.getResponse().getStatus())) {
                 handleFailedPayment(order);
@@ -70,7 +76,8 @@ public class PaymentService {
 
             // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
             order.getPayment().changePaymentBySuccess(PaymentStatus.completed, iamportResponse.getResponse().getImpUid());
-            orderRepository.save(order); // 주문 상태 저장
+//            paymentRepository.save(order.getPayment()); // 결제 내역 저장
+            Order savedOrder = orderRepository.save(order); // 주문 상태 저장
 
             // 결제 완료 후 재고 감소 처리 이벤트 발행 (비동기)
 //            order.getOrderProducts().stream()
@@ -80,21 +87,34 @@ public class PaymentService {
 //                        messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
 //                    });
 
-            order.getOrderProducts().forEach(orderProduct -> {
-                ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
-
-                if (orderProduct.getFlashSaleProductId() == null) {  //일반 상품인 경우
-                    messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
-                } else {  //플래시 세일 상품인 경우
-                    messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
-                }
-            });
+//            order.getOrderProducts().forEach(orderProduct -> {
+//                ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
+//
+//                if (orderProduct.getFlashSaleProductId() == null) {  //일반 상품인 경우
+//                    messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
+//                } else {  //플래시 세일 상품인 경우
+//                    messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
+//                }
+//            });
+            messagingProducerService.sendPaymentRequest(savedOrder);
 
             return iamportResponse;
 
         } catch (IamportResponseException | IOException e) {
+            log.error("아임포트 응답 오류: {}", e.getMessage());
             throw new CustomException(PaymentErrorCode.PAYMENT_PROCESSING_ERROR);
         }
+    }
+
+    public void handlePayment(UUID orderId){
+        Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+//        // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
+//        order.getPayment().changePaymentBySuccess(PaymentStatus.completed, "imp_1234567890");
+//        Order savedOrder = orderRepository.save(order); // 주문 상태 저장
+
+        messagingProducerService.sendPaymentRequest(order);
     }
 
     // 결제가 실패했을 경우 처리
