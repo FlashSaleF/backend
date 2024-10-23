@@ -163,6 +163,25 @@
             } else {
                 alert('결제 실패! ' + rsp.error_msg);
                 // window.location.href = '/fail-payment';
+
+                // 주문 취소 API 호출
+                fetch(`/api/orders/${orderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('주문 취소 실패: ' + response.statusText);
+                        }
+                        alert('주문이 취소되었습니다.');
+                        // window.location.href = '/fail-payment';
+                    })
+                    .catch(error => {
+                        console.error('주문 취소 중 오류 발생:', error);
+                        alert('주문 취소 실패: ' + error.message);
+                    });
             }
         });
     }
