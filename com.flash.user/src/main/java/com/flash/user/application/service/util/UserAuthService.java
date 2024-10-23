@@ -28,7 +28,7 @@ public class UserAuthService {
         // 다르면 권한이 MASTER인지 확인
         Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
         for (GrantedAuthority authority : authorities) {
-            if (authority.getAuthority().equals(RoleEnum.MASTER)) {
+            if (authority.getAuthority().equals(RoleEnum.MASTER.getAuthority())) {
                 return;  // MASTER 권한이면 return
             }
         }

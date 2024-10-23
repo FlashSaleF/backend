@@ -27,6 +27,7 @@ public class AuthorizationFilter extends OncePerRequestFilter {
 
         String userId = request.getHeader("X-User-ID");
         String role = request.getHeader("X-User-Role");
+        log.info("role: {}", role);
         if (userId != null && role != null) {
             User user = new User(userId, "", Collections.singletonList(new SimpleGrantedAuthority(role)));
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities());
