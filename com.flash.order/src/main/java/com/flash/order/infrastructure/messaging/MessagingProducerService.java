@@ -79,4 +79,15 @@ public class MessagingProducerService {
             log.error("결제 요청 메시지를 직렬화 중 오류 발생", e);
         }
     }
+
+    public void sendCancelPayment(UUID orderId) {
+        CancelPaymentEvent event = new CancelPaymentEvent(orderId);
+
+        try {
+            String eventJson = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(KafkaTopic.CANCELL_PAYMENT.getTopic(), eventJson);
+        } catch (JsonProcessingException e) {
+            log.error("결제 취소 요청 메시지를 직렬화 중 오류 발생", e);
+        }
+    }
 }

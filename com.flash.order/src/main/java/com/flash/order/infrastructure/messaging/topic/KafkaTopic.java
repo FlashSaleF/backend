@@ -8,7 +8,8 @@ public enum KafkaTopic {
     PRODUCT_STOCK_DECREASE("product-stock-decrease"),
     PRODUCT_STOCK_INCREASE("product-stock-increase"),
     FLASH_PRODUCT_STOCK_DECREASE("flash-product-stock-decrease"),
-    FLASH_PRODUCT_STOCK_INCREASE("flash-product-stock-increase");
+    FLASH_PRODUCT_STOCK_INCREASE("flash-product-stock-increase"),
+    CANCELL_PAYMENT("cancel-payment");
 
     private final String topic;
 
