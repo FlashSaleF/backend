@@ -111,7 +111,7 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         //주문 생성 시 이벤트 발행
-        messagingProducerService.sendPaymentRequest(savedOrder);
+//        messagingProducerService.sendPaymentRequest(savedOrder);
 
         return orderMapper.convertToResponseDto(savedOrder);
     }
@@ -122,7 +122,7 @@ public class OrderService {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        order.getPayment().changeStatus(PaymentStatus.completed);
+//        order.getPayment().changeStatus(PaymentStatus.completed);
 
         // 재고 감소 처리 플래그
         boolean stockDecreasedSuccessfully = true;
