@@ -48,7 +48,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/flash-sale/backend
-            unzip backend.zip
+            unzip -u backend.zip
             
             # Stop and remove existing containers
             docker-compose -p flash stop -v || true
