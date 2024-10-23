@@ -1,11 +1,13 @@
 package com.flash.auth.application.service.util;
 
 import com.flash.base.dto.UserInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+@Slf4j(topic = "Cache Util")
 @Service
 public class CacheUtil {
 
@@ -48,6 +50,19 @@ public class CacheUtil {
     }
 
     /**
+     * Access Token 조회
+     *
+     * @param userId
+     * @return
+     */
+    @Cacheable(cacheNames = "accessTokenWhiteList", key = "#userId", unless = "#result == null")
+    public UserInfo getValidAccessToken(String userId) {
+        // 캐시 미스 시 null 반환
+        return null;
+    }
+
+
+    /**
      * Refresh Token 조회
      *
      * @param userId
@@ -64,14 +79,15 @@ public class CacheUtil {
      */
     @CacheEvict(cacheNames = "accessTokenWhiteList", key = "#userId")
     public void deleteAccessToken(String userId) {
+        log.info("로그아웃 되었습니다: {}", userId);
         // 캐시에서 해당 userId로 저장된 데이터를 삭제
     }
 
     /**
      * 화이트리스트 처리된 Refresh Token을 삭제
      */
-    @CacheEvict(cacheNames = "refreshTokenWhiteList", key = "#refreshToken")
-    public void deleteRefreshToken(String refreshToken) {
+    @CacheEvict(cacheNames = "refreshTokenWhiteList", key = "#userId")
+    public void deleteRefreshToken(String userId) {
         // 삭제된 후 특별히 처리할 내용이 없으므로 빈 메서드로 구현
     }
 }
