@@ -397,7 +397,7 @@ public class FlashSaleProductService {
 
     private void validAvailableFlashSale(FlashSaleProduct flashSaleProduct) {
         if (getAuthority().equals("ROLE_VENDOR")) {
-            if (flashSaleProduct.getCreatedBy().equals(getCurrentUserId())) {
+            if (!flashSaleProduct.getCreatedBy().equals(getCurrentUserId())) {
                 throw new CustomException(FlashSaleProductErrorCode.IS_NOT_MY_ITEM);
             }
         }
