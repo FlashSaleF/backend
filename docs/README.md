@@ -125,7 +125,7 @@
 
 - [Gateway에서 캐싱된 Access토큰 블랙리스트 및 화이트리스트 조회](https://creative-crane-389.notion.site/Gateway-Access-128707d279cc8197a074f9c1ad0f28c2)
 - [대규모 트래픽에서 효율적인 락 관리](https://creative-crane-389.notion.site/128707d279cc818983eec6578e3d7a6d)
-- [메일 발송을 위한 동적 스케줄러 구성](https://creative-crane-389.notion.site/128707d279cc81c5b17cf46059782498)
+- [메일 발송을 위한 동적 스케줄러 구성](https://creative-crane-389.notion.site/128707d279cc810184b5d013b5ded7c4)
 - [아키텍처](https://creative-crane-389.notion.site/128707d279cc81a8a5b6cac32605c527)
 - [Kafka를 이용한 주문 생성](https://creative-crane-389.notion.site/Kafka-128707d279cc8141a020ca70790739a2)
 
