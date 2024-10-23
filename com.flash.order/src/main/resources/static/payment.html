@@ -164,8 +164,8 @@
                 alert('결제 실패! ' + rsp.error_msg);
                 // window.location.href = '/fail-payment';
 
-                // 주문 취소 API 호출
-                fetch(`/api/orders/${orderId}`, {
+                // 결제 실패에 따른 주문 롤백 API 호출
+                fetch(`/api/orders/rollback/${orderId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': 'Bearer ' + token
