@@ -24,7 +24,7 @@ public class RouteConfig {
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://VENDOR")
                 )
-                .route("order", r -> r.path("/api/orders", "/api/orders/**")
+                .route("order", r -> r.path("/api/orders", "/api/orders/**", "/api/payments", "/api/payments/**")
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://ORDER")
                 )
@@ -35,6 +35,9 @@ public class RouteConfig {
                 .route("alarm", r -> r.path("/api/alarms", "/api/alarms/**")
                         .filters(f -> f.filter(authFilter))
                         .uri("lb://ALARM")
+                )
+                .route("payment", r -> r.path("/payment.html")
+                        .uri("lb://ORDER")
                 )
                 .build();
     }

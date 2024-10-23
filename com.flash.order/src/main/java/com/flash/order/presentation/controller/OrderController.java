@@ -64,9 +64,17 @@ public class OrderController {
         return ResponseEntity.ok(updatedOrder);
     }
 
+    //주문 취소
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable UUID orderId) {
-        orderService.cancellOrder(orderId);
+    public ResponseEntity<Void> cancelOrder(@PathVariable UUID orderId) {
+        orderService.cancelOrder(orderId);
+        return ResponseEntity.noContent().build();
+    }
+
+    //사용자 결제 실패시 주문 롤백 처리 위한 API
+    @DeleteMapping("/rollback/{orderId}")
+    public ResponseEntity<Void> rollbackOrder(@PathVariable UUID orderId) {
+        orderService.rollbackOrder(orderId);
         return ResponseEntity.noContent().build();
     }
 }

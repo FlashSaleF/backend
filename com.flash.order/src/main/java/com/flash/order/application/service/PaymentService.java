@@ -10,6 +10,7 @@ import com.flash.order.application.dtos.response.RefundResponseDto;
 import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.exception.PaymentErrorCode;
 import com.flash.order.domain.model.Order;
+import com.flash.order.domain.model.OrderStatus;
 import com.flash.order.domain.model.PaymentStatus;
 import com.flash.order.domain.repository.OrderRepository;
 import com.flash.order.domain.repository.PaymentRepository;
@@ -20,8 +21,10 @@ import com.siot.IamportRestClient.request.CancelData;
 import com.siot.IamportRestClient.response.IamportResponse;
 import com.siot.IamportRestClient.response.Payment;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -42,10 +46,11 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final MessagingProducerService messagingProducerService;
 
+    @Transactional
     public IamportResponse<Payment> processPayment(PaymentCallbackDto request) {
         try {
             // 주문 내역 조회
-            Order order = orderRepository.findOrderByOrderUid(request.orderUid())
+            Order order = orderRepository.findByIdAndIsDeletedFalse(request.orderId())
                     .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
             // 결제 단건 조회 (아임포트)
@@ -70,29 +75,16 @@ public class PaymentService {
 
             // 결제 성공 처리: 이때 결제 완료되면 생성된 paymentUid 할당해줌.
             order.getPayment().changePaymentBySuccess(PaymentStatus.completed, iamportResponse.getResponse().getImpUid());
-            orderRepository.save(order); // 주문 상태 저장
+//            paymentRepository.save(order.getPayment()); // 결제 내역 저장
+            Order savedOrder = orderRepository.save(order); // 주문 상태 저장
 
-            // 결제 완료 후 재고 감소 처리 이벤트 발행 (비동기)
-//            order.getOrderProducts().stream()
-//                    .filter(orderProduct -> orderProduct.getFlashSaleProductId() == null)  // flashSaleProduct가 아닌 상품들만 처리
-//                    .forEach(orderProduct -> {
-//                        ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
-//                        messagingProducerService.sendDecreaseProductStock(orderProduct.getProductId(), requestDto); // 이벤트 발행
-//                    });
 
-            order.getOrderProducts().forEach(orderProduct -> {
-                ProductStockDecreaseRequestDto requestDto = new ProductStockDecreaseRequestDto(orderProduct.getQuantity());
-
-                if (orderProduct.getFlashSaleProductId() == null) {  //일반 상품인 경우
-                    messagingProducerService.sendDecreaseProductStock(order.getId(), orderProduct.getProductId(), requestDto); // 이벤트 발행
-                } else {  //플래시 세일 상품인 경우
-                    messagingProducerService.sendDecreaseFlashProductStock(order.getId(), orderProduct.getFlashSaleProductId(), requestDto); // 이벤트 발행
-                }
-            });
+            messagingProducerService.sendPaymentRequest(savedOrder);
 
             return iamportResponse;
 
         } catch (IamportResponseException | IOException e) {
+            log.error("아임포트 응답 오류: {}", e.getMessage());
             throw new CustomException(PaymentErrorCode.PAYMENT_PROCESSING_ERROR);
         }
     }
@@ -115,23 +107,28 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public PaymentResponseDto getPayment(UUID paymentId) {
-        com.flash.order.domain.model.Payment payment = paymentRepository.findByIdAndIsDeletedFalse(paymentId)
-                .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_HISTORY_NOT_FOUND));
-
-        return paymentMapper.convertToResponseDto(payment);
-    }
-
-    @Transactional(readOnly = true)
     public Page<PaymentResponseDto> getAllPayments(Pageable pageable) {
         Page<com.flash.order.domain.model.Payment> payments = paymentRepository.findAllByIsDeletedFalse(pageable);
 
         return payments.map(paymentMapper::convertToResponseDto);
     }
 
-    // 실제 결제 조회 메소드
-    public PaymentDetailsResponseDto getPaymentDetails(String paymentUid) {
+    //결제 조회
+    public PaymentDetailsResponseDto getPaymentDetails(UUID paymentId) {
         try {
+            Long currentUserId = Long.valueOf(getCurrentUserId());
+            String authority = getCurrentUserAuthority();
+
+            com.flash.order.domain.model.Payment payment = paymentRepository.findByIdAndIsDeletedFalse(paymentId)
+                    .orElseThrow(() -> new CustomException(PaymentErrorCode.PAYMENT_HISTORY_NOT_FOUND));
+
+            // 권한이 ROLE_MASTER가 아닌 경우에만 주문자가 맞는지 확인
+            if (!authority.equals("ROLE_MASTER") && !payment.getUserId().equals(currentUserId)) {
+                throw new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST);
+            }
+
+            String paymentUid = payment.getPaymentUid();
+
             IamportResponse<Payment> iamportResponse = iamportClient.paymentByImpUid(paymentUid);
 
             if (iamportResponse.getResponse() == null) {
@@ -161,7 +158,12 @@ public class PaymentService {
             if ("cancelled".equals(response.getResponse().getStatus())) {
                 // 환불 성공 처리: 필요시 결제 상태 업데이트
                 payment.changePaymentByCancell(PaymentStatus.cancelled, response.getResponse().getImpUid());
-                paymentRepository.save(payment); // 환불된 결제 정보 저장
+                payment.delete();
+
+                Order order = payment.getOrder();
+                order.changeOrderStatus(OrderStatus.cancelled);
+                order.delete();
+
             } else {
                 throw new CustomException(PaymentErrorCode.REFUND_FAILED);
             }
@@ -171,6 +173,20 @@ public class PaymentService {
         } catch (IamportResponseException | IOException e) {
             throw new CustomException(PaymentErrorCode.REFUND_PROCESSING_ERROR);
         }
+    }
+
+    private String getCurrentUserId() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private String getCurrentUserAuthority() {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities()
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new CustomException(OrderErrorCode.INVALID_PERMISSION_REQUEST))
+                .getAuthority();
     }
 
 }

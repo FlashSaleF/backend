@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flash.base.exception.CustomException;
 import com.flash.order.application.service.FeignClientService;
 import com.flash.order.application.service.OrderService;
+import com.flash.order.application.service.PaymentService;
 import com.flash.order.domain.exception.OrderErrorCode;
 import com.flash.order.domain.model.Order;
 import com.flash.order.domain.repository.OrderRepository;
@@ -23,6 +24,7 @@ public class MessagingConsumerService {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final FeignClientService feignClientService;
+    private final PaymentService paymentService;
 
     @KafkaListener(topics = "product-stock-decrease", groupId = "order-group")
     public void listenProductStockDecreaseEvent(String message) {
@@ -100,6 +102,19 @@ public class MessagingConsumerService {
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
         orderService.handlePaymentCompleted(order.getId());
+    }
+
+    //결제 취소
+    @KafkaListener(topics = "cancel-payment", groupId = "order-group")
+    public void listenCancelPaymentEvent(String message) {
+        // 메시지 수신
+        CancelPaymentEvent event = EventSerializer.deserialize(message, CancelPaymentEvent.class);
+        Order order = orderRepository.findByIdAndIsDeletedFalse(event.orderId())
+                .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
+
+        String paymentUid = order.getPayment().getPaymentUid();
+
+        paymentService.refundPayment(paymentUid);
     }
 
 //    @KafkaListener(topics = "order-payment-topic")

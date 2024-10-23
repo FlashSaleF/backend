@@ -52,6 +52,10 @@ public class Order extends BaseEntity {
         this.totalPrice = totalPrice;
     }
 
+    public void changeOrderStatus(OrderStatus status) {
+        this.status = status;
+    }
+
     public void addPayment(Payment payment) {
         this.payment = payment; // Order에 Payment 설정
     }

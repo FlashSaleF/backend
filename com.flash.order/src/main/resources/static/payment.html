@@ -9,34 +9,86 @@
 </head>
 <body>
 <h1>결제 페이지</h1>
-<button onclick="createOrder()">주문 생성 및 결제</button>
+
+<!-- 주문 정보를 입력할 수 있는 폼 -->
+<form id="order-form">
+    <!--    <label for="userId">User ID:</label>-->
+    <!--    <input type="number" id="userId" name="userId" required><br><br>-->
+
+    <label for="token">JWT Token:</label>
+    <input type="text" id="token" name="token" required><br><br>
+
+    <hr style="border: 1px solid #ccc; margin: 20px 0;">
+
+    <p>주문 정보를 입력하세요:</p>
+
+    <label for="productId1">Product ID 1:</label>
+    <input type="text" id="productId1" name="productId1" required><br><br>
+
+    <label for="quantity1">Quantity 1:</label>
+    <input type="number" id="quantity1" name="quantity1" required><br><br>
+
+    <!--    <label for="price1">Price 1:</label>-->
+    <!--    <input type="number" id="price1" name="price1" required><br><br>-->
+
+    <label for="productId2">Product ID 2:</label>
+    <input type="text" id="productId2" name="productId2"><br><br>
+
+    <label for="quantity2">Quantity 2:</label>
+    <input type="number" id="quantity2" name="quantity2"><br><br>
+
+    <!--    <label for="price2">Price 2:</label>-->
+    <!--    <input type="number" id="price2" name="price2"><br><br>-->
+
+    <label for="address">Address:</label>
+    <input type="text" id="address" name="address" required><br><br>
+
+    <button type="button" onclick="createOrder()">주문 생성 및 결제</button>
+</form>
 
 <script>
     var IMP = window.IMP;
     IMP.init("imp41578645");
+
     async function createOrder() {
         try {
+            // 폼 데이터 가져오기
+            const token = document.getElementById('token').value;
+            // const userId = document.getElementById('userId').value;
+            const productId1 = document.getElementById('productId1').value;
+            const quantity1 = document.getElementById('quantity1').value;
+            // const price1 = document.getElementById('price1').value;
+
+            const productId2 = document.getElementById('productId2').value;
+            const quantity2 = document.getElementById('quantity2').value;
+            // const price2 = document.getElementById('price2').value;
+
+            const address = document.getElementById('address').value;
+
+            // 주문 상품 리스트 구성 (두 번째 상품은 입력이 없을 경우 제외)
+            let orderProducts = [
+                {
+                    productId: productId1,
+                    quantity: parseInt(quantity1)
+                }
+            ];
+            // if (productId2 && quantity2) {
+            //     orderProducts.push({
+            //         productId: productId2,
+            //         quantity: parseInt(quantity2)
+            //     });
+            // }
+
             // 주문 생성 요청
             const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
                 },
-                body: JSON.stringify({
-                    userId: 1,  // 사용자의 ID
-                    orderProducts: [
-                        {
-                            productId: "d290f1ee-6c54-4b01-90e6-d701748f0851",  // 상품 ID
-                            quantity: 1,  // 수량
-                            price: 3  // 가격
-                        },
-                        {
-                            productId: "fd9281fe-934d-48da-a2b8-0281a95b8f7f",  // 상품 ID
-                            quantity: 1,  // 수량
-                            price: 2  // 가격
-                        }
-                    ],
-                    address: "123 Main Street, Seoul, South Korea"  // 배송지 주소
+                body: JSON.stringify({  // 사용자 ID
+                    orderProducts: orderProducts,  // 주문 상품 리스트
+                    address: address  // 배송지 주소
                 })
             });
 
@@ -49,7 +101,7 @@
             console.log(orderResponse);  // 디버깅용 콘솔 출력
 
             // 결제 API 호출
-            requestPay(orderResponse);
+            requestPay(orderResponse, token);
         } catch (error) {
             console.error('주문 생성 중 오류:', error);
             alert('오류 발생: ' + error.message);
@@ -57,8 +109,8 @@
     }
 
     // 결제 처리 함수
-    function requestPay(orderResponse) {
-        var orderUid = orderResponse.orderUid;  // 주문 고유 ID
+    function requestPay(orderResponse, token) {
+        var orderId = orderResponse.orderId;  // 주문 ID
         var itemName = orderResponse.orderProducts.map(product => product.productId).join(', ');  // 상품 이름들
         var paymentPrice = orderResponse.totalPrice;  // 총 결제 금액
         var buyerName = '홍길동';  // 사용자 이름
@@ -68,7 +120,7 @@
         IMP.request_pay({
             pg: 'html5_inicis',
             pay_method: 'card',
-            merchant_uid: orderUid,  // 주문 고유 ID
+            merchant_uid: orderId,  // 주문 고유 ID
             name: itemName,  // 상품 이름
             amount: paymentPrice,  // 결제 금액
             buyer_email: buyerEmail,  // 사용자 이메일
@@ -79,27 +131,57 @@
         }, function(rsp) {
             if (rsp.success) {
                 alert('call back!!: ' + JSON.stringify(rsp));
-                // 결제 성공 시: 결제 승인 또는 가상계좌 발급에 성공한 경우
-                // jQuery로 HTTP 요청
-                jQuery.ajax({
-                    url: "/api/payments/process",
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    data: JSON.stringify({
-                        "payment_uid": rsp.imp_uid,      // 결제 고유번호
-                        "order_uid": rsp.merchant_uid   // 주문번호
+
+                // fetch API로 결제 요청 보내기
+                fetch('/api/payments/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        paymentUid: rsp.imp_uid,   // 결제 고유번호
+                        orderId: rsp.merchant_uid // 주문번호
                     })
-                }).done(function (response) {
-                    console.log(response);
-                    // 가맹점 서버 결제 API 성공시 로직
-                    //alert('Please, Check your payment result page!!' + rsp);
-                    alert('결제 완료!' + rsp);
-                    window.location.href = "/success-payment";
                 })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('결제 후 서버 요청 실패: ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(data);
+                        alert('결제 완료! ' + rsp.imp_uid);
+                        // window.location.href = '/success-payment';
+                    })
+                    .catch(error => {
+                        console.error('결제 처리 중 오류 발생:', error);
+                        alert('결제 처리 실패: ' + error.message);
+                        // window.location.href = '/fail-payment';
+                    });
             } else {
-                // alert("success? "+ rsp.success+ ", 결제에 실패하였습니다. 에러 내용: " + JSON.stringify(rsp));
-                alert('결제 실패!' + rsp);
-                window.location.href = "/fail-payment";
+                alert('결제 실패! ' + rsp.error_msg);
+                // window.location.href = '/fail-payment';
+
+                // 결제 실패에 따른 주문 롤백 API 호출
+                fetch(`/api/orders/rollback/${orderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('주문 취소 실패: ' + response.statusText);
+                        }
+                        alert('주문이 취소되었습니다.');
+                        // window.location.href = '/fail-payment';
+                    })
+                    .catch(error => {
+                        console.error('주문 취소 중 오류 발생:', error);
+                        alert('주문 취소 실패: ' + error.message);
+                    });
             }
         });
     }

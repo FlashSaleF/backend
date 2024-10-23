@@ -39,7 +39,7 @@ public class OrderService {
     private final FeignClientService feignClientService;
     private final OrderMapper orderMapper;
     private final MessagingProducerService messagingProducerService;
-    private final RedisLockService redisLockService;
+    private final PaymentService paymentService;
 
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
@@ -111,7 +111,7 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         //주문 생성 시 이벤트 발행
-        messagingProducerService.sendPaymentRequest(savedOrder);
+//        messagingProducerService.sendPaymentRequest(savedOrder);
 
         return orderMapper.convertToResponseDto(savedOrder);
     }
@@ -122,7 +122,7 @@ public class OrderService {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
-        order.getPayment().changeStatus(PaymentStatus.completed);
+//        order.getPayment().changeStatus(PaymentStatus.completed);
 
         // 재고 감소 처리 플래그
         boolean stockDecreasedSuccessfully = true;
@@ -183,14 +183,6 @@ public class OrderService {
         return orderMapper.convertToResponseDto(order);
     }
 
-//    @Transactional(readOnly = true)
-//    public List<OrderResponseDto> getOrdersByUserId(Long userId) {
-//        List<Order> orders = orderRepository.findByUserIdAndIsDeletedFalse(userId);
-//        return orders.stream()
-//                .map(orderMapper::convertToResponseDto)
-//                .collect(Collectors.toList());
-//    }
-
     //주문 전체 조회
     @Transactional(readOnly = true)
     public Page<OrderResponseDto> getAllOrders(Pageable pageable) {
@@ -238,12 +230,6 @@ public class OrderService {
                     return orderProduct;
                 }).collect(Collectors.toList());
 
-//        // 제외된 상품 처리 (재고 복구 요청)
-//        List<OrderProduct> excludedOrderProducts = existingOrderProducts.stream()
-//                .filter(existingProduct -> updatedOrderProducts.stream()
-//                        .noneMatch(updatedProduct -> Objects.equals(existingProduct.getProductId(), updatedProduct.getProductId())
-//                                && Objects.equals(existingProduct.getFlashSaleProductId(), updatedProduct.getFlashSaleProductId())))
-//                .collect(Collectors.toList());
 
         for (OrderProduct excludedProduct : existingOrderProducts) {
             ProductStockIncreaseRequestDto requestDto = new ProductStockIncreaseRequestDto(excludedProduct.getQuantity());
@@ -287,7 +273,7 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancellOrder(UUID orderId) {
+    public void cancelOrder(UUID orderId) {
         // 기존 주문 조회
         Order existingOrder = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
@@ -297,29 +283,33 @@ public class OrderService {
             throw new CustomException(OrderErrorCode.ORDER_ALREADY_CANCELLED);
         }
 
+        // 결제 취소 요청 이벤트
+//        messagingProducerService.sendCancelPayment(orderId);
+        paymentService.refundPayment(existingOrder.getPayment().getPaymentUid());
+
         // 주문에 포함된 상품들에 대한 재고 복구 요청
         for (OrderProduct orderProduct : existingOrder.getOrderProducts()) {
             ProductStockIncreaseRequestDto requestDto = new ProductStockIncreaseRequestDto(orderProduct.getQuantity());
 
             // 재고 복구 요청 (flashSaleProduct 여부에 따라 분기 처리)
             if (orderProduct.getFlashSaleProductId() == null) {
-                messagingProducerService.sendIncreaseProductStock(existingOrder.getId(), orderProduct.getProductId(), requestDto);
+//                messagingProducerService.sendIncreaseProductStock(existingOrder.getId(), orderProduct.getProductId(), requestDto);
+                feignClientService.increaseProductStock(orderProduct.getProductId(), requestDto);
             } else {
-                messagingProducerService.sendIncreaseFlashProductStock(existingOrder.getId(), orderProduct.getFlashSaleProductId(), requestDto);
+//                messagingProducerService.sendIncreaseFlashProductStock(existingOrder.getId(), orderProduct.getFlashSaleProductId(), requestDto);
+                feignClientService.increaseFlashSaleProductStock(orderProduct.getFlashSaleProductId());
             }
         }
 
-        // 주문 취소 처리 (상태 변경)
-        cancelOrderAndPayment(orderId); // 주문 상태를 '취소'로 변경
-        existingOrder.delete();
-        orderRepository.save(existingOrder); // 취소된 주문 정보 저장
     }
 
     @Transactional
-    public void deleteOrder(UUID orderId) {
+    public void rollbackOrder(UUID orderId) {
         Order order = orderRepository.findByIdAndIsDeletedFalse(orderId)
                 .orElseThrow(() -> new CustomException(OrderErrorCode.ORDER_NOT_FOUND));
 
+        cancelOrderAndPayment(orderId);
+        order.getPayment().delete();
         order.delete();
     }
 
