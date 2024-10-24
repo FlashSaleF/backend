@@ -20,6 +20,7 @@ class AuditorAwareImpl implements AuditorAware<String> {
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
                 .filter(Authentication::isAuthenticated)
+                .filter(auth -> !"anonymousUser".equals(auth.getName()))
                 .map(Authentication::getPrincipal)
                 .map(principal -> {
                     if (principal instanceof UserDetails) {

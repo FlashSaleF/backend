@@ -1,0 +1,64 @@
+server:
+  port: ${VENDOR_PORT}
+
+spring:
+  application:
+    name: vendor
+  datasource:
+    url: ${DB_DATABASE}/vendors
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DRIVER_CLASS}
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL}
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVER}:9092  # Kafka 서버 주소
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: ${VENDOR_API_DOCS_PATH}
+  enable-spring-security: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+management:
+  server:
+    port: ${VENDOR_PORT}
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true

@@ -1,0 +1,60 @@
+server:
+  port: ${FLASH_SALE_PORT}
+
+spring:
+  application:
+    name: flash-sale
+  datasource:
+    url: ${DB_DATABASE}/flashsales
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DRIVER_CLASS}
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL}
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
+  data:
+    redis:
+      host: ${REDIS_DOMAIN}
+      port: ${REDIS_PORT}
+#      timeout: 60000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: ${FLASH_SALE_API_DOCS_PATH}
+    enable-spring-security: true
+    default-consumes-media-type: application/json
+    default-produces-media-type: application/json
+
+management:
+  server:
+    port: ${FLASH_SALE_PORT}
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true

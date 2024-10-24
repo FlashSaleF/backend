@@ -1,0 +1,62 @@
+server:
+  port: ${AUTH_PORT}
+
+spring:
+  application:
+    name: auth
+  datasource:
+    url: ${DB_DATABASE}/auth
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: ${DRIVER_CLASS}
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: ${DDL}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        highlight_sql: true
+  data:
+    redis:
+      host: ${REDIS_DOMAIN}
+      port: ${REDIS_PORT}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DOMAIN}:${EUREKA_PORT}/eureka/
+
+jwt:
+  secret:
+    key: ${JWT_SECRET_KEY}
+  refresh:
+    secret:
+      key: ${JWT_REFRESH_SECRET_KEY}
+
+springdoc:
+  api-docs:
+    version: openapi_3_1
+    enabled: true
+    path: ${AUTH_API_DOCS_PATH}
+  enable-spring-security: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+management:
+  server:
+    port: ${AUTH_PORT}
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true
