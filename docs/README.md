@@ -93,6 +93,12 @@
 
 ---
 
+## 📜API 명세서
+
+- [API 명세서](https://creative-crane-389.notion.site/API-129707d279cc80d49416e27ad92e8310)
+
+---
+
 ## 🚗 주요 기능
 
 - [⭐ 비동기 처리와 이벤트 기반 대용량 주문 처리](https://spot-decade-fee.notion.site/1264f92830ab80f7b6bed71f7b2144d5)
@@ -133,13 +139,13 @@
 
 ## ⚽ 트러블슈팅
 
-[Jmeter 부하테스트 ](https://spot-decade-fee.notion.site/Jmeter-1264f92830ab809dafadf52b1b7885d2)
+- [Jmeter 부하테스트 ](https://spot-decade-fee.notion.site/Jmeter-1264f92830ab809dafadf52b1b7885d2)
 
-[UUID 검증](https://creative-crane-389.notion.site/UUID-128707d279cc81b4ba94e59d5ff698f5)
+- [UUID 검증](https://creative-crane-389.notion.site/UUID-128707d279cc81b4ba94e59d5ff698f5)
 
-[Feignclient 에러 핸들링](https://creative-crane-389.notion.site/Feignclient-128707d279cc81f5b15dfa4a2029c781)
+- [Feignclient 에러 핸들링](https://creative-crane-389.notion.site/Feignclient-128707d279cc81f5b15dfa4a2029c781)
 
-[재고에 대한 분산 락 처리의 변경](https://creative-crane-389.notion.site/128707d279cc8129b8f4f7e7611785a3)
+- [재고에 대한 분산 락 처리의 변경](https://creative-crane-389.notion.site/128707d279cc8129b8f4f7e7611785a3)
 
 ---
 

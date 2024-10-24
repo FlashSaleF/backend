@@ -30,7 +30,7 @@ public class UserController {
 
     @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{userId}")
-    public ResponseEntity<UserInfoResponseDto> updateUserByMaster(@PathVariable String userId, @RequestBody UpdateRequestDto updateRequestDto) {
+    public ResponseEntity<UserInfoResponseDto> updateUser(@PathVariable String userId, @RequestBody UpdateRequestDto updateRequestDto) {
         userAuthService.verifyIdentity(userId);
         return ResponseEntity.ok(userService.updateUser(userId, updateRequestDto));
     }
