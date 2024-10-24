@@ -80,7 +80,7 @@
             // }
 
             // 주문 생성 요청
-            const response = await fetch('/api/orders', {
+            const response = await fetch('http://13.125.201.85:19091/api/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -133,7 +133,7 @@
                 alert('call back!!: ' + JSON.stringify(rsp));
 
                 // fetch API로 결제 요청 보내기
-                fetch('/api/payments/process', {
+                fetch('http://13.125.201.85:19091/api/payments/process', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -165,7 +165,7 @@
                 // window.location.href = '/fail-payment';
 
                 // 결제 실패에 따른 주문 롤백 API 호출
-                fetch(`/api/orders/rollback/${orderId}`, {
+                fetch(`http://13.125.201.85:19091/api/orders/rollback/${orderId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': 'Bearer ' + token
